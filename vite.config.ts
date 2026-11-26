@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => {
       __BUILD_MODE__: JSON.stringify(single ? 'single' : 'pages'),
       __APP_VERSION__: JSON.stringify(process.env.npm_package_version ?? '0.0.0'),
     },
-    worker: { format: 'es' },
+    worker: { format: 'iife' },
     build: {
       outDir: single ? 'dist-single' : 'dist',
       emptyOutDir: true,

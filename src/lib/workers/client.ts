@@ -6,12 +6,21 @@ let worker: Worker | null = null
 let seq = 0
 const pending = new Map<number, { res: (t: Table) => void; rej: (e: Error) => void }>()
 
+let workerBroken = false
+
 async function getWorker(): Promise<Worker | null> {
-  if (typeof Worker === 'undefined') return null
+  if (typeof Worker === 'undefined' || workerBroken) return null
   if (!worker) {
     // inline: works from file:// (blob worker) and in the Pages build alike
     const mod = await import('./decode.worker?worker&inline')
     worker = new mod.default()
+    worker.onerror = (ev) => {
+      const err = new Error(`Parquet worker failed: ${ev.message || 'unknown error'}`)
+      for (const p of pending.values()) p.rej(err)
+      pending.clear()
+      worker = null
+      workerBroken = true
+    }
     worker.onmessage = (ev: MessageEvent<DecodeResponse>) => {
       const p = pending.get(ev.data.id)
       if (!p) return

@@ -1,0 +1,6 @@
+:root { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; color: #1d2330; background: #f4f5f7; --amber: #e8a400; }
+body { margin: 0; }
+code { font-size: 0.85em; background: #f1f2f4; padding: 0 3px; border-radius: 3px; }
+button { cursor: pointer; border: 1px solid #c4c8cf; background: #fff; border-radius: 4px; padding: 2px 8px; }
+button:hover { background: #f0f3f8; }
+select { font-size: 0.85rem; }
