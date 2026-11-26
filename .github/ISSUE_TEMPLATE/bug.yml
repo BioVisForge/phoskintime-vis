@@ -1,0 +1,14 @@
+name: Bug
+description: Something in the viewer is wrong
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes: { label: What happened, description: 'Use synthetic data only; do not attach real bundles.' }
+    validations: { required: true }
+  - type: input
+    id: bundle
+    attributes: { label: 'bundle_schema and bundle_id', placeholder: '1.0 / pkt-…' }
+  - type: input
+    id: browser
+    attributes: { label: Browser and build (single file / pages) }

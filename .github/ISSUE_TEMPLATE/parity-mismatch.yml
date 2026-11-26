@@ -1,0 +1,14 @@
+name: Parity mismatch
+description: The viewer's numbers differ from PhosKinTime's
+labels: [parity]
+body:
+  - type: input
+    id: panel
+    attributes: { label: Panel id }
+    validations: { required: true }
+  - type: input
+    id: ref
+    attributes: { label: PhosKinTime function and commit }
+  - type: textarea
+    id: numbers
+    attributes: { label: 'Expected vs shown (with tolerance)' }
