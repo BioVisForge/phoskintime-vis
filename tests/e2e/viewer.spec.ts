@@ -46,23 +46,27 @@ test('open-issue chip shows bundled issue text', async ({ page }) => {
   await expect(page.locator('[data-testid=issue-text]')).toContainText('Fold-change baseline')
 })
 
-test('tampered bundle is flagged as sha256 mismatch with the file named', async ({ page }) => {
+for (const form of ['zip', 'folder'] as const) {
+test(`tampered bundle (${form}) is flagged as sha256 mismatch with the file named`, async ({ page }) => {
   await page.goto(APP)
-  await openZip(page, 'tampered')
+  if (form === 'zip') await openZip(page, 'tampered')
+  else await openFolder(page, 'tampered')
   await waitVerified(page, 'mismatch')
   await expect(page.locator('[data-testid=mismatch-list]')).toContainText('tables/metrics.parquet')
 })
 
-test('future-major bundle is refused with a clear message', async ({ page }) => {
+test(`future-major bundle (${form}) is refused with a clear message`, async ({ page }) => {
   const errors = watchErrors(page)
   await page.goto(APP)
-  await openZip(page, 'future-major')
+  if (form === 'zip') await openZip(page, 'future-major')
+  else await openFolder(page, 'future-major')
   const err = page.locator('[data-testid=load-error]')
   await expect(err).toHaveAttribute('data-kind', 'unsupported-version')
   await expect(err).toContainText('Unsupported bundle schema 2.0')
   await expect(page.locator('[data-testid=bundle-header]')).toHaveCount(0)
   expect(errors).toEqual([])
 })
+}
 
 test('labels fall back to raw names when the manifest has none (N8)', async ({ page }) => {
   await page.goto(APP)
