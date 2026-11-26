@@ -165,3 +165,4 @@ tests/reference/out/
 test-results/
 playwright-report/
 bench/out/
+src/lib/contracts/generated/
