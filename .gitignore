@@ -155,3 +155,13 @@ vite.config.ts.timestamp-*
 .nx/cache
 .nx/workspace-data
 .nx/migrate-runs
+
+# phoskintime-vis
+.venv/
+dist/
+dist-single/
+tests/fixtures/out/
+tests/reference/out/
+test-results/
+playwright-report/
+bench/out/
