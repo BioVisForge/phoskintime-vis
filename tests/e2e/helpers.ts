@@ -24,8 +24,24 @@ export async function waitVerified(page: Page, state = 'verified') {
   await expect(page.locator(`[data-testid=verify-badge][data-state=${state}]`).first()).toBeVisible({ timeout: 30_000 })
 }
 
-/** Scroll through every panel so lazy panels render; return {id, available, marks, naText}. */
+export const PANEL_SECTIONS = ['fit', 'dynamics', 'parameters', 'uncertainty', 'sensitivity', 'network'] as const
+
+export async function goSection(page: Page, section: string) {
+  await page.evaluate((h) => (location.hash = h), `#/${section}`)
+  await expect(page.locator('main h1')).toBeVisible()
+}
+
+/** Visit every section and scroll through its panels so lazy panels render. */
 export async function renderAllPanels(page: Page) {
+  const out: { id: string; available: boolean; marks: number; text: string }[] = []
+  for (const sec of PANEL_SECTIONS) {
+    await goSection(page, sec)
+    out.push(...(await renderSectionPanels(page)))
+  }
+  return out
+}
+
+export async function renderSectionPanels(page: Page) {
   const ids = await page.locator('[data-panel]').evaluateAll((els) => els.map((e) => e.getAttribute('data-panel')!))
   const out: { id: string; available: boolean; marks: number; text: string }[] = []
   for (const id of ids) {

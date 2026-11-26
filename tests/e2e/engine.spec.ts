@@ -15,7 +15,7 @@ test('what-if (feature flag, mock engine): connect, verify, simulate, labelled o
   await page.goto(APP + '?engine=mock')
   await openZip(page, 'small-protwise')
   await waitVerified(page)
-  await page.getByRole('button', { name: 'What-if (mock engine)' }).click()
+  await page.getByRole('link', { name: /Open What-if \(mock engine/ }).click()
   await page.fill('[data-testid=engine-url]', `http://127.0.0.1:${process.env.MOCK_PORT}`)
   await page.click('[data-testid=engine-connect]')
   await expect(page.locator('[data-testid=engine-info]')).toContainText('mock-pktengine')
@@ -27,5 +27,5 @@ test('what-if (feature flag, mock engine): connect, verify, simulate, labelled o
 
 test('what-if is hidden without the feature flag', async ({ page }) => {
   await page.goto(APP)
-  await expect(page.getByRole('button', { name: /What-if/ })).toHaveCount(0)
+  await expect(page.getByText(/What-if/)).toHaveCount(0)
 })
