@@ -21,6 +21,29 @@
 2. Add `src/lib/contracts/adapters/v<major>.ts` mapping the manifest to `BundleMeta`, and register it in `adapters/index.ts`. Panels do not change.
 3. Generate fixtures with the upstream `phoskintime bundle` command, if it exists, and run all tests.
 
+## Visual regression baselines
+
+`tests/visual/visual.spec.ts` screenshots every section in light and dark themes
+(`npm run test:visual`). After an intended visual change:
+
+```bash
+npm run build:single
+npx playwright test --project=visual --update-snapshots
+```
+
+Review every changed PNG in `tests/visual/visual.spec.ts-snapshots/` (they are synthetic-data
+screenshots) and commit them with the change that caused them, stating why in the message.
+
+## Exports
+
+- Figures export through `src/lib/export/` (PNG, PDF, SVG, CSV) and `src/lib/tikz/` (PGFPlots).
+  A panel needs nothing extra: marks imported from `src/lib/plot` are recorded automatically.
+  Never import marks from `svelteplot` directly in a panel.
+- A new mark type needs a wrapper in `src/lib/plot/`, a case in `src/lib/tikz/emit.ts` and a
+  golden snapshot in `tests/unit/tikz.test.ts`.
+- `tests/tikz/compile_all.sh` compiles TikZ exports. Run it after emitter changes:
+  `node tests/tikz/export_all.mjs network tests/tikz/out tikz && bash tests/tikz/compile_all.sh tests/tikz/out/all-panels_*.zip`.
+
 ## Checks before a PR
 
 ```bash

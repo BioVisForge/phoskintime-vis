@@ -8,6 +8,25 @@ for a future simulation engine sits behind a feature flag.
 
 Companion to [bibymaths/phoskintime](https://github.com/bibymaths/phoskintime).
 
+## Exports
+
+Every panel's ⋯ menu exports **PNG** (true 600 dpi by default, 300 and 1200 selectable, with
+pHYs and provenance text chunks), **PDF** (vector, real text, embedded font, provenance
+metadata), **SVG** (size in mm), **CSV** (the plotted data, with a provenance and units header)
+and **TikZ/PGFPlots** (a zip with a `tikzpicture`, a standalone document, full-precision data
+files and a README). "Export options…" sets the journal size (85 / 114 / 174 mm or custom), the
+base font size in pt, the dpi, and title, caption and footer. "Export all panels" (command
+palette) writes one zip. Exports always use the light print theme and the bundled font. See
+`docs/decisions/0002-pdf-export.md` and `docs/decisions/0003-tikz-export.md`.
+
+## Navigation
+
+Sections follow scientific questions: Overview, Fit quality, Dynamics, Parameters,
+Uncertainty, Sensitivity, Steady state & network, and Compare when two bundles are open. The
+protein / psite / layer bar drives every dependent panel and the URL, so a link such as
+`index.html#/dynamics/nm-timeseries?protein=G007` reproduces the view. Ctrl/⌘ + K opens the
+command palette. The light and dark themes and two densities are in the top bar.
+
 ## Contract-only design
 
 This repository depends **only on versioned contracts**, never on PhosKinTime's internals:
@@ -46,7 +65,9 @@ xdg-open dist-single/index.html   # then open a .pkt.zip or .pkt folder
 ```
 
 Other scripts: `dev`, `build` (Pages build), `test` (unit), `test:parity`, `test:e2e`
-(Playwright, Chromium + Firefox, `file://`), `lint`, `check`, `sync-contracts`.
+(Playwright, Chromium + Firefox, `file://`), `test:visual` (screenshot baselines), `lint`,
+`check`, `sync-contracts`, `docs:assets` (screenshots, gallery and sample exports into the
+ignored `docs/screenshots/` and `docs/samples/exports/`).
 
 Mock engine for the What-if preview: `node scripts/mock-engine.mjs tests/fixtures/out/small-protwise.pkt`,
 then open `dist-single/index.html?engine=mock`. The mock does not simulate anything; it is for
@@ -67,11 +88,15 @@ network at all.
 - `docs/substitutions.md`: chart types replaced by honest equivalents
 - `docs/upstream-proposals.md`: proposed issues for PhosKinTime
 - `docs/decisions/0001-parquet-reader.md`: Parquet reader choice (measured)
+- `docs/decisions/0002-pdf-export.md`, `0003-tikz-export.md`, `0004-ui-stack.md`: export pipeline, PGFPlots emitter, UI stack
+- `THIRD_PARTY.md`: bundled font licence (OFL) and runtime libraries
 - `docs/performance.md`: measured performance
-- Screenshot gallery of every panel and comparison mode (synthetic data). Generated, not kept in
-  git: run `npm run docs:assets` after `npm run fixtures` and `npm run build:single` (writes
-  `docs/screenshots/gallery.html`), or download the `docs-assets` artifact of a CI run. The Pages
-  demo publishes it at `docs/screenshots/gallery.html`.
+- Generated docs assets (synthetic data, not kept in git): `docs/screenshots/gallery.html` (every
+  section in light and dark, every panel, comparison mode, exports) and `docs/samples/exports/`
+  (sample exports in every format). Run `npm run docs:assets` after `npm run fixtures` and
+  `npm run build:single`, or download the `docs-assets` artifact of a CI run. The Pages demo
+  publishes both under `docs/`. The TikZ gallery (`docs/screenshots/tikz-gallery.html`, each
+  panel's compiled TikZ next to the viewer's PNG export) needs TeX Live; see `CONTRIBUTING.md`.
 
 All data in this repository (fixtures, screenshots, demo) is synthetic.
 

@@ -22,7 +22,7 @@
     "sync-contracts": "tsx scripts/sync-contracts.ts",
     "fixtures": "${PYTHON:-python3} tests/fixtures/make_fixtures.py",
     "validators": "node scripts/build-validators.mjs",
-    "docs:assets": "node scripts/screenshots.mjs && node scripts/gallery.mjs",
+    "docs:assets": "node scripts/screenshots.mjs && node scripts/gallery.mjs && node scripts/export-samples.mjs",
     "predev": "node scripts/build-validators.mjs",
     "prebuild": "node scripts/build-validators.mjs",
     "prebuild:single": "node scripts/build-validators.mjs",
