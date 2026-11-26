@@ -1,0 +1,16 @@
+
+\begin{tikzpicture}[font=\fontsize{8}{9.6}\selectfont]
+\pgfplotsset{every axis/.append style={font=\fontsize{8}{9.6}\selectfont, tick label style={font=\fontsize{7.00}{8.4}\selectfont, /pgf/number format/assume math mode=true}, legend style={font=\fontsize{7.00}{8.4}\selectfont}, clip mode=individual}}
+\begin{scope}[shift={(7.14mm,-1.79mm)}]
+\begin{axis}[scale only axis, width=71.43mm, height=44.64mm, unbounded coords=jump, axis line style={draw=black!60}, tick style={draw=black!60}, clip=true, xlabel={Time (min)}, xmin=-0.5, xmax=1.5, xtick={0,1}, xticklabels={{p},{r}}, xtick style={draw=none}, x tick label style={rotate=0}, ylabel={Fold change}, ymin=-0.5, ymax=1.5, ytick={0,1}, yticklabels={{q},{s}}, ytick style={draw=none}, y dir=reverse, xmajorgrids, ymajorgrids, grid style={draw=black!12}, colormap={pkvmap1}{rgb255=(33,102,172) rgb255=(33,102,172) rgb255=(33,102,172) rgb255=(33,102,172) rgb255=(33,102,172) rgb255=(178,24,43) rgb255=(178,24,43) rgb255=(178,24,43) rgb255=(178,24,43) rgb255=(178,24,43) rgb255=(178,24,43)}, point meta min=-1, point meta max=1, at={(0,0)}, anchor=north west]
+% Cell: one cell per stored value; empty cells are nan (left blank, never coloured as 0)
+\addplot[matrix plot*, mesh/cols=2, mesh/rows=2, mesh/ordering=x varies, point meta=explicit, forget plot, unbounded coords=discard] table[x=x,y=y,meta=v] {data/cell-cell0-2.dat};
+\end{axis}
+\end{scope}\end{tikzpicture}
+
+%%% data/cell-cell0-2.dat
+x	y	v
+0.0000000000000000	0.0000000000000000	1.0000000000000000
+1.0000000000000000	0.0000000000000000	-1.0000000000000000
+0.0000000000000000	1.0000000000000000	nan
+1.0000000000000000	1.0000000000000000	nan

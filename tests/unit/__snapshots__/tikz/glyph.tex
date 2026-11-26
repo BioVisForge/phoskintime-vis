@@ -1,0 +1,12 @@
+\definecolor{pkvc1}{HTML}{D62728}
+\begin{tikzpicture}[font=\fontsize{8}{9.6}\selectfont]
+\pgfplotsset{every axis/.append style={font=\fontsize{8}{9.6}\selectfont, tick label style={font=\fontsize{7.00}{8.4}\selectfont, /pgf/number format/assume math mode=true}, legend style={font=\fontsize{7.00}{8.4}\selectfont}, clip mode=individual}}
+\begin{scope}[shift={(7.14mm,-1.79mm)}]
+\begin{axis}[scale only axis, width=71.43mm, height=44.64mm, unbounded coords=jump, axis line style={draw=black!60}, tick style={draw=black!60}, clip=true, xlabel={Time (min)}, xmin=0, xmax=10, scaled x ticks=false, xticklabel style={/pgf/number format/fixed, /pgf/number format/precision=3}, ylabel={Fold change}, ymin=0, ymax=2, scaled y ticks=false, yticklabel style={/pgf/number format/fixed, /pgf/number format/precision=3}, xmajorgrids, ymajorgrids, grid style={draw=black!12}, at={(0,0)}, anchor=north west]
+\addplot[only marks, mark=o, mark size=1.52pt, draw=pkvc1, mark options={line width=0.25pt}, forget plot] table[x=x,y=y] {data/glyph-custommark0-1.dat};
+\end{axis}
+\end{scope}\end{tikzpicture}
+
+%%% data/glyph-custommark0-1.dat
+x	y
+1.0000000000000000	1.0000000000000000
