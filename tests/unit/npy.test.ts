@@ -30,8 +30,8 @@ describe('npy parser', () => {
     expect(a.data[npyIndex(a, [1, 0])]).toBe(4)
   })
   it('reads v2 headers, f4, i4 and 1-D shapes', () => {
-    expect(Array.from(parseNpy(makeNpy('<f4', [3], Float32Array.from([1, 2, 3]), false, 2)).data)).toEqual([1, 2, 3])
-    expect(Array.from(parseNpy(makeNpy('<i4', [2], Int32Array.from([-1, 7]))).data)).toEqual([-1, 7])
+    expect(Array.from(parseNpy(makeNpy('<f4', [3], Float32Array.from([1, 2, 3]), false, 2)).data as ArrayLike<number>)).toEqual([1, 2, 3])
+    expect(Array.from(parseNpy(makeNpy('<i4', [2], Int32Array.from([-1, 7]))).data as ArrayLike<number>)).toEqual([-1, 7])
   })
   it('rejects bad magic, big-endian and object dtypes', () => {
     expect(() => parseNpy(new Uint8Array(20).buffer)).toThrow(/magic/)
