@@ -15,12 +15,27 @@
   const sources = $derived([...def.requires.map((r) => bundle.tableEntry(r.table)?.path ?? r.table), ...(def.arrays ?? []).map((a) => bundle.arrayEntry(a)?.path ?? a)])
   const fname = (ext: string) => `${def.id}_${bundle.meta.bundleId}.${ext}`
 
+  // render lazily: only once the panel scrolls near the viewport (keeps first paint fast)
+  let host: HTMLElement | undefined = $state()
+  let visible = $state(typeof IntersectionObserver === 'undefined')
+  $effect(() => {
+    if (!host || visible) return
+    const io = new IntersectionObserver((es) => {
+      if (es.some((e) => e.isIntersecting)) {
+        visible = true
+        io.disconnect()
+      }
+    }, { rootMargin: '300px' })
+    io.observe(host)
+    return () => io.disconnect()
+  })
+
   function onerror(e: unknown) {
     error = (e as Error)?.message ?? String(e)
   }
 </script>
 
-<section class="panel" data-panel={def.id} data-available={avail.ok} id={`panel-${def.id}`}>
+<section bind:this={host} class="panel" data-rendered={visible} data-panel={def.id} data-available={avail.ok} id={`panel-${def.id}`}>
   <header>
     <h3>{def.title}</h3>
     <span class="cov cov-{def.coverage}" title="coverage against PhosKinTime">{def.coverage}</span>
@@ -35,7 +50,7 @@
   {:else}
     <div class="figure" bind:this={figure}>
       <svelte:boundary onerror={onerror}>
-        <def.component {bundle} {report} />
+        {#if visible}<def.component {bundle} {report} />{:else}<div class="placeholder">…</div>{/if}
         {#snippet failed(e)}
           <div class="na err">Panel failed: {(e as Error)?.message ?? String(e)}</div>
         {/snippet}
@@ -76,4 +91,7 @@
   .btns { margin-left: auto; display: flex; gap: 4px; }
   button { font-size: 0.75rem; }
   .figure { overflow-x: auto; }
+  .placeholder { height: 260px; }
+  .figure :global(h2) { font-size: 0.82rem; font-weight: 600; margin: 2px 0; }
+  .figure :global(h3) { font-size: 0.78rem; font-weight: 400; margin: 0; }
 </style>

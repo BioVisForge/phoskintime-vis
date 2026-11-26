@@ -1,6 +1,6 @@
 import { quantileSorted } from './stats'
 
-export interface Envelope {
+export type Envelope = {
   key: string
   time: number
   n: number

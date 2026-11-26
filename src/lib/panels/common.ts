@@ -30,7 +30,7 @@ export function colUnit(t: Table, col: string): string {
   return u ? ` (${u})` : ''
 }
 
-export interface TrajRow {
+export type TrajRow = {
   layer: string
   protein: string
   psite: string | null
@@ -70,3 +70,6 @@ export function histogram(values: number[], bins: number) {
   for (const x of v) counts[Math.min(bins - 1, Math.floor((x - lo) / w))]++
   return counts.map((c, i) => ({ x1: lo + i * w, x2: lo + (i + 1) * w, count: c }))
 }
+
+/** Explicit ticks for symlog time axes (automatic symlog ticks can come out negative). */
+export const TIME_TICKS = [0, 1, 10, 100, 1000]

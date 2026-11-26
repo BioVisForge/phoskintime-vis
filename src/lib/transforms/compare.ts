@@ -6,7 +6,7 @@
  * ("by-name") and rows present in only one run are listed, never silently dropped.
  */
 
-export interface NamedValue {
+export type NamedValue = {
   name: string
   value: number
   group?: string | null
@@ -14,7 +14,7 @@ export interface NamedValue {
   unit?: string | null
 }
 
-export interface ParamDelta {
+export type ParamDelta = {
   name: string
   group: string | null
   label: string | null
@@ -78,7 +78,7 @@ export function sortDeltas(p: ParamDelta[]): ParamDelta[] {
   return [...p].sort((x, y) => key(y) - key(x) || (x.name < y.name ? -1 : 1))
 }
 
-export interface TrajPoint {
+export type TrajPoint = {
   state: string
   layer: string
   protein: string
@@ -86,7 +86,7 @@ export interface TrajPoint {
   value: number
 }
 
-export interface TrajDelta {
+export type TrajDelta = {
   state: string
   layer: string
   protein: string
@@ -125,7 +125,7 @@ export function alignTrajectories(a: TrajPoint[], b: TrajPoint[]): Alignment<Tra
   }
 }
 
-export interface MetricRow {
+export type MetricRow = {
   layer: string | null
   protein: string | null
   metric: string

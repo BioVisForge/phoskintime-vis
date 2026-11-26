@@ -8,9 +8,11 @@
   let { bundle, report }: PanelProps = $props()
   let t = $state.raw<Table | null>(null)
   let protein = $state('')
-  bundle.table('trajectories').then((x) => {
-    t = x
-    protein = proteins(x)[0]
+  $effect(() => {
+    bundle.table('trajectories').then((x) => {
+      t = x
+      protein = proteins(x)[0]
+    })
   })
   const rows = $derived(t ? trajRows(t, { protein, best: true }) : [])
   // plot_model_fit: cutoff_idx = 8 on the protein time grid (plotting.py:220). RNA observations are
