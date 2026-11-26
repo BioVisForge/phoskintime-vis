@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { Plot, Line, Dot } from 'svelteplot'
+  import { app, pick } from '../../ui/state.svelte'
+  import { Plot, Line, Dot } from '../../plot'
   import type { PanelProps } from '../types'
   import type { Table } from '../../model/types'
   import { trajRows, proteins, type TrajRow } from '../common'
@@ -7,11 +8,10 @@
 
   let { bundle, report }: PanelProps = $props()
   let t = $state.raw<Table | null>(null)
-  let protein = $state('')
+  const protein = $derived(pick(app.ctx.protein, t ? proteins(t) : []))
   $effect(() => {
     bundle.table('trajectories').then((x) => {
       t = x
-      protein = proteins(x)[0]
     })
   })
   const rows = $derived(t ? trajRows(t, { protein, best: true }) : [])
@@ -36,7 +36,6 @@
 </script>
 
 {#if !t}<Loading />{:else}
-  <label>Protein <select bind:value={protein}>{#each proteins(t) as p}<option value={p}>{p}</option>{/each}</select></label>
   <div class="two">
     {#each parts as part, i}
       <Plot height={300} grid x={{ label: `Time (min), ${part.name}` }} y={{ label: 'Fold change: model solid, data dashed', domain: ydom }} color={{ legend: i === 1 }}>
@@ -48,4 +47,4 @@
   </div>
 {/if}
 
-<style>.two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } label { font-size: 0.85rem; }</style>
+<style>.two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }</style>

@@ -4,8 +4,17 @@
   import { BundleZipSource } from '../sources/zip'
   import { SourceError } from '../sources/types'
 
+  let { showZone = true }: { showZone?: boolean } = $props()
   let dragging = $state(false)
   let busy = $state(false)
+  let zipInput: HTMLInputElement | undefined = $state()
+  let folderInput: HTMLInputElement | undefined = $state()
+  export function pick(kind: 'zip' | 'folder') {
+    ;(kind === 'zip' ? zipInput : folderInput)?.click()
+  }
+  export async function drop(e: DragEvent) {
+    await onDrop(e)
+  }
 
   async function openFiles(files: File[]) {
     busy = true
@@ -54,30 +63,37 @@
   }
 </script>
 
-<div
-  class="drop"
-  class:dragging
-  role="region"
-  aria-label="Open bundles"
-  ondragover={(e) => {
-    e.preventDefault()
-    dragging = true
-  }}
-  ondragleave={() => (dragging = false)}
-  ondrop={onDrop}>
-  <strong>Open a run bundle</strong> — drop <code>&lt;run&gt;.pkt/</code> folders or <code>&lt;run&gt;.pkt.zip</code> files here, or
-  <label class="btn">folder… <input data-testid="open-folder" type="file" webkitdirectory multiple onchange={(e) => openFiles(Array.from(e.currentTarget.files ?? []))} /></label>
-  <label class="btn">zip… <input data-testid="open-zip" type="file" accept=".zip" multiple onchange={(e) => openFiles(Array.from(e.currentTarget.files ?? []))} /></label>
-  {#if __BUILD_MODE__ === 'pages'}
-    <span>or a synthetic demo:
-      {#each ['small-protwise', 'network', 'network-after-fix'] as d}
-        <button onclick={() => openSafe(async () => new BundleZipSource(`${d}.pkt.zip`, new Uint8Array(await (await fetch(`demo/${d}.pkt.zip`)).arrayBuffer())), d)}>{d}</button>
-      {/each}
-    </span>
-  {/if}
-  {#if busy}<span class="busy">opening…</span>{/if}
-  <span class="privacy">Everything stays in this browser tab: nothing is uploaded.</span>
-</div>
+<input bind:this={folderInput} class="visually-hidden" tabindex="-1" aria-label="Open bundle folder" data-testid="open-folder" type="file" webkitdirectory multiple onchange={(e) => openFiles(Array.from(e.currentTarget.files ?? []))} />
+<input bind:this={zipInput} class="visually-hidden" tabindex="-1" aria-label="Open bundle zip" data-testid="open-zip" type="file" accept=".zip" multiple onchange={(e) => openFiles(Array.from(e.currentTarget.files ?? []))} />
+{#if showZone}
+  <div
+    class="drop"
+    class:dragging
+    role="region"
+    aria-label="Open bundles"
+    ondragover={(e) => {
+      e.preventDefault()
+      dragging = true
+    }}
+    ondragleave={() => (dragging = false)}
+    ondrop={onDrop}>
+    <h1>Open a PhosKinTime run bundle</h1>
+    <p>Drop <code>&lt;run&gt;.pkt/</code> folders or <code>&lt;run&gt;.pkt.zip</code> files anywhere in this window, or choose:</p>
+    <div class="btns">
+      <button class="primary" onclick={() => zipInput?.click()}>Open zip…</button>
+      <button onclick={() => folderInput?.click()}>Open folder…</button>
+      {#if __BUILD_MODE__ === 'pages'}
+        <span class="demo">Synthetic demo:
+          {#each ['small-protwise', 'network', 'network-after-fix'] as d}
+            <button onclick={() => openSafe(async () => new BundleZipSource(`${d}.pkt.zip`, new Uint8Array(await (await fetch(`demo/${d}.pkt.zip`)).arrayBuffer())), d)}>{d}</button>
+          {/each}
+        </span>
+      {/if}
+    </div>
+    {#if busy}<p class="busy" role="status">Opening…</p>{/if}
+    <p class="privacy">Everything stays in this browser tab: nothing is uploaded, no network is used.</p>
+  </div>
+{:else if busy}<p class="busy" role="status">Opening…</p>{/if}
 
 {#each app.errors as err, i}
   <div class="error" data-testid="load-error" data-kind={err.kind}>
@@ -88,11 +104,13 @@
 {/each}
 
 <style>
-  .drop { border: 2px dashed #9aa4b5; border-radius: 8px; padding: 12px 16px; background: #fff; font-size: 0.9rem; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .dragging { background: #eef4ff; border-color: #3b6fd8; }
-  .btn { border: 1px solid #c4c8cf; border-radius: 4px; padding: 2px 8px; cursor: pointer; background: #f8f9fb; }
-  .btn input { display: none; }
-  .privacy { margin-left: auto; color: #4a6; font-size: 0.8rem; }
-  .busy { color: #777; }
-  .error { background: #fdecec; border: 1px solid #e3a3a3; padding: 8px 12px; margin-top: 8px; border-radius: 6px; font-size: 0.88rem; }
+  .drop { border: 2px dashed var(--pkv-border-strong); border-radius: 14px; padding: 48px 32px; background: var(--pkv-surface); text-align: center; max-width: 720px; margin: 8vh auto 0; }
+  .drop h1 { font-size: 1.35rem; margin: 0 0 8px; }
+  .drop p { color: var(--pkv-ink-2); }
+  .dragging { background: var(--pkv-accent-soft); border-color: var(--pkv-accent); }
+  .btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; align-items: center; }
+  .demo { font-size: var(--pkv-text-sm); color: var(--pkv-ink-2); display: inline-flex; gap: 4px; align-items: center; }
+  .privacy { font-size: var(--pkv-text-xs); margin-top: 18px; }
+  .busy { color: var(--pkv-ink-2); }
+  .error { background: var(--pkv-bad-bg); color: var(--pkv-bad-ink); border: 1px solid var(--pkv-bad-ink); padding: 8px 12px; margin-top: 8px; border-radius: 8px; font-size: var(--pkv-text-sm); }
 </style>

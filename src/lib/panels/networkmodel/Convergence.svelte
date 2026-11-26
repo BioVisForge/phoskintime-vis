@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Plot, Line, RuleX } from 'svelteplot'
+  import { Plot, Line, RuleX } from '../../plot'
   import type { PanelProps } from '../types'
   import type { Table } from '../../model/types'
   import { num, str } from '../../transforms/table'
@@ -32,4 +32,4 @@
   </Plot>
   <p class="legend">grey: each start · red line: best across starts · pink rules: min–max across starts per iteration</p>
 {/if}
-<style>.legend { font-size: 0.75rem; color: #555; margin: 0; }</style>
+<style>.legend { font-size: 0.75rem; color: var(--pkv-ink-2); margin: 0; }</style>

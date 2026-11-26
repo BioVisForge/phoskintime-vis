@@ -1,18 +1,22 @@
 <script lang="ts">
-  import { Plot, Line, Dot, normalizeParallelX } from 'svelteplot'
+  import { usePanelState } from '../../ui/panelState'
+  import { untrack } from 'svelte'
+  import { app, pick } from '../../ui/state.svelte'
+  import { Plot, Line, Dot, normalizeParallelX } from '../../plot'
   import type { PanelProps } from '../types'
   import type { Table } from '../../model/types'
   import { trajRows, proteins } from '../common'
   import Loading from '../Loading.svelte'
 
   let { bundle, report }: PanelProps = $props()
+  const ps = usePanelState(untrack(() => bundle))
   let t = $state.raw<Table | null>(null)
-  let protein = $state('')
-  let mode = $state<'raw' | 'extent'>('raw')
+  const protein = $derived(pick(app.ctx.protein, t ? proteins(t) : []))
+  let mode = $state<'raw' | 'extent'>(ps.get('mode', 'raw'))
+  $effect(() => ps.set('mode', mode))
   $effect(() => {
     bundle.table('trajectories').then((x) => {
       t = x
-      protein = proteins(x)[0]
     })
   })
   // plot_parallel: one polyline per time point across the states (pandas parallel_coordinates, raw values)
@@ -25,7 +29,6 @@
 </script>
 
 {#if !t}<Loading />{:else}
-  <label>Protein <select bind:value={protein}>{#each proteins(t) as p}<option value={p}>{p}</option>{/each}</select></label>
   <label>Scale <select bind:value={mode}><option value="raw">raw values (as PhosKinTime)</option><option value="extent">per-state extent</option></select></label>
   <Plot height={Math.max(200, 50 * new Set(rows.map((r) => r.state)).size)} grid inset={10} x={{ label: mode === 'raw' ? 'Predicted fold change' : 'Normalised to state extent' }} y={{ label: 'State' }} color={{ legend: true, label: 'Time (min)', type: 'log' }}>
     <Line {...plotted as any} stroke={(d: any) => Math.max(d.time, 0.1)} strokeOpacity={0.6} />

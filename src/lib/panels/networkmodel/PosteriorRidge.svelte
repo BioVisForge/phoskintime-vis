@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { usePanelState } from '../../ui/panelState'
+  import { untrack } from 'svelte'
   import type { PanelProps } from '../types'
   import { loadPosterior } from './posterior'
   import { posteriorColumn } from '../../derive/trajectories'
@@ -7,9 +9,12 @@
   import Loading from '../Loading.svelte'
 
   let { bundle, report }: PanelProps = $props()
+  const ps = usePanelState(untrack(() => bundle))
   let post = $state.raw<Awaited<ReturnType<typeof loadPosterior>> | null>(null)
-  let batch = $state(0)
-  let mode = $state<'normalised' | 'raw-log' | 'raw'>('normalised')
+  let batch = $state(ps.get('batch', 0))
+  $effect(() => ps.set('batch', batch))
+  let mode = $state<'normalised' | 'raw-log' | 'raw'>(ps.get('mode', 'normalised'))
+  $effect(() => ps.set('mode', mode))
   $effect(() => {
     loadPosterior(bundle).then((p) => (post = p))
   })

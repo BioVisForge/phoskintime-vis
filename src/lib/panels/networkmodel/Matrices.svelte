@@ -1,11 +1,14 @@
 <script lang="ts">
-  import { Plot, Cell } from 'svelteplot'
+  import { usePanelState } from '../../ui/panelState'
+  import { untrack } from 'svelte'
+  import { Plot, Cell } from '../../plot'
   import type { PanelProps } from '../types'
   import type { NpyArray, Table } from '../../model/types'
   import { num, str } from '../../transforms/table'
   import Loading from '../Loading.svelte'
 
   let { bundle, report }: PanelProps = $props()
+  const ps = usePanelState(untrack(() => bundle))
   const names = $derived(bundle.meta.files.filter((f) => f.kind === 'array' && f.array?.name?.startsWith('matrix_')).map((f) => f.array!.name!))
   let name = $state('')
   $effect(() => {
@@ -13,7 +16,8 @@
   })
   let arr = $state.raw<NpyArray | null>(null)
   let labels = $state.raw<Table | null>(null)
-  let maxRows = $state(80)
+  let maxRows = $state(ps.get('maxRows', 80))
+  $effect(() => ps.set('maxRows', maxRows))
   $effect(() => {
     if (!name) return
     Promise.all([bundle.array(name), bundle.hasTable('matrix_labels') ? bundle.table('matrix_labels') : Promise.resolve(null)]).then(([a, l]) => {

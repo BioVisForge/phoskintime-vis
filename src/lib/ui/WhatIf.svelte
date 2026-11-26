@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Plot, Line, DifferenceY, Dot } from 'svelteplot'
+  import { Plot, Line, DifferenceY, Dot } from '../plot'
   import { app } from './state.svelte'
   import { EngineHttpSource } from '../sources/engine'
   import type { EngineInfo, SimResult, VerifyResult } from '../engine/types'
@@ -130,7 +130,7 @@
         <Plot height={260} grid x={{ type: 'symlog', ticks: TIME_TICKS, label: 'Time (min), symlog' }} y={{ label: `${S} FC` }}>
           <DifferenceY data={pairs} x="time" y1="baseline" y2="engine" positiveFill="#d6604d" negativeFill="#4393c3" fillOpacity={0.4} />
           <Line data={pairs} x="time" y="baseline" stroke="#888" strokeDasharray="5 3" />
-          <Line data={pairs} x="time" y="engine" stroke="black" />
+          <Line data={pairs} x="time" y="engine" stroke="var(--pkv-ink)" />
         </Plot>
         <Plot height={260} grid x={{ type: 'symlog', ticks: TIME_TICKS, label: 'Time (min), symlog' }} y={{ label: 'Δ (engine − stored baseline)' }}>
           <Line data={pairs} x="time" y="delta" stroke="#d62728" />
@@ -143,14 +143,14 @@
 {/if}
 
 <style>
-  .flag { background: #eef3ff; border: 1px solid #9db4e8; padding: 6px 10px; border-radius: 4px; font-size: 0.85rem; margin: 8px 0; }
+  .flag { background: var(--pkv-accent-soft); border: 1px solid var(--pkv-accent); padding: 6px 10px; border-radius: 4px; font-size: 0.85rem; margin: 8px 0; }
   .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin: 6px 0; font-size: 0.88rem; }
-  .engine { background: #fff; border: 1px solid #ccd; padding: 6px 10px; font-size: 0.85rem; }
-  .verify { background: #fdecec; padding: 4px 10px; margin: 4px 0; font-size: 0.85rem; } .verify.ok { background: #d8f2df; }
-  .err { background: #fdecec; padding: 6px; }
+  .engine { background: var(--pkv-surface); border: 1px solid var(--pkv-border); padding: 6px 10px; font-size: 0.85rem; }
+  .verify { background: var(--pkv-bad-bg); color: var(--pkv-bad-ink); padding: 4px 10px; margin: 4px 0; font-size: 0.85rem; } .verify.ok { background: var(--pkv-ok-bg); color: var(--pkv-ok-ink); }
+  .err { background: var(--pkv-bad-bg); color: var(--pkv-bad-ink); padding: 6px; }
   fieldset { border: 1px solid #dde; margin: 6px 0; font-size: 0.82rem; }
   .slider { display: grid; grid-template-columns: 260px 220px 70px auto; gap: 6px; align-items: center; }
-  .dim { color: #777; font-size: 0.78rem; }
-  .label { background: #fff3cd; padding: 4px 8px; font-size: 0.85rem; }
+  .dim { color: var(--pkv-ink-2); font-size: 0.78rem; }
+  .label { background: var(--pkv-warn-bg); color: var(--pkv-warn-ink); padding: 4px 8px; font-size: 0.85rem; }
   .two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 </style>

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Plot, BarX, RuleX } from 'svelteplot'
+  import { Plot, BarX, RuleX } from '../../plot'
   import type { PanelProps } from '../types'
   import type { Table } from '../../model/types'
   import { klFromTrajectories } from '../../derive/trajectories'

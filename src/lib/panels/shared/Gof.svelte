@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { Plot, Dot, Line, RegressionY, Text, Brush, Rect, CustomMark } from 'svelteplot'
+  import { usePanelState } from '../../ui/panelState'
+  import { untrack } from 'svelte'
+  import { Plot, Dot, Line, RegressionY, Text, Brush, Rect, CustomMark } from '../../plot'
   import type { PanelProps } from '../types'
   import type { Table } from '../../model/types'
   import { gofPoints, gofByLayer, protwiseOffsets, type GofPoint } from '../../derive/trajectories'
@@ -8,8 +10,10 @@
   import Loading from '../Loading.svelte'
 
   let { bundle, report, workflow }: PanelProps & { workflow: 'protwise' | 'networkmodel' } = $props()
+  const ps = usePanelState(untrack(() => bundle))
   let t = $state.raw<Table | null>(null)
-  let showReg = $state(false)
+  let showReg = $state(ps.get('showReg', false))
+  $effect(() => ps.set('showReg', showReg))
   let brush = $state({ enabled: false } as { enabled: boolean; x1?: number; x2?: number; y1?: number; y2?: number })
   $effect(() => {
     bundle.table('trajectories').then((x) => (t = x))
@@ -65,17 +69,18 @@
     </tbody>
   </table>
   <label><input type="checkbox" bind:checked={showReg} /> OLS regression line with 95 % confidence band (extra layer)</label>
+  <p class="hint" data-export-skip>Brush the overall plot to select points and see their trajectories.</p>
   <div class="two">
     <div>
-      <Plot height={380} grid inset={6} aspectRatio={1} title="Overall (brush to select points)" x={{ label: 'Observed' }} y={{ label: workflow === 'protwise' ? 'Fitted' : 'Predicted' }} color={{ legend: true }}>
+      <Plot height={380} grid inset={6} aspectRatio={1} title="Overall" x={{ label: 'Observed' }} y={{ label: workflow === 'protwise' ? 'Fitted' : 'Predicted' }} color={{ legend: true }}>
         <Line data={bandLines(overall.min, overall.max, overall.d95, overall.d99)} x="x" y="y" z="k" stroke={(d: any) => (d.k === 'identity' ? '#555' : d.k.includes('95') ? '#d62728' : '#888')} strokeDasharray={(d: any) => (d.k === 'identity' ? 'none' : d.k.includes('95') ? '5 3' : '1 3')} />
-        <Dot canvas={pts.length > CANVAS_MIN} data={pts} x="obs" y="pred" fill="layer" r={2.5} opacity={0.55} stroke="black" strokeWidth={0.3} />
+        <Dot canvas={pts.length > CANVAS_MIN} data={pts} x="obs" y="pred" fill="layer" r={2.5} opacity={0.55} stroke="var(--pkv-ink)" strokeWidth={0.3} />
         <!-- P4: ring glyph for points beyond the 95 % band -->
-        <CustomMark data={flagged} x="obs" y="pred">
-          {#snippet mark({ record })}<circle cx={record.x} cy={record.y} r="6" fill="none" stroke="#d62728" stroke-width="1.5"><title>{record.datum.label}: residual {record.datum.resid.toFixed(3)}</title></circle>{/snippet}
+        <CustomMark glyph="ring" data={flagged} x="obs" y="pred">
+          {#snippet mark({ record }: any)}<circle cx={record.x} cy={record.y} r="6" fill="none" stroke="#d62728" stroke-width="1.5"><title>{record.datum.label}: residual {record.datum.resid.toFixed(3)}</title></circle>{/snippet}
         </CustomMark>
         <Text data={flagged} x="obs" y="pred" text="label" dy={-9} fontSize={8} />
-        {#if showReg}<RegressionY data={pts} x="obs" y="pred" stroke="black" confidence={0.95} />{/if}
+        {#if showReg}<RegressionY data={pts} x="obs" y="pred" stroke="var(--pkv-ink)" confidence={0.95} />{/if}
         {#if brush.enabled}<Rect {...brush} opacity={0.08} />{/if}
         <Brush bind:brush constrainToDomain stroke={false} />
       </Plot>
@@ -85,7 +90,7 @@
       <Plot height={300} grid inset={6} fx={{ label: '' }} x={{ label: 'Observed' }} y={{ label: 'Predicted' }} color={{ legend: true }}>
         <Line data={facetLines} x="x" y="y" z="k" fx="facet" stroke={(d: any) => (d.k === 'identity' ? '#555' : d.k.includes('95') ? '#d62728' : '#888')} strokeDasharray={(d: any) => (d.k === 'identity' ? 'none' : d.k.includes('95') ? '5 3' : '1 3')} />
         <Dot canvas={pts.length > CANVAS_MIN} data={pts} x="obs" y="pred" fx="layer" fill="layer" r={2} opacity={0.5} />
-        {#if showReg}<RegressionY data={pts} x="obs" y="pred" fx="layer" stroke="black" confidence={0.95} />{/if}
+        {#if showReg}<RegressionY data={pts} x="obs" y="pred" fx="layer" stroke="var(--pkv-ink)" confidence={0.95} />{/if}
       </Plot>
     {/if}
   </div>
@@ -103,5 +108,6 @@
   .stats { font-size: 0.8rem; border-collapse: collapse; margin-bottom: 6px; }
   .stats td, .stats th { padding: 2px 8px; border-bottom: 1px solid #eee; text-align: right; }
   .stats td:first-child, .stats th:first-child { text-align: left; }
-  .legend { font-size: 0.75rem; color: #555; margin: 0; }
+  .legend { font-size: 0.75rem; color: var(--pkv-ink-2); margin: 0; }
+  .hint { font-size: 0.78rem; color: var(--pkv-ink-2); margin: 2px 0; }
 </style>

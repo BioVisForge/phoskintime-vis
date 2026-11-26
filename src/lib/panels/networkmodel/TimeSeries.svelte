@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { Plot, Line, Dot } from 'svelteplot'
+  import { app, pick } from '../../ui/state.svelte'
+  import { Plot, Line, Dot } from '../../plot'
   import type { PanelProps } from '../types'
   import type { Table } from '../../model/types'
   import { trajRows, proteins, layerLabel } from '../common'
@@ -7,11 +8,10 @@
 
   let { bundle, report }: PanelProps = $props()
   let t = $state.raw<Table | null>(null)
-  let protein = $state('')
+  const protein = $derived(pick(app.ctx.protein, t ? proteins(t) : []))
   $effect(() => {
     bundle.table('trajectories').then((x) => {
       t = x
-      protein = proteins(x)[0]
     })
   })
   const rows = $derived(t ? trajRows(t, { protein, best: true }).map((r) => ({ ...r, panel: layerLabel(bundle, r.layer), series: r.psite ?? r.layer })) : [])
@@ -22,7 +22,6 @@
 </script>
 
 {#if !t}<Loading />{:else}
-  <label>Gene <select bind:value={protein}>{#each proteins(t) as p}<option value={p}>{p}</option>{/each}</select></label>
   <Plot height={260} grid fx={{ label: '', domain: bundle.meta.layers.length ? ['protein', 'rna', 'phospho'].map((l) => layerLabel(bundle, l)) : undefined }} x={{ label: 'Time (min)' }} y={{ label: 'FC' }} color={{ legend: true }}>
     <Line data={rows} x="time" y="obs" z="state" fx="panel" stroke="series" strokeOpacity={0.35} />
     <Dot data={rows.filter((r) => r.obs !== null)} x="time" y="obs" fx="panel" stroke="series" symbol="square" r={3} opacity={0.5} />

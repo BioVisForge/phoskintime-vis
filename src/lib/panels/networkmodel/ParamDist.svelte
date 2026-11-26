@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Plot, RectY } from 'svelteplot'
+  import { Plot, RectY } from '../../plot'
   import type { PanelProps } from '../types'
   import { parameterValues } from '../../derive/compare'
   import { groupLabel, histogram } from '../common'

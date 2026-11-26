@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { Plot, Dot, RegressionY, Brush, Line, Rect } from 'svelteplot'
+  import { usePanelState } from '../../ui/panelState'
+  import { untrack } from 'svelte'
+  import { app, pick } from '../../ui/state.svelte'
+  import { Plot, Dot, RegressionY, Brush, Line, Rect } from '../../plot'
   import type { PanelProps } from '../types'
   import type { Table } from '../../model/types'
   import { num, str } from '../../transforms/table'
@@ -9,16 +12,17 @@
   import Loading from '../Loading.svelte'
 
   let { bundle, report }: PanelProps = $props()
+  const ps = usePanelState(untrack(() => bundle))
   let t = $state.raw<Table | null>(null)
   let pt = $state.raw<Table | null>(null)
-  let protein = $state('')
-  let focus = $state(0)
+  const protein = $derived(pick(app.ctx.protein, t ? ([...new Set(str(t, 'protein'))].filter(Boolean) as string[]) : []))
+  let focus = $state(ps.get('focus', 0))
+  $effect(() => ps.set('focus', focus))
   let brush = $state({ enabled: false } as { enabled: boolean; x1?: number; x2?: number; y1?: number; y2?: number })
   $effect(() => {
     Promise.all([bundle.table('perturbation_samples'), bundle.hasTable('perturbations') ? bundle.table('perturbations') : Promise.resolve(null)]).then(([x, y]) => {
       t = x
       pt = y
-      protein = str(x, 'protein')[0] ?? ''
     })
   })
   const wide = $derived.by(() => {
@@ -55,19 +59,18 @@
 </script>
 
 {#if !t}<Loading />{:else}
-  <label>Protein <select bind:value={protein}>{#each [...new Set(str(t, 'protein'))] as p}<option value={p}>{p}</option>{/each}</select></label>
   <div class="grid">
     {#each pairs as p, i}
-      <button class="cell" class:on={i === focus} onclick={() => { focus = i; brush = { enabled: false } }}>
+      <div class="cell" class:on={i === focus} role="button" tabindex="0" aria-pressed={i === focus} aria-label={`Focus pair ${p.a} vs ${p.b}`} onclick={() => { focus = i; brush = { enabled: false } }} onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); focus = i; brush = { enabled: false } } }}>
         <Plot height={170} width={220} grid inset={6} title={`|r| = ${p.r.toFixed(2)}`} x={{ label: paramLabel(bundle, p.a) }} y={{ label: paramLabel(bundle, p.b) }}>
           <Dot data={wide.rows} x={p.a} y={p.b} r={2} fill="#3b6fd8" opacity={0.7} />
           <RegressionY data={wide.rows} x={p.a} y={p.b} stroke="red" confidence={0.95} />
         </Plot>
-      </button>
+      </div>
     {/each}
   </div>
   {#if f}
-    <p class="hint">Brush the plot below to select perturbation samples and show their trajectories (P3).</p>
+    <p class="hint" data-export-skip>Brush the plot below to select perturbation samples and show their trajectories (P3).</p>
     <div class="two">
       <Plot height={300} grid inset={6} x={{ label: paramLabel(bundle, f.a) }} y={{ label: paramLabel(bundle, f.b) }}>
         <Dot data={wide.rows} x={f.a} y={f.b} r={3} fill={(d: any) => (inBrush(d) ? '#d62728' : '#999')} />
@@ -78,7 +81,7 @@
       <Plot height={300} grid x={{ type: 'symlog', ticks: TIME_TICKS, label: 'Time (min), symlog' }} y={{ label: 'Model FC of selected samples' }} color={{ legend: true }}>
         <Line data={selTraj} x="time" y="value" z={(d: any) => d.perturbation + d.state} stroke="state" strokeOpacity={0.6} />
       </Plot>
-      {:else}<p class="hint">No samples selected: drag a box on the left plot.</p>{/if}
+      {:else}<p class="hint" data-export-skip>No samples selected: drag a box on the left plot.</p>{/if}
     </div>
     <Selection ids={selected} label="perturbation samples selected" name={`perturbations_${protein}`} />
   {/if}
@@ -86,8 +89,8 @@
 
 <style>
   .grid { display: flex; flex-wrap: wrap; gap: 4px; }
-  .cell { padding: 0; border: 1px solid #ddd; background: #fff; }
-  .cell.on { border-color: #3b6fd8; }
+  .cell { padding: 0; border: 1px solid var(--pkv-border); background: var(--pkv-surface); border-radius: 4px; cursor: pointer; }
+  .cell.on { border-color: var(--pkv-accent); box-shadow: 0 0 0 1px var(--pkv-accent); }
   .two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .hint { font-size: 0.8rem; color: #555; margin: 6px 0 0; }
+  .hint { font-size: 0.8rem; color: var(--pkv-ink-2); margin: 6px 0 0; }
 </style>

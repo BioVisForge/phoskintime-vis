@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { Plot, Dot, RuleY } from 'svelteplot'
+  import { usePanelState } from '../../ui/panelState'
+  import { untrack } from 'svelte'
+  import { Plot, Dot, RuleY } from '../../plot'
   import type { PanelProps } from '../types'
   import { loadPosterior } from './posterior'
   import { posteriorColumn, credible } from '../../derive/trajectories'
@@ -7,9 +9,12 @@
   import Loading from '../Loading.svelte'
 
   let { bundle, report }: PanelProps = $props()
+  const ps = usePanelState(untrack(() => bundle))
   let post = $state.raw<Awaited<ReturnType<typeof loadPosterior>> | null>(null)
-  let group = $state('')
-  let log = $state(true)
+  let group = $state(ps.get('group', ''))
+  $effect(() => ps.set('group', group))
+  let log = $state(ps.get('log', true))
+  $effect(() => ps.set('log', log))
   $effect(() => {
     loadPosterior(bundle).then((p) => (post = p))
   })
@@ -27,7 +32,7 @@
   <label>Group <select value={g} onchange={(e) => (group = e.currentTarget.value)}>{#each groups as x}<option value={x}>{groupLabel(bundle, x)}</option>{/each}</select></label>
   <label><input type="checkbox" bind:checked={log} /> log x</label>
   <Plot height={Math.max(160, 14 * rows.length + 60)} marginLeft={190} grid x={{ type: log ? 'log' : 'linear', label: 'posterior median and 90 % interval' }} y={{ label: '', domain: rows.map((r) => r.label) }}>
-    <RuleY data={rows} y="label" x1="q05" x2="q95" stroke="#333" />
+    <RuleY data={rows} y="label" x1="q05" x2="q95" stroke="var(--pkv-ink)" />
     <Dot data={rows} x="q50" y="label" fill="#1f77b4" r={3} title={(d: any) => `${d.label}: median ${d.q50.toPrecision(4)} [${d.q05.toPrecision(4)}, ${d.q95.toPrecision(4)}]`} />
   </Plot>
 {/if}

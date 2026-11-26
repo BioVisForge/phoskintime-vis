@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { Plot, Dot, Line, Vector, Text } from 'svelteplot'
+  import { app, pick } from '../../ui/state.svelte'
+  import { Plot, Dot, Line, Text } from '../../plot'
+  import PixelArrows from '../../plot/PixelArrows.svelte'
   import type { PanelProps } from '../types'
   import type { Table } from '../../model/types'
   import { num, str } from '../../transforms/table'
@@ -8,12 +10,9 @@
 
   let { bundle, report, method }: PanelProps & { method: 'pca' | 'tsne' } = $props()
   let t = $state.raw<Table | null>(null)
-  let protein = $state('')
   $effect(() => {
     bundle.table('embeddings').then((x) => {
       t = x
-      const P = str(x, 'protein'), M = str(x, 'method')
-      protein = P.find((p, i) => M[i] === method) ?? ''
     })
   })
   const pts = $derived.by(() => {
@@ -28,6 +27,7 @@
   })
   const arrows = $derived(finiteDifferenceArrows(pts.map((p) => p.time), pts.map((p) => p.x), pts.map((p) => p.y)))
   const proteinsFor = $derived(t ? [...new Set(str(t, 'protein').filter((p, i) => str(t!, 'method')[i] === method))].filter(Boolean) as string[] : [])
+  const protein = $derived(pick(app.ctx.protein, proteinsFor))
   const ax = (k: 'x' | 'y') => {
     const ev = pts[0]?.[k === 'x' ? 'evx' : 'evy']
     const base = method === 'pca' ? (k === 'x' ? 'PC1' : 'PC2') : k === 'x' ? 't-SNE 1' : 't-SNE 2'
@@ -45,11 +45,10 @@
 </script>
 
 {#if !t}<Loading />{:else}
-  <label>Protein <select bind:value={protein}>{#each proteinsFor as p}<option value={p}>{p}</option>{/each}</select></label>
   <Plot height={360} grid inset={14} x={{ label: ax('x') }} y={{ label: ax('y') }} color={{ legend: true, label: 'Time (min)', type: 'log' }}>
     <Line data={pts} x="x" y="y" stroke="#c33" strokeOpacity={0.35} />
-    <Vector data={arrows} x="x" y="y" rotate="angleDeg" length={() => 14} stroke="#444" anchor="middle" />
-    <Dot data={pts} x="x" y="y" fill={(d: any) => Math.max(d.time, 0.1)} stroke="black" r={5} title={(d: any) => `t = ${d.time} min`} />
+    <PixelArrows data={arrows.map((a) => ({ ...a, x0: a.x - a.dx / 2, y0: a.y - a.dy / 2, x1: a.x + a.dx / 2, y1: a.y + a.dy / 2 }))} length={14} stroke="#444" />
+    <Dot data={pts} x="x" y="y" fill={(d: any) => Math.max(d.time, 0.1)} stroke="var(--pkv-ink)" r={5} title={(d: any) => `t = ${d.time} min`} />
     <Text data={pts} x="x" y="y" text="index" dy={-10} fontSize={9} />
   </Plot>
 {/if}
