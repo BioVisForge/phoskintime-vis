@@ -26,7 +26,7 @@ export function deltasCsv(c: Comparison): string {
 export function reportHtml(c: Comparison, root: HTMLElement): string {
   const figs = [...root.querySelectorAll<HTMLElement>('[data-figure]')].map((el) => {
     const title = el.closest('section')?.querySelector('h3')?.textContent ?? ''
-    let svg = ''
+    let svg: string
     try {
       svg = figureToSvg(el).svg
     } catch {

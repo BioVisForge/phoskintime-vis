@@ -7,6 +7,7 @@
   import { proteins, layerLabel, TIME_TICKS } from '../common'
   import { app } from '../../ui/state.svelte'
   import Loading from '../Loading.svelte'
+  import FastLines from '../shared/FastLines.svelte'
 
   let { bundle, report }: PanelProps = $props()
   let t = $state.raw<Table | null>(null)
@@ -29,11 +30,21 @@
     // quantiles across all series of a layer at each exact stored time point
     return envelopes(flat.L, flat.T, flat.E).map((e) => ({ ...e, panel: layerLabel(bundle, e.key) }))
   })
+  // raw mode: per layer, typed arrays of all series (sorted by series, then time)
   const raw = $derived.by(() => {
     if (!flat || !app.rawLines) return []
-    const out = []
-    for (let i = 0; i < flat.T.length; i++) out.push({ panel: layerLabel(bundle, flat.L[i]!), z: flat.S[i]! + '|' + flat.SID[i], time: flat.T[i], v: flat.E[i], hi: flat.P[i] === protein })
-    return out
+    return layers.map((l) => {
+      const idx: number[] = []
+      for (let i = 0; i < flat!.T.length; i++) if (flat!.L[i] === l) idx.push(i)
+      const key = (i: number) => flat!.S[i]! + '\u0000' + flat!.SID[i]
+      idx.sort((a, b) => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : flat!.T[a] - flat!.T[b]))
+      const xs = Float64Array.from(idx, (i) => flat!.T[i])
+      const ys = Float64Array.from(idx, (i) => flat!.E[i])
+      const starts: number[] = []
+      idx.forEach((i, k) => (k === 0 || key(i) !== key(idx[k - 1])) && starts.push(k))
+      const fin = Array.from(ys).filter(Number.isFinite)
+      return { layer: l, panel: layerLabel(bundle, l), xs, ys, starts: Int32Array.from(starts), ydom: [Math.min(...fin), Math.max(...fin)], xdom: [Math.min(...xs), Math.max(...xs)] }
+    })
   })
   const hi = $derived.by(() => {
     if (!flat) return []
@@ -49,14 +60,22 @@
 
 {#if !flat}<Loading />{:else}
   <label>Highlight gene <select bind:value={protein}>{#each proteins(t!) as p}<option value={p}>{p}</option>{/each}</select></label>
-  <Plot height={280} grid fx={{ label: '', domain: layers.map((l) => layerLabel(bundle, l)) }} x={{ type: 'symlog', ticks: TIME_TICKS, label: 'Time (min), symlog' }} y={{ label: 'Predicted FC' }}>
-    {#if app.rawLines}
-      <Line canvas data={raw} x="time" y="v" z="z" fx="panel" stroke="#9aa3ad" strokeOpacity={0.15} strokeWidth={0.6} />
-    {:else}
+  {#if app.rawLines}
+    <div class="three">
+      {#each raw as r}
+        <Plot height={280} grid title={r.panel} x={{ type: 'symlog', ticks: TIME_TICKS, domain: r.xdom, label: 'Time (min), symlog' }} y={{ domain: r.ydom, label: 'Predicted FC' }}>
+          <FastLines xs={r.xs} ys={r.ys} starts={r.starts} />
+          <Line data={hi.filter((h) => h.panel === r.panel)} x="time" y="v" z="z" stroke="#d62728" strokeWidth={1.8} />
+        </Plot>
+      {/each}
+    </div>
+  {:else}
+    <Plot height={280} grid fx={{ label: '', domain: layers.map((l) => layerLabel(bundle, l)) }} x={{ type: 'symlog', ticks: TIME_TICKS, label: 'Time (min), symlog' }} y={{ label: 'Predicted FC' }}>
       <AreaY data={bands} x="time" y1="q01" y2="q99" fx="panel" fill="#a9c4e4" fillOpacity={0.35} />
       <AreaY data={bands} x="time" y1="q05" y2="q95" fx="panel" fill="#6f9bd1" fillOpacity={0.45} />
       <Line data={bands} x="time" y="q50" fx="panel" stroke="#1f4e8c" strokeWidth={1.5} />
-    {/if}
-    <Line data={hi} x="time" y="v" z="z" fx="panel" stroke="#d62728" strokeWidth={1.8} />
-  </Plot>
+      <Line data={hi} x="time" y="v" z="z" fx="panel" stroke="#d62728" strokeWidth={1.8} />
+    </Plot>
+  {/if}
 {/if}
+<style>.three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }</style>

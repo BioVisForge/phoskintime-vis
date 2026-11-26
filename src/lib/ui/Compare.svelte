@@ -4,7 +4,6 @@
   import { compareRuns, type Comparison } from '../derive/compare'
   import { sortDeltas } from '../transforms/compare'
   import { trajRows, layerLabel, paramLabel, fmt, TIME_TICKS, type TrajRow } from '../panels/common'
-  import type { LoadedBundle } from '../model/bundle'
   import Section from '../compare/Section.svelte'
   import { deltasCsv, reportHtml } from '../compare/report'
   import { download } from '../export/figure'
@@ -16,7 +15,6 @@
   let layer = $state('')
   let topN = $state(40)
   let trajA = $state.raw<TrajRow[]>([])
-  let trajB = $state.raw<TrajRow[]>([])
   let others = $state.raw<{ label: string; rows: TrajRow[] }[]>([])
   let root: HTMLElement | undefined = $state()
   const A = $derived(app.byId(app.compareA))
@@ -29,11 +27,10 @@
     if (!a || !b || a === b) return
     busy = true
     const extra = app.bundles.filter((x) => x !== a && x !== b && x.hasTable('trajectories'))
-    Promise.all([compareRuns(a, b), a.table('trajectories'), b.table('trajectories'), ...extra.map((x) => x.table('trajectories'))])
-      .then(([c, ta, tb, ...te]) => {
+    Promise.all([compareRuns(a, b), a.table('trajectories'), ...extra.map((x) => x.table('trajectories'))])
+      .then(([c, ta, ...te]) => {
         cmp = c
         trajA = trajRows(ta, { best: true })
-        trajB = trajRows(tb, { best: true })
         others = te.map((t, i) => ({ label: extra[i].label, rows: trajRows(t, { best: true }) }))
         ;(window as any).__compareReady = performance.now()
       })
@@ -73,7 +70,6 @@
     })
   })
   const gofLong = $derived(gofRows.flatMap((g) => [{ subset: g.subset, run: 'A', rmse: g.rmse_a ?? NaN }, { subset: g.subset, run: 'B', rmse: g.rmse_b ?? NaN }]))
-  const short = (b: LoadedBundle | undefined) => (b ? `${b.label} (${b.meta.gitCommit.slice(0, 7)})` : '')
 
   function exportReport() {
     if (!cmp || !root) return
@@ -147,7 +143,7 @@
       {/if}
     </Section>
 
-    <Section id="overlay" title="Trajectory overlay, A vs B" patterns={['P5', 'P6']} rows={overlay} note={`y1 = A (grey), y2 = B (black). Red where B > A, blue where B < A. Both are best-fit model series on the same time grid. Observations (orange) are points only. Other open runs are thin coloured lines. Default state: the one with the largest |B − A|.`}>
+    <Section id="overlay" title="Trajectory overlay, A vs B" patterns={['P5', 'P6']} rows={overlay} note="y1 = A (grey), y2 = B (black). Red where B > A, blue where B < A. Both are best-fit model series on the same time grid. Observations (orange) are points only. Other open runs are thin coloured lines. Default state: the one with the largest |B − A|.">
       <label>State <select data-testid="compare-state" value={S} onchange={(e) => (state_ = e.currentTarget.value)}>{#each states as s}<option value={s}>{s}</option>{/each}</select></label>
       <Plot height={300} grid x={{ type: 'symlog', ticks: TIME_TICKS, label: 'Time (min), symlog' }} y={{ label: 'Predicted FC' }} color={{ legend: others.length > 0 }}>
         <DifferenceY data={overlay} x="time" y1="a" y2="b" positiveFill="#d6604d" negativeFill="#4393c3" fillOpacity={0.4} />

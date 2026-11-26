@@ -3,7 +3,7 @@
   import type { PanelProps } from '../types'
   import type { Table } from '../../model/types'
   import { gofPoints, gofByLayer, protwiseOffsets, type GofPoint } from '../../derive/trajectories'
-  import { layerLabel, fmt, trajRows, TIME_TICKS } from '../common'
+  import { layerLabel, fmt, trajRows, TIME_TICKS, CANVAS_MIN } from '../common'
   import Selection from './Selection.svelte'
   import Loading from '../Loading.svelte'
 
@@ -69,7 +69,7 @@
     <div>
       <Plot height={380} grid inset={6} aspectRatio={1} title="Overall (brush to select points)" x={{ label: 'Observed' }} y={{ label: workflow === 'protwise' ? 'Fitted' : 'Predicted' }} color={{ legend: true }}>
         <Line data={bandLines(overall.min, overall.max, overall.d95, overall.d99)} x="x" y="y" z="k" stroke={(d: any) => (d.k === 'identity' ? '#555' : d.k.includes('95') ? '#d62728' : '#888')} strokeDasharray={(d: any) => (d.k === 'identity' ? 'none' : d.k.includes('95') ? '5 3' : '1 3')} />
-        <Dot data={pts} x="obs" y="pred" fill="layer" r={2.5} opacity={0.55} stroke="black" strokeWidth={0.3} />
+        <Dot canvas={pts.length > CANVAS_MIN} data={pts} x="obs" y="pred" fill="layer" r={2.5} opacity={0.55} stroke="black" strokeWidth={0.3} />
         <!-- P4: ring glyph for points beyond the 95 % band -->
         <CustomMark data={flagged} x="obs" y="pred">
           {#snippet mark({ record })}<circle cx={record.x} cy={record.y} r="6" fill="none" stroke="#d62728" stroke-width="1.5"><title>{record.datum.label}: residual {record.datum.resid.toFixed(3)}</title></circle>{/snippet}
@@ -84,7 +84,7 @@
     {#if workflow === 'networkmodel'}
       <Plot height={300} grid inset={6} fx={{ label: '' }} x={{ label: 'Observed' }} y={{ label: 'Predicted' }} color={{ legend: true }}>
         <Line data={facetLines} x="x" y="y" z="k" fx="facet" stroke={(d: any) => (d.k === 'identity' ? '#555' : d.k.includes('95') ? '#d62728' : '#888')} strokeDasharray={(d: any) => (d.k === 'identity' ? 'none' : d.k.includes('95') ? '5 3' : '1 3')} />
-        <Dot data={pts} x="obs" y="pred" fx="layer" fill="layer" r={2} opacity={0.5} />
+        <Dot canvas={pts.length > CANVAS_MIN} data={pts} x="obs" y="pred" fx="layer" fill="layer" r={2} opacity={0.5} />
         {#if showReg}<RegressionY data={pts} x="obs" y="pred" fx="layer" stroke="black" confidence={0.95} />{/if}
       </Plot>
     {/if}

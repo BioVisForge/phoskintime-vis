@@ -73,3 +73,6 @@ export function histogram(values: number[], bins: number) {
 
 /** Explicit ticks for symlog time axes (automatic symlog ticks can come out negative). */
 export const TIME_TICKS = [0, 1, 10, 100, 1000]
+
+/** Marks with more elements than this draw on canvas (addendum rule; also avoids a Svelte runtime cost that grows with the number of SVG elements). */
+export const CANVAS_MIN = 1000

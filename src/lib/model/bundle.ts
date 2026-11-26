@@ -3,6 +3,7 @@ import { sha256Hex } from '../io/sha256'
 import { parseNpy } from '../io/npy'
 import { decodeTable } from '../workers/client'
 import type { DataSource } from '../sources/types'
+import { enqueueRender } from '../ui/renderQueue'
 import type { BundleMeta, FileCheck, FileEntry, NpyArray, Table, VerifyState } from './types'
 
 /** An opened bundle: validated manifest, adapted metadata, lazy table/array access, sha256 checks. */
@@ -61,7 +62,18 @@ export class LoadedBundle {
     return m ? m.reason : null
   }
 
+  /**
+   * Decoded table (cached). In the browser each caller is resolved in its own frame (render
+   * queue), so panels waiting on the same table render one after another instead of in one
+   * long synchronous update.
+   */
   table(name: string): Promise<Table> {
+    const p = this.tableRaw(name)
+    if (typeof window === 'undefined') return p
+    return p.then((t) => new Promise<Table>((res) => enqueueRender(() => res(t))))
+  }
+
+  private tableRaw(name: string): Promise<Table> {
     let p = this.tables.get(name)
     if (!p) {
       const e = this.tableEntry(name)

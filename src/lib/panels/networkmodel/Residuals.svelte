@@ -4,7 +4,7 @@
   import type { Table } from '../../model/types'
   import { gofPoints } from '../../derive/trajectories'
   import { mean } from '../../transforms/stats'
-  import { layerLabel, fmt, TIME_TICKS } from '../common'
+  import { layerLabel, fmt, TIME_TICKS, CANVAS_MIN } from '../common'
   import Ridgeline from '../shared/Ridgeline.svelte'
   import Loading from '../Loading.svelte'
 
@@ -28,7 +28,7 @@
 {#if !t}<Loading />{:else}
   <p class="summ">{#each summ as s}<span><b>{s.panel}</b>: Bias {fmt(s.bias, 4)}, RMSE {fmt(s.rmse, 4)} (n={s.n})</span>{/each}</p>
   <Plot height={240} grid fx={{ label: '' }} x={{ type: 'symlog', ticks: TIME_TICKS, label: 'Time (min), symlog' }} y={{ label: 'Residual (pred − obs)' }}>
-    <Dot data={pts} x="time" y="resid" fx="panel" r={1.6} fill="#555" opacity={0.45} />
+    <Dot canvas={pts.length > CANVAS_MIN} data={pts} x="time" y="resid" fx="panel" r={1.6} fill="#555" opacity={0.45} />
     <RuleY y={0} stroke="red" strokeDasharray="4 3" />
   </Plot>
   <div class="two">

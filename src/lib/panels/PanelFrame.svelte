@@ -5,6 +5,7 @@
   import { download, figureToPng, figureToSvg } from '../export/figure'
   import { toCsv } from '../transforms/table'
   import RawRows from '../ui/RawRows.svelte'
+  import { enqueueRender } from '../ui/renderQueue'
 
   let { def, bundle }: { def: PanelDef; bundle: LoadedBundle } = $props()
   const avail = $derived(availability(def, bundle))
@@ -22,10 +23,10 @@
     if (!host || visible) return
     const io = new IntersectionObserver((es) => {
       if (es.some((e) => e.isIntersecting)) {
-        visible = true
         io.disconnect()
+        enqueueRender(() => (visible = true))
       }
-    }, { rootMargin: '300px' })
+    }, { rootMargin: '150px' })
     io.observe(host)
     return () => io.disconnect()
   })

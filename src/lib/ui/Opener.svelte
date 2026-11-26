@@ -68,6 +68,13 @@
   <strong>Open a run bundle</strong> — drop <code>&lt;run&gt;.pkt/</code> folders or <code>&lt;run&gt;.pkt.zip</code> files here, or
   <label class="btn">folder… <input data-testid="open-folder" type="file" webkitdirectory multiple onchange={(e) => openFiles(Array.from(e.currentTarget.files ?? []))} /></label>
   <label class="btn">zip… <input data-testid="open-zip" type="file" accept=".zip" multiple onchange={(e) => openFiles(Array.from(e.currentTarget.files ?? []))} /></label>
+  {#if __BUILD_MODE__ === 'pages'}
+    <span>or a synthetic demo:
+      {#each ['small-protwise', 'network', 'network-after-fix'] as d}
+        <button onclick={() => openSafe(async () => new BundleZipSource(`${d}.pkt.zip`, new Uint8Array(await (await fetch(`demo/${d}.pkt.zip`)).arrayBuffer())), d)}>{d}</button>
+      {/each}
+    </span>
+  {/if}
   {#if busy}<span class="busy">opening…</span>{/if}
   <span class="privacy">Everything stays in this browser tab: nothing is uploaded.</span>
 </div>
