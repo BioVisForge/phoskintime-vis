@@ -632,6 +632,42 @@
           "nullable": false
         }
       ]
+    },
+    "perturbation_samples": {
+      "core": false,
+      "description": "Parameter values of each sensitivity/perturbation sample and its RMSE (protwise `*_perturbations` sheets carry the same information).",
+      "columns": [
+        {
+          "name": "workflow",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "protein",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "perturbation",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "parameter",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "value",
+          "dtype": "float64",
+          "nullable": false
+        },
+        {
+          "name": "rmse",
+          "dtype": "float64",
+          "nullable": true
+        }
+      ]
     }
   },
   "arrays": {

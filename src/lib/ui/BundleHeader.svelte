@@ -5,15 +5,15 @@
   let { bundle }: { bundle: LoadedBundle } = $props()
   const m = $derived(bundle.meta)
   let openIssue = $state<string | null>(null)
-  const state = $derived(app.verifyProgress[m.bundleId] ?? bundle.verifyState)
+  const vstate = $derived(app.verifyProgress[m.bundleId] ?? bundle.verifyState)
   const issueUrl = (commit: string) => `https://github.com/bibymaths/phoskintime/blob/${commit}/KNOWN_ISSUES.md`
   const bad = $derived(bundle.checks.filter((c) => !c.ok))
 </script>
 
 <div class="hdr" data-testid="bundle-header">
   <div class="row">
-    <span class="badge" class:ok={state === 'verified'} class:bad={state === 'mismatch' || state === 'error'} data-testid="verify-badge" data-state={state}>
-      {state === 'verified' ? '✔ sha256 verified' : state === 'mismatch' ? '✖ sha256 mismatch' : state === 'error' ? '✖ files missing' : state}
+    <span class="badge" class:ok={vstate === 'verified'} class:bad={vstate === 'mismatch' || vstate === 'error'} data-testid="verify-badge" data-state={vstate}>
+      {vstate === 'verified' ? '✔ sha256 verified' : vstate === 'mismatch' ? '✖ sha256 mismatch' : vstate === 'error' ? '✖ files missing' : vstate}
     </span>
     <code title="bundle_id" data-testid="bundle-id">{m.bundleId}</code>
     <span>PhosKinTime <b>{m.phoskintimeVersion}</b></span>

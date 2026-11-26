@@ -26,7 +26,7 @@
 {/each}
 
 <style>
-  .toc { display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.85rem; align-items: center; position: sticky; top: 0; background: #f4f5f7; padding: 6px 0; z-index: 5; }
+  .toc { display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.85rem; align-items: center; background: #f4f5f7; padding: 6px 0; z-index: 5; }
   .count { color: #666; margin-left: auto; }
   h2 { font-size: 1.1rem; margin: 18px 0 4px; border-bottom: 1px solid #ccd; }
 </style>

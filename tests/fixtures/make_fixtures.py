@@ -300,6 +300,18 @@ def make_small_protwise(drop: set[str] | None = None, name: str = "small-protwis
                         pert[k].append(x)
     b.add_table("perturbations", pert)
 
+    ps = {k: [] for k in ["workflow", "protein", "perturbation", "parameter", "value", "rmse"]}
+    for p in proteins:
+        pnames = [n for n in params if n.split("_")[1] == p][:4]
+        for j in range(30):
+            base = rng.lognormal(0, 0.3, len(pnames))
+            base[1] = base[0] * rng.uniform(0.8, 1.2)  # a correlated pair
+            rmse = float(abs(rng.normal(0.1, 0.03)))
+            for n, v in zip(pnames, base):
+                for k, x in zip(ps.keys(), ["protwise", p, f"pert{j}", n, float(v), rmse]):
+                    ps[k].append(x)
+    b.add_table("perturbation_samples", ps)
+
     prof = {k: [] for k in ["workflow", "protein", "parameter", "parameter_value", "state", "time", "value"]}
     for p in proteins[:3]:
         for pn in [f"A_{p}", f"D_{p}"]:
@@ -353,35 +365,40 @@ def make_network(variant: str = "base") -> Bundle:
     rng_fix = np.random.default_rng(7)
 
     # parameters: 200
-    groups = [{"id": "A", "label": "synthesis (synthetic label)", "unit": "1/min"},
-              {"id": "B", "label": "degradation (synthetic label)", "unit": "1/min"},
-              {"id": "C", "label": "translation (synthetic label)", "unit": "1/min"},
-              {"id": "E", "label": None, "unit": None},
-              {"id": "c_k", "label": "kinase scale (synthetic label)", "unit": "dimensionless"},
-              {"id": "tf_scale", "label": "TF scale (synthetic label)", "unit": "dimensionless"}]
+    # group ids and name patterns follow networkmodel's own naming (A_i[<protein>], c_k[<kinase>],
+    # Dp_i[<protein>_<site>], tf_scale). Labels are synthetic; E_i and Dp_i deliberately have none (N8).
+    groups = [{"id": "A_i", "label": "A (synthetic label)", "unit": None},
+              {"id": "B_i", "label": "B (synthetic label)", "unit": None},
+              {"id": "C_i", "label": "C (synthetic label)", "unit": None},
+              {"id": "D_i", "label": "D (synthetic label)", "unit": None},
+              {"id": "E_i", "label": None, "unit": None},
+              {"id": "c_k", "label": "c_k (synthetic label)", "unit": None},
+              {"id": "Dp_i", "label": None, "unit": None},
+              {"id": "tf_scale", "label": "tf_scale (synthetic label)", "unit": None}]
     gl = {g["id"]: g for g in groups}
     plist = []
-    for g in ["A", "B", "C", "E"]:
-        for p in proteins[:40]:
-            plist.append((f"{g}_{p}", g, p, None))
+    for g in ["A_i", "B_i", "C_i", "D_i", "E_i"]:
+        for p in proteins[:30]:
+            plist.append((f"{g}[{p}]", g, p, None))
     for k in kinases:
-        plist.append((f"c_k_{k}", "c_k", None, k))
-    for p in proteins[:10]:
-        plist.append((f"tf_scale_{p}", "tf_scale", p, None))
+        plist.append((f"c_k[{k}]", "c_k", None, k))
+    for p in proteins[:19]:
+        plist.append((f"Dp_i[{p}_{sites[p][0]}]", "Dp_i", p, None))
+    plist.append(("tf_scale", "tf_scale", None, None))
     assert len(plist) == 200
     base_vals = rng.lognormal(-1.5, 0.9, len(plist))
     vals = base_vals.copy()
     if fix:
         f = rng_fix.lognormal(0, 0.12, len(plist))
-        e_idx = [i for i, x in enumerate(plist) if x[1] == "E"]
+        e_idx = [i for i, x in enumerate(plist) if x[1] == "E_i"]
         f[e_idx] *= 1.8  # the "fix" mostly moves the E group
         vals = base_vals * f
     order = list(range(len(plist)))
     extra = []
     if variant == "reordered":
         order = list(np.random.default_rng(3).permutation(len(plist)))
-        order = [i for i in order if plist[i][0] != "tf_scale_G010"]  # one parameter removed ...
-        extra = [("Dp_G001", "Dp", "G001", None)]  # ... and one added: unmatched rows on both sides
+        order = [i for i in order if plist[i][0] != "tf_scale"]  # one parameter removed ...
+        extra = [("Dp_i[G050_S1]", "Dp_i", "G050", None)]  # ... and one added: unmatched rows on both sides
     pmeta = []
     prow = {k: [] for k in ["workflow", "scenario", "sample_id", "name", "group", "label", "protein", "psite", "kinase", "value", "lower", "upper", "unit"]}
     plist_out = [plist[i] for i in order] + extra
@@ -390,7 +407,7 @@ def make_network(variant: str = "base") -> Bundle:
         vals_out = vals_out[:-1]
     for (n, g, p, k), v in zip(plist_out, vals_out):
         gm = gl.get(g, {"label": None, "unit": None})
-        label = None if g in ("E", "Dp") else gm["label"]
+        label = gm["label"]
         pmeta.append({"name": n, "label": label, "group": g, "unit": gm["unit"]})
         for key, val in zip(prow.keys(), ["networkmodel", "fit", "best", n, g, label, p, None, k, float(v), 1e-5, 100.0, gm["unit"]]):
             prow[key].append(val)

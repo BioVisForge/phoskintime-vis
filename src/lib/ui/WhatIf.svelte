@@ -1,1 +1,2 @@
-<p>What-if: behind a feature flag.</p>
+<script lang="ts"></script>
+<p>What-if.</p>
