@@ -15,6 +15,9 @@ export default defineConfig(({ mode }) => {
       __APP_VERSION__: JSON.stringify(process.env.npm_package_version ?? '0.0.0'),
     },
     worker: { format: 'iife' },
+    resolve: {
+      alias: Object.fromEntries(['html2canvas', 'dompurify', 'canvg'].map((m) => [m, new URL('./src/lib/export/empty.ts', import.meta.url).pathname])),
+    },
     build: {
       outDir: single ? 'dist-single' : 'dist',
       emptyOutDir: true,
