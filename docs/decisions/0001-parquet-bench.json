@@ -1,0 +1,56 @@
+[
+ {
+  "browser": "chromium",
+  "version": "159.0.8154.6",
+  "file": "/@fs/home/abhinav/Documents/phoskintime-vis/tests/fixtures/out/network.pkt/tables/trajectories.parquet",
+  "bytes": 1177960,
+  "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/159.0.8154.6 Safari/537.36",
+  "res": [
+   {
+    "name": "hyparquet",
+    "first_ms": 110.9,
+    "median_ms": 57.9,
+    "min_ms": 51.3
+   },
+   {
+    "name": "parquet-wasm+arrow",
+    "first_ms": 668.6,
+    "median_ms": 424.8,
+    "min_ms": 417.6
+   },
+   {
+    "name": "duckdb-wasm",
+    "first_ms": 2243.7,
+    "median_ms": 447.5,
+    "min_ms": 439.5
+   }
+  ]
+ },
+ {
+  "browser": "firefox",
+  "version": "159.0",
+  "file": "/@fs/home/abhinav/Documents/phoskintime-vis/tests/fixtures/out/network.pkt/tables/trajectories.parquet",
+  "bytes": 1177960,
+  "ua": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0",
+  "res": [
+   {
+    "name": "hyparquet",
+    "first_ms": 104,
+    "median_ms": 86,
+    "min_ms": 76
+   },
+   {
+    "name": "parquet-wasm+arrow",
+    "first_ms": 903,
+    "median_ms": 717,
+    "min_ms": 695
+   },
+   {
+    "name": "duckdb-wasm",
+    "first_ms": 2800,
+    "median_ms": 667,
+    "min_ms": 657
+   }
+  ]
+ }
+]
