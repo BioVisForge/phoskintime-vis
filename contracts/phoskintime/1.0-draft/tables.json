@@ -1,0 +1,666 @@
+{
+  "bundle_schema": "1.0",
+  "status": "DRAFT",
+  "tables": {
+    "trajectories": {
+      "core": true,
+      "description": "Observed and predicted values per state over time. value_obs and value_pred are null where there is no observation or prediction; nulls are gaps, never zeros.",
+      "columns": [
+        {
+          "name": "workflow",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "scenario",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "sample_id",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "layer",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "protein",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "psite",
+          "dtype": "string",
+          "nullable": true
+        },
+        {
+          "name": "state",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "time",
+          "dtype": "float64",
+          "nullable": false,
+          "unit": "from manifest"
+        },
+        {
+          "name": "value_obs",
+          "dtype": "float64",
+          "nullable": true
+        },
+        {
+          "name": "value_pred",
+          "dtype": "float64",
+          "nullable": true
+        }
+      ]
+    },
+    "parameters": {
+      "core": true,
+      "description": "Fitted parameter values. name is the key; label/group/unit are copied from the manifest parameter metadata and may be null.",
+      "columns": [
+        {
+          "name": "workflow",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "scenario",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "sample_id",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "name",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "group",
+          "dtype": "string",
+          "nullable": true
+        },
+        {
+          "name": "label",
+          "dtype": "string",
+          "nullable": true
+        },
+        {
+          "name": "protein",
+          "dtype": "string",
+          "nullable": true
+        },
+        {
+          "name": "psite",
+          "dtype": "string",
+          "nullable": true
+        },
+        {
+          "name": "kinase",
+          "dtype": "string",
+          "nullable": true
+        },
+        {
+          "name": "value",
+          "dtype": "float64",
+          "nullable": false
+        },
+        {
+          "name": "lower",
+          "dtype": "float64",
+          "nullable": true
+        },
+        {
+          "name": "upper",
+          "dtype": "float64",
+          "nullable": true
+        },
+        {
+          "name": "unit",
+          "dtype": "string",
+          "nullable": true
+        }
+      ]
+    },
+    "state_index": {
+      "core": true,
+      "description": "State order of the ODE system; state_order_sha256 is computed over the state column in index order.",
+      "columns": [
+        {
+          "name": "index",
+          "dtype": "int64",
+          "nullable": false
+        },
+        {
+          "name": "state",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "layer",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "protein",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "psite",
+          "dtype": "string",
+          "nullable": true
+        }
+      ]
+    },
+    "metrics": {
+      "core": true,
+      "description": "Scalar metrics in long form. protein and layer are null for overall metrics.",
+      "columns": [
+        {
+          "name": "workflow",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "scenario",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "layer",
+          "dtype": "string",
+          "nullable": true
+        },
+        {
+          "name": "protein",
+          "dtype": "string",
+          "nullable": true
+        },
+        {
+          "name": "metric",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "value",
+          "dtype": "float64",
+          "nullable": true
+        }
+      ]
+    },
+    "sensitivity": {
+      "core": true,
+      "description": "Morris elementary-effects summary.",
+      "columns": [
+        {
+          "name": "workflow",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "protein",
+          "dtype": "string",
+          "nullable": true
+        },
+        {
+          "name": "output",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "parameter",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "mu",
+          "dtype": "float64",
+          "nullable": true
+        },
+        {
+          "name": "mu_star",
+          "dtype": "float64",
+          "nullable": false
+        },
+        {
+          "name": "sigma",
+          "dtype": "float64",
+          "nullable": false
+        },
+        {
+          "name": "mu_star_conf",
+          "dtype": "float64",
+          "nullable": true
+        }
+      ]
+    },
+    "embeddings": {
+      "core": true,
+      "description": "Low-dimensional embeddings (PCA, t-SNE).",
+      "columns": [
+        {
+          "name": "workflow",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "protein",
+          "dtype": "string",
+          "nullable": true
+        },
+        {
+          "name": "method",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "point_id",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "label",
+          "dtype": "string",
+          "nullable": true
+        },
+        {
+          "name": "time",
+          "dtype": "float64",
+          "nullable": true
+        },
+        {
+          "name": "x",
+          "dtype": "float64",
+          "nullable": false
+        },
+        {
+          "name": "y",
+          "dtype": "float64",
+          "nullable": false
+        },
+        {
+          "name": "explained_variance_x",
+          "dtype": "float64",
+          "nullable": true
+        },
+        {
+          "name": "explained_variance_y",
+          "dtype": "float64",
+          "nullable": true
+        }
+      ]
+    },
+    "convergence": {
+      "core": true,
+      "description": "Optimizer objective per iteration and start.",
+      "columns": [
+        {
+          "name": "workflow",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "run",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "iteration",
+          "dtype": "int64",
+          "nullable": false
+        },
+        {
+          "name": "objective",
+          "dtype": "float64",
+          "nullable": true
+        },
+        {
+          "name": "component",
+          "dtype": "string",
+          "nullable": true
+        }
+      ]
+    },
+    "multistart": {
+      "core": false,
+      "columns": [
+        {
+          "name": "workflow",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "start",
+          "dtype": "int64",
+          "nullable": false
+        },
+        {
+          "name": "objective",
+          "dtype": "float64",
+          "nullable": true
+        },
+        {
+          "name": "converged",
+          "dtype": "bool",
+          "nullable": false
+        },
+        {
+          "name": "selected",
+          "dtype": "bool",
+          "nullable": false
+        }
+      ]
+    },
+    "pareto": {
+      "core": false,
+      "columns": [
+        {
+          "name": "workflow",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "solution",
+          "dtype": "int64",
+          "nullable": false
+        },
+        {
+          "name": "objective",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "value",
+          "dtype": "float64",
+          "nullable": false
+        },
+        {
+          "name": "selected",
+          "dtype": "bool",
+          "nullable": false
+        }
+      ]
+    },
+    "profile_likelihood": {
+      "core": false,
+      "columns": [
+        {
+          "name": "workflow",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "name",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "grid_value",
+          "dtype": "float64",
+          "nullable": false
+        },
+        {
+          "name": "delta",
+          "dtype": "float64",
+          "nullable": true
+        },
+        {
+          "name": "space",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "statistic",
+          "dtype": "string",
+          "nullable": false
+        }
+      ]
+    },
+    "kinase_activity": {
+      "core": false,
+      "description": "Kinase activity. representation says how it is defined between knots: 'rhs_step' = piecewise-constant as the RHS uses it; 'export_linear' = linear interpolation as exported (KNOWN_ISSUES N17).",
+      "columns": [
+        {
+          "name": "workflow",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "kinase",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "time",
+          "dtype": "float64",
+          "nullable": false
+        },
+        {
+          "name": "value",
+          "dtype": "float64",
+          "nullable": true
+        },
+        {
+          "name": "representation",
+          "dtype": "string",
+          "nullable": false
+        }
+      ]
+    },
+    "knockouts": {
+      "core": false,
+      "columns": [
+        {
+          "name": "workflow",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "protein",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "knockout",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "state",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "layer",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "time",
+          "dtype": "float64",
+          "nullable": false
+        },
+        {
+          "name": "value",
+          "dtype": "float64",
+          "nullable": true
+        }
+      ]
+    },
+    "perturbations": {
+      "core": false,
+      "columns": [
+        {
+          "name": "workflow",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "protein",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "perturbation",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "state",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "time",
+          "dtype": "float64",
+          "nullable": false
+        },
+        {
+          "name": "value",
+          "dtype": "float64",
+          "nullable": true
+        }
+      ]
+    },
+    "steady_state": {
+      "core": false,
+      "columns": [
+        {
+          "name": "workflow",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "protein",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "state",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "time",
+          "dtype": "float64",
+          "nullable": false
+        },
+        {
+          "name": "value",
+          "dtype": "float64",
+          "nullable": true
+        },
+        {
+          "name": "dydt_abs",
+          "dtype": "float64",
+          "nullable": true
+        }
+      ]
+    },
+    "parameter_profiles": {
+      "core": false,
+      "description": "Model output of one state as one parameter is varied.",
+      "columns": [
+        {
+          "name": "workflow",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "protein",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "parameter",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "parameter_value",
+          "dtype": "float64",
+          "nullable": false
+        },
+        {
+          "name": "state",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "time",
+          "dtype": "float64",
+          "nullable": false
+        },
+        {
+          "name": "value",
+          "dtype": "float64",
+          "nullable": true
+        }
+      ]
+    },
+    "matrix_labels": {
+      "core": false,
+      "description": "Row/column labels for arrays/*.npy matrices.",
+      "columns": [
+        {
+          "name": "matrix",
+          "dtype": "string",
+          "nullable": false
+        },
+        {
+          "name": "axis",
+          "dtype": "int64",
+          "nullable": false
+        },
+        {
+          "name": "position",
+          "dtype": "int64",
+          "nullable": false
+        },
+        {
+          "name": "label",
+          "dtype": "string",
+          "nullable": false
+        }
+      ]
+    }
+  },
+  "arrays": {
+    "posterior_draws": {
+      "axes": [
+        "chain",
+        "draw",
+        "parameter"
+      ],
+      "description": "Posterior draws; parameter axis follows the parameters table order for sample_id='best' (parameter_order_sha256)."
+    },
+    "matrix_*": {
+      "axes": [
+        "row",
+        "col"
+      ],
+      "description": "Network matrices; labels in matrix_labels."
+    }
+  },
+  "dtypes": {
+    "float64": "IEEE double",
+    "int64": "64-bit signed int",
+    "string": "UTF-8",
+    "bool": "boolean"
+  },
+  "rules": [
+    "Tables are Parquet files under tables/<table>.parquet.",
+    "Pass-through tables live under tables/passthrough/ and carry file.passthrough.source_path/sheet.",
+    "Unknown extra columns are allowed within a minor version.",
+    "Null means missing; producers must not write 0 or NaN-as-0 for missing values."
+  ]
+}
