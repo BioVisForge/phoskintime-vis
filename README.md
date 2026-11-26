@@ -38,7 +38,8 @@ a worker (`src/lib/workers`).
 ```bash
 nvm use                      # Node 24
 npm ci
-python -m pip install -r tests/requirements-dev.txt   # dev only: numpy, pyarrow, scipy, pandas
+python -m pip install -r tests/requirements-dev.txt   # dev only: numpy, pyarrow, scipy, pandas (pyarrow needs snappy)
+# set PYTHON=/path/to/venv/python if your default python3 lacks these
 npm run fixtures             # synthetic spec-fixture bundles in tests/fixtures/out/
 npm run build:single         # dist-single/index.html: one file, works offline from file://
 xdg-open dist-single/index.html   # then open a .pkt.zip or .pkt folder
