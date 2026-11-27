@@ -68,7 +68,10 @@ network at all.
 - `docs/upstream-proposals.md`: proposed issues for PhosKinTime
 - `docs/decisions/0001-parquet-reader.md`: Parquet reader choice (measured)
 - `docs/performance.md`: measured performance
-- `docs/screenshots/gallery.html`: screenshots of every panel and comparison mode (synthetic data)
+- Screenshot gallery of every panel and comparison mode (synthetic data). Generated, not kept in
+  git: run `npm run docs:assets` after `npm run fixtures` and `npm run build:single` (writes
+  `docs/screenshots/gallery.html`), or download the `docs-assets` artifact of a CI run. The Pages
+  demo publishes it at `docs/screenshots/gallery.html`.
 
 All data in this repository (fixtures, screenshots, demo) is synthetic.
 
