@@ -10,7 +10,8 @@ authors:
   - family-names: Mishra
     given-names: Abhinav
     orcid: "https://orcid.org/0009-0005-3179-7408"
-version: "0.1.0"
+version: "0.2.0"
+date-released: "2026-11-27"
 license: BSD-3-Clause
 repository-code: "https://github.com/BioVisForge/phoskintime-vis"
 url: "https://biovisforge.github.io/phoskintime-vis/"

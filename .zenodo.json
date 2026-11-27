@@ -2,7 +2,7 @@
   "title": "PhosKinTime-Vis: offline viewer and run comparison for PhosKinTime run bundles",
   "description": "PhosKinTime-Vis opens PhosKinTime run bundles in the browser, verifies their files, redraws the model's plots from the stored data, compares runs and exports publication figures (PNG, PDF, SVG, CSV and TikZ/PGFPlots). It works offline from a single HTML file and uploads nothing. All example data distributed with the software is synthetic.",
   "upload_type": "software",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "access_right": "open",
   "license": "BSD-3-Clause",
   "language": "eng",

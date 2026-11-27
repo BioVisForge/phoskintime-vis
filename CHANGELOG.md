@@ -3,6 +3,25 @@
 All notable changes to PhosKinTime-Vis are documented here. The project follows
 [Semantic Versioning](https://semver.org/) and [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [0.2.0] - 2026-11-27
+
+### Added
+
+- **plot:** Pan and zoom on every plot with dot marks: Ctrl/⌘ + wheel, toolbar, pan mode, double-click reset, keyboard (+/−, arrows, 0); facets linked or per facet (#5)
+- **export:** "Export current view" for zoomed plots; the caption states the shown axis ranges (#5)
+- **fixtures:** `gof-100k` stress fixture with 102,868 goodness-of-fit points (#5)
+- **perf:** Stage profiler (`scripts/profile.mjs`), gesture frame times (`scripts/frames.mjs`), screen vs export gallery (#5)
+
+### Performance
+
+- Fast canvas dot layer on screen (exports unchanged); one canvas draw per frame; sliced redraws of large layers (#5)
+- Quantiles sort once, typed KDE loop, ranked raw-lines sort (bitwise identical); lazy asynchronous zip inflate; brushing applied when the pointer pauses (#5)
+
+### Fixed
+
+- **export:** Firefox refused 85 mm exports that fit (SVG text now measured by its glyph box) (#5)
+- **plot:** Dot outlines on screen use the mark's stroke width, as the export does (#5)
+
 ## [0.1.0] - 2026-11-27
 
 

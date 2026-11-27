@@ -7,7 +7,7 @@ GitHub's **Cite this repository** button formats it for you.
 @software{mishra_phoskintime_vis,
   author  = {Mishra, Abhinav},
   title   = {PhosKinTime-Vis: offline viewer and run comparison for PhosKinTime run bundles},
-  version = {0.1.0},
+  version = {0.2.0},
   url     = {https://github.com/BioVisForge/phoskintime-vis}
 }
 ```
