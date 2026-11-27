@@ -15,6 +15,8 @@ const SAMPLES = [
 const browser = await chromium.launch()
 const ctx = await browser.newContext({ viewport: { width: 1400, height: 1000 }, acceptDownloads: true })
 const page = await ctx.newPage()
+// a click waits for the page's main thread; large exports on a loaded machine exceed the 30 s default
+page.setDefaultTimeout(180_000)
 const errors = []
 page.on('pageerror', (e) => errors.push(e.message))
 page.on('console', (m) => m.type() === 'error' && errors.push(m.text()))

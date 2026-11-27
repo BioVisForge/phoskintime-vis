@@ -49,7 +49,8 @@ export async function renderSectionPanels(page: Page) {
     await loc.scrollIntoViewIfNeeded()
     const available = (await loc.getAttribute('data-available')) === 'true'
     if (available) {
-      await expect(loc).toHaveAttribute('data-rendered', 'true')
+      // same budget as the loading wait below: 5 s (the default) is too short on a loaded machine
+      await expect(loc).toHaveAttribute('data-rendered', 'true', { timeout: 30_000 })
       await expect(loc.locator('.loading')).toHaveCount(0, { timeout: 30_000 })
       await page.waitForTimeout(100)
     }
