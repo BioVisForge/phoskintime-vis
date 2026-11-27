@@ -38,9 +38,11 @@ Zenodo's GitHub settings once, before the first release; the DOI can then be add
 
 ## Publishing this site
 
-Run the **pages** workflow by hand (Actions → pages → Run workflow). It publishes the site, the
-live demo under `demo/` and the screenshot gallery under `gallery/`. The repository's Pages source
-must be set to **GitHub Actions** once.
+The **pages** workflow runs when a `vX.Y.Z` release tag is pushed, so the site follows the
+releases. It publishes the site, the live demo under `demo/` and the screenshot gallery under
+`gallery/`. To redeploy between releases, run it by hand (Actions → pages → Run workflow). The
+repository's Pages source is **GitHub Actions**, and the `github-pages` environment accepts `main`
+and `v*` tags.
 
 Design decisions are recorded in
 [`docs/decisions/`](https://github.com/BioVisForge/phoskintime-vis/tree/main/docs/decisions).

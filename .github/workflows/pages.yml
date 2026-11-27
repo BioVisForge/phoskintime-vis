@@ -1,7 +1,10 @@
 # Publish the documentation site, the live demo (demo/) and the screenshot gallery (gallery/) to
-# GitHub Pages. Manual only: do not trigger without the owner's OK.
+# GitHub Pages. Runs when a vX.Y.Z release tag is pushed (the github-pages environment allows main
+# and v* tags), and by hand for a redeploy between releases.
 name: pages
 on:
+  push:
+    tags: ['v*']
   workflow_dispatch:
 permissions:
   contents: read
