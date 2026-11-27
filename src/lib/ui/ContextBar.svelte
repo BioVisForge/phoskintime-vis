@@ -1,7 +1,10 @@
 <script lang="ts">
   import { app } from './state.svelte'
 
-  /** Global protein / psite / layer selector: drives every dependent panel and the URL hash. */
+  /**
+   * Global protein / psite / layer selector: drives every dependent panel and the URL hash. The
+   * protein box is disabled until the list has loaded: Enter on an empty list was silently lost.
+   */
   let { proteins, sites, layers }: { proteins: string[]; sites: Record<string, string[]>; layers: string[] } = $props()
   let query = $state('')
   let open = $state(false)
@@ -32,7 +35,7 @@
 <div class="ctx" role="group" aria-label="Global context">
   <div class="combo">
     <label for="ctx-protein">Protein</label>
-    <input id="ctx-protein" type="search" role="combobox" aria-expanded={open} aria-controls="ctx-protein-list" aria-autocomplete="list" autocomplete="off" placeholder={current} bind:value={query} onfocus={() => (open = true)} onblur={() => setTimeout(() => (open = false), 150)} oninput={() => { open = true; active = 0 }} onkeydown={onkey} data-testid="ctx-protein" aria-activedescendant={open && matches[active] ? `ctx-opt-${matches[active]}` : undefined} />
+    <input id="ctx-protein" type="search" role="combobox" aria-expanded={open} aria-controls="ctx-protein-list" aria-autocomplete="list" autocomplete="off" disabled={!proteins.length} placeholder={current} bind:value={query} onfocus={() => (open = true)} onblur={() => setTimeout(() => (open = false), 150)} oninput={() => { open = true; active = 0 }} onkeydown={onkey} data-testid="ctx-protein" aria-activedescendant={open && matches[active] ? `ctx-opt-${matches[active]}` : undefined} />
     {#if open && matches.length}
       <ul id="ctx-protein-list" role="listbox" aria-label="Proteins">
         {#each matches as p, i}
