@@ -1,5 +1,9 @@
 # Third-party material
 
+The logo and favicons in `assets/brand/` are original work of this project (BSD-3-Clause); the
+wordmark outlines come from PKV Sans (see below). Documentation tools (build only): Zensical,
+TypeDoc, typedoc-plugin-markdown, yaml.
+
 ## PKV Sans (bundled UI and export font)
 
 `src/assets/fonts/PKVSans-Regular.ttf` and `PKVSans-Bold.ttf` are built by `scripts/build_font.py`
@@ -43,7 +47,7 @@ with others.
 
 The OFL allows the licensed fonts to be used, studied, modified and
 redistributed freely as long as they are not sold by themselves. The
-fonts, including any derivative works, can be bundled, embedded, 
+fonts, including any derivative works, can be bundled, embedded,
 redistributed and/or sold with any software provided that any reserved
 names are not used by derivative works. The fonts and derivatives,
 however, cannot be released under any other type of license. The
