@@ -1,56 +1,33 @@
-# Handoff (2026-11-27, end of session)
+# Handoff (updated 2026-11-27)
 
-**Rule from the owner: push and open PRs only after the owner confirms.**
+**Rule from the owner: push, open PRs, tag or deploy only after the owner confirms.** Claude Code's
+auto mode blocks `gh pr merge`; the owner runs `gh pr merge <n> --squash` once a PR is green.
 
-## Where to continue
+## State
 
-Verification finished on 2026-11-27 (results below); the three branches are pushed and the
-stacked PRs are open. Next: merge them in order following the merge plan below; then the
-post-merge steps. A Node 24 run has not happened locally; the first CI run covers it.
+`main` holds the three squash-merged PRs: #1 viewer and comparison (`568c3ee`), #2 exports and UI
+(`0128ce4`), #3 documentation site, brand and release tooling (`a22b4e5`). All CI jobs passed on
+each PR (GitHub runners, Node 24). The feature branches are deleted on GitHub.
 
-## Test status at the end of the session
+- **Ruleset `main`** (id 28234538, no bypass): PR required (0 approvals, threads resolved), squash
+  only, branch up to date, no force-push or deletion, linear history; required checks: Lint and
+  type check, Unit and parity tests, Build (single file + pages), End-to-end (Chromium + Firefox,
+  file://), Documentation (site, screenshots, gallery). Classic branch protection is still on too.
+- **Pages**: source is GitHub Actions; the `pages` workflow runs on `v*` tags and by hand; the
+  `github-pages` environment accepts `main` and `v*` tags. First deploy by hand on 2026-11-27.
+- **Fixture bundle ids differ between machines** (floats differ in the last bits between CPUs;
+  GitHub's runners gave other ids than the development host). Tests read ids from the generated
+  manifests (`bundleId()`/`shortId()` in `tests/e2e/helpers.ts`); never hard-code them.
 
-| Branch | Last full result |
-|---|---|
-| `feat/foundation` `fb7a7e3` | all passed (Node 26): lint, types, unit 44, parity 10, e2e 42, builds, `docs:assets` |
-| `feat/export-ui` `8e6d60b` | e2e 73 passed, **1 failed** (Firefox, reordered-params), visual 16, **`docs:assets` failed** |
-| `feat/export-ui` `0244bd8` (longer timeouts for both) | all passed 2026-11-27 (Node 26, load ~2): lint, types, unit 82, parity 10, e2e 74 + 18 skipped, visual 16, builds, `docs:assets` |
-| `feat/docs-release` | all passed 2026-11-27 (Node 26): lint, types, unit 82, parity 10, e2e 74 + 18 skipped, visual 16, builds, `tox -e lint`, `tox -e docs` (strict build), pre-commit |
+## Still open
 
-The two failures: the Firefox test passed 6 of 6 afterwards and the sample export twice in a row;
-the host was at load 60-105. Most likely timeouts (5 s panel render, 30 s click), now longer, but
-not proven: the detailed output of the failing run was overwritten.
-
-## Branch state (all local; nothing pushed, no PR, Pages not deployed)
-
-| Branch | Based on | Content |
-|---|---|---|
-| `main` | — | `36cac96` Initial commit (origin) |
-| `feat/foundation` | `main` | viewer, compare, tests, CI; generated docs assets out of history |
-| `feat/export-ui` | `feat/foundation` | exports, UI, fit to width, PDF fidelity |
-| `feat/docs-release` | `feat/export-ui` | documentation site, brand, release and tooling files |
-
-Local tags `backup/foundation-pre-clean` and `backup/export-ui-pre-clean` keep the history from
-before generated files were removed (about 30 MB). Do not push them; delete them once the PRs are
-merged. A clone of the branches without them is about 3 MB.
-
-## Merge plan (stacked squash PRs into protected `main`)
-
-1. PR 1: `feat/foundation` → `main`.
-2. PR 2: `feat/export-ui` → `feat/foundation`. After PR 1 is squash-merged:
-   `git fetch && git rebase --onto origin/main feat/foundation feat/export-ui`, force-push the
-   feature branch (allowed; only `main` is protected) and retarget the PR to `main`.
-3. PR 3: `feat/docs-release` → `feat/export-ui`, same steps after PR 2.
-
-## After merging
-
-- `tikz-compile` and `pages` are manual workflows; GitHub offers manual dispatch only once they are
-  on `main`. The TikZ compile step was run locally in the same image
-  (`texlive/texlive:TL2025-historic`, with udocker): 41 of 41 compiled. The GitHub job itself has
-  not run.
-- GitHub settings to switch on: Pages source "GitHub Actions"; private vulnerability reporting;
-  Zenodo's GitHub integration (before the first release).
-- No CI workflow has ever run on GitHub.
+- Tag 0.1.0 (`npm run release` / `tox -e release`) once ready; that also deploys the site.
+- GitHub settings: private vulnerability reporting; Zenodo's GitHub integration (before the
+  first release).
+- `tikz-compile` has never run on GitHub (41/41 compiled locally in
+  `texlive/texlive:TL2025-historic`).
+- Local only: tags `backup/foundation-pre-clean` and `backup/export-ui-pre-clean` (about 30 MB of
+  pre-clean history). Never push them; delete when no longer needed.
 
 ## Resume
 
