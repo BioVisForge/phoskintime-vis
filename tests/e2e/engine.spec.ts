@@ -23,6 +23,14 @@ test('what-if (feature flag, mock engine): connect, verify, simulate, labelled o
   await page.locator('input[type=range]').first().fill('0.9')
   await page.click('[data-testid=engine-run]')
   await expect(page.getByText('Engine output from mock-pktengine 0.0.0-mock')).toBeVisible()
+  // the what-if plot pans and zooms like every plot with dot marks (docs/pan-zoom.md)
+  const w = page.locator('.pkv-zoomwrap[data-zoom-key="main"]').first()
+  await w.locator('[data-testid=zoom-in]').click()
+  await expect(w).toHaveAttribute('data-zoomed', 'true')
+  await w.focus()
+  await page.keyboard.press('ArrowRight')
+  await page.keyboard.press('0')
+  await expect(w).toHaveAttribute('data-zoomed', 'false')
 })
 
 test('what-if is hidden without the feature flag', async ({ page }) => {

@@ -29,7 +29,7 @@
 </script>
 
 {#if !t}<Loading />{:else}
-  <Plot height={260} grid fx={{ label: '' }} x={{ type: 'symlog', ticks: TIME_TICKS, label: 'Time (min), symlog' }} y={{ label: 'Model FC' }} color={{ legend: true, label: 'parameter value', scheme: 'viridis' }}>
+  <Plot zoom="main" height={260} grid fx={{ label: '' }} x={{ type: 'symlog', ticks: TIME_TICKS, label: 'Time (min), symlog' }} y={{ label: 'Model FC' }} color={{ legend: true, label: 'parameter value', scheme: 'viridis' }}>
     <Line data={rows} x="time" y="value" z="pv" fx="parameter" stroke="pv" />
     <Dot data={rows} x="time" y="value" fx="parameter" fill="pv" r={1.5} />
   </Plot>

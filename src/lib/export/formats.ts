@@ -5,6 +5,7 @@ import { exportFilename, provenanceText, LAYOUT_PX_PER_MM, type ExportSettings, 
 import { fontBase64, FONT_FAMILY } from './fonts'
 import { toCsv } from '../transforms/table'
 import { span, spanAsync } from '../perf/spans'
+import { panelViews, viewCaption } from '../plot/zoom/views'
 
 export type Format = 'png' | 'pdf' | 'svg' | 'csv' | 'tikz'
 export const FORMATS: Format[] = ['png', 'pdf', 'svg', 'csv', 'tikz']
@@ -27,7 +28,15 @@ export function rasterNote(r: Rendered, dpi: number): string[] {
 }
 
 function compose(t: ExportTarget, r: Rendered, s: ExportSettings, embedFont = true): Composed {
-  return span('export compose', t.id, () => composeSvg(r.figure, s, { title: t.title, caption: t.caption, provenance: provenanceOf(t), notes: rasterNote(r, s.dpi) }, embedFont))
+  return span('export compose', t.id, () => composeSvg(r.figure, s, { title: t.title, caption: t.caption, provenance: provenanceOf(t), notes: [...rasterNote(r, s.dpi), ...viewNote(t, s)] }, embedFont))
+}
+
+/** "Export current view": the caption states the ranges shown (nothing when no plot is zoomed). */
+export function viewNote(t: ExportTarget, s: ExportSettings): string[] {
+  if (s.view !== 'current') return []
+  const all = panelViews(t.panelId ?? t.id)
+  const c = viewCaption(t.zoomKeys ? new Map([...all].filter(([k]) => t.zoomKeys!.includes(k))) : all)
+  return c ? [c] : []
 }
 
 const enc = (s: string) => new TextEncoder().encode(s)

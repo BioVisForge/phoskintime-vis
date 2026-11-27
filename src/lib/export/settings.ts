@@ -31,10 +31,15 @@ export interface ExportSettings {
   fitReflow: boolean
   /** internal, per render: layout px reserved for overhanging labels */
   fitReservePx: number
+  /**
+   * 'full' (default): every plot shows its full data range. 'current': zoomed plots show the
+   * view the user zoomed to on screen, and the caption states the shown ranges. Never remembered.
+   */
+  view: 'full' | 'current'
 }
 
 /** Per-export choices that are never persisted (a confirmed "scale anyway" must not carry over). */
-export const TRANSIENT_KEYS = ['fitFewerTicks', 'fitShortenLabels', 'fitScale', 'fitReflow', 'fitReservePx'] as const
+export const TRANSIENT_KEYS = ['fitFewerTicks', 'fitShortenLabels', 'fitScale', 'fitReflow', 'fitReservePx', 'view'] as const
 
 export const DEFAULTS: ExportSettings = {
   preset: 'single',
@@ -52,6 +57,7 @@ export const DEFAULTS: ExportSettings = {
   fitScale: false,
   fitReflow: false,
   fitReservePx: 0,
+  view: 'full',
 }
 
 function withoutTransient(s: Partial<ExportSettings>): Partial<ExportSettings> {

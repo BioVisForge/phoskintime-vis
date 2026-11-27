@@ -66,7 +66,7 @@
 {#if !t}<Loading />{:else}
   <label>X <select value={X} onchange={(e) => (sx = e.currentTarget.value)}>{#each states as s}<option value={s}>{s}</option>{/each}</select></label>
   <label>Y <select value={Y} onchange={(e) => (sy = e.currentTarget.value)}>{#each states as s}<option value={s}>{s}</option>{/each}</select></label>
-  <Plot height={360} grid inset={10} x={{ label: `${X} (model FC)` }} y={{ label: `${Y} (model FC)` }}>
+  <Plot zoom="main" height={360} grid inset={10} x={{ label: `${X} (model FC)` }} y={{ label: `${Y} (model FC)` }}>
     <Line canvas={app.rawLines} data={paths} x="x" y="y" z="k" stroke="#8aa" strokeOpacity={0.45} strokeWidth={0.6} />
     <Line data={best} x="x" y="y" stroke="var(--pkv-ink)" strokeWidth={1.6} />
     <PixelArrows data={arrows.map((a) => ({ ...a, x0: a.x - a.dx / 2, y0: a.y - a.dy / 2, x1: a.x + a.dx / 2, y1: a.y + a.dy / 2 }))} length={12} stroke="#c33" />

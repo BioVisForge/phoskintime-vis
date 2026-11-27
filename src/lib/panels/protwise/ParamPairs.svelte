@@ -62,7 +62,7 @@
   <div class="grid">
     {#each pairs as p, i}
       <div class="cell" class:on={i === focus} role="button" tabindex="0" aria-pressed={i === focus} aria-label={`Focus pair ${p.a} vs ${p.b}`} onclick={() => { focus = i; brush = { enabled: false } }} onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); focus = i; brush = { enabled: false } } }}>
-        <Plot height={170} width={220} grid inset={6} title={`|r| = ${p.r.toFixed(2)}`} x={{ label: paramLabel(bundle, p.a) }} y={{ label: paramLabel(bundle, p.b) }}>
+        <Plot zoom={`pair:${p.a}|${p.b}`} height={170} width={220} grid inset={6} title={`|r| = ${p.r.toFixed(2)}`} x={{ label: paramLabel(bundle, p.a) }} y={{ label: paramLabel(bundle, p.b) }}>
           <Dot data={wide.rows} x={p.a} y={p.b} r={2} fill="#3b6fd8" opacity={0.7} />
           <RegressionY data={wide.rows} x={p.a} y={p.b} stroke="red" confidence={0.95} />
         </Plot>
@@ -72,7 +72,7 @@
   {#if f}
     <p class="hint" data-export-skip>Brush the plot below to select perturbation samples and show their trajectories (P3).</p>
     <div class="two">
-      <Plot height={300} grid inset={6} x={{ label: paramLabel(bundle, f.a) }} y={{ label: paramLabel(bundle, f.b) }}>
+      <Plot zoom="focus" height={300} grid inset={6} x={{ label: paramLabel(bundle, f.a) }} y={{ label: paramLabel(bundle, f.b) }}>
         <Dot data={wide.rows} x={f.a} y={f.b} r={3} fill={(d: any) => (inBrush(d) ? '#d62728' : '#999')} />
         {#if brush.enabled}<Rect {...brush} opacity={0.08} />{/if}
         <Brush bind:brush constrainToDomain stroke={false} />

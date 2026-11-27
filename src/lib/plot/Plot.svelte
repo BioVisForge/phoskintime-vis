@@ -1,61 +1,34 @@
+<!-- Plot used by every panel: SveltePlot's Plot plus the export spec (PlotView). `zoom` (true or a
+     key) makes it zoomable on screen (ZoomGroup: Ctrl/⌘ + wheel, toolbar, keyboard, pan mode,
+     linked or per-facet views). Exports show the full data range, or the view the user zoomed to
+     when the export dialog's "export current view" is on. -->
 <script lang="ts">
-  import { Plot } from 'svelteplot'
-  import { getExportMode, registerPlot } from './context'
-  import ScaleProbe from './ScaleProbe.svelte'
-  import ZoomLayer from './zoom/ZoomLayer.svelte'
-  import { ZoomState, setZoom } from './zoom/zoom.svelte'
+  import { getExportMode } from './context'
+  import PlotView from './zoom/PlotView.svelte'
+  import ZoomGroup from './zoom/ZoomGroup.svelte'
+  import { withView } from './zoom/zoom.svelte'
 
-  /**
-   * `zoom`: pan and zoom on screen (true), or 'brush' when the plot also has a Brush (dragging
-   * then brushes until pan mode is switched on). Exports always show the full data range.
-   */
   let { children, zoom = false, ...rest }: Record<string, any> = $props()
-  const spec = registerPlot(() => rest)
-  const exporting = !!getExportMode()
+  const exp = getExportMode()
   // svelte-ignore state_referenced_locally
-  const z = zoom && !exporting ? new ZoomState(zoom === 'brush') : undefined
-  if (z) setZoom(z)
-  const opts = $derived(z?.zoomed ? { ...rest, x: { ...rest.x, ...(z.view.x ? { domain: z.view.x } : {}) }, y: { ...rest.y, ...(z.view.y ? { domain: z.view.y } : {}) } } : rest)
-  /** zoom by k around the frame centre (toolbar buttons) */
-  function step(k: number) {
-    z!.touch()
-    z!.zoomAt(probe!.x, probe!.y, centre(probe!.x), centre(probe!.y), k)
-  }
-  const centre = (s: { fn: { range(): number[] } }) => {
-    const [a, b] = s.fn.range()
-    return (a + b) / 2
-  }
-  let probe: { x: any; y: any } | undefined = $state()
+  const zkey = typeof zoom === 'string' ? zoom : String(rest.title ?? 'plot')
+  // svelte-ignore state_referenced_locally
+  const label = String(rest.title ?? 'plot')
+  // svelte-ignore state_referenced_locally
+  const saved = zoom && exp ? exp.views?.get(zkey) : undefined
+  const facetOpts = (f: string) => ({ ...rest, fx: { ...rest.fx, domain: [f] } })
 </script>
 
-{#if z}
-  <div class="pkv-zoomwrap" data-zoomed={z.zoomed}>
-    <div class="pkv-zoombar" role="toolbar" aria-label="Zoom" data-export-skip>
-      <button type="button" data-testid="zoom-in" title="Zoom in (or Ctrl/⌘ + wheel over the plot)" aria-label="Zoom in" onclick={() => step(1.5)}>+</button>
-      <button type="button" data-testid="zoom-out" title="Zoom out" aria-label="Zoom out" onclick={() => step(1 / 1.5)}>−</button>
-      {#if z.hasBrush}
-        <button type="button" data-testid="zoom-pan" aria-pressed={z.mode === 'pan'} title="Drag to pan instead of brushing" onclick={() => (z.mode = z.mode === 'pan' ? 'brush' : 'pan')}>pan</button>
-      {/if}
-      <button type="button" data-testid="zoom-reset" title="Full data range (double-click the plot in pan mode)" disabled={!z.zoomed} onclick={() => z.reset()}>reset</button>
-    </div>
-    <Plot {...opts}>
-      {@render children?.()}
-      {#if spec}<ScaleProbe {spec} />{/if}
-      <ZoomLayer bind:probe />
-    </Plot>
+{#if zoom && !exp}
+  <ZoomGroup opts={rest} {children} {zkey} {label} />
+{:else if saved?.linked}
+  <PlotView opts={withView(rest, saved.views.get(''))} {children} layer="clip" />
+{:else if saved}
+  <div style={`display:grid;gap:4px;grid-template-columns:repeat(${saved.facets.length}, minmax(0, 1fr))`}>
+    {#each saved.facets as f (f)}
+      <PlotView opts={withView(facetOpts(f), saved.views.get(f))} {children} layer={saved.views.has(f) ? 'clip' : 'none'} />
+    {/each}
   </div>
 {:else}
-  <Plot {...rest}>
-    {@render children?.()}
-    {#if spec}<ScaleProbe {spec} />{/if}
-  </Plot>
+  <PlotView opts={rest} {children} />
 {/if}
-
-<style>
-  .pkv-zoomwrap { position: relative; }
-  /* full opacity: the labels must keep WCAG AA contrast (axe) */
-  .pkv-zoombar { position: absolute; top: 0; right: 0; z-index: 2; display: flex; gap: 2px; }
-  .pkv-zoombar button { font: inherit; font-size: 0.72rem; line-height: 1; padding: 2px 6px; min-width: 22px; border: 1px solid var(--pkv-rule, #ccc); background: var(--pkv-surface, #fff); color: var(--pkv-ink); border-radius: 3px; cursor: pointer; }
-  .pkv-zoombar button[aria-pressed='true'] { background: var(--pkv-ink); color: var(--pkv-surface, #fff); }
-  .pkv-zoombar button:disabled { color: var(--pkv-ink-2); cursor: default; }
-</style>

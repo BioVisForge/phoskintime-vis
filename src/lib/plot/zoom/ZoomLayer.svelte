@@ -1,18 +1,23 @@
 <!-- Pointer handling and clipping for a zoomable plot (rendered inside every facet). Wheel with
      Ctrl/⌘ (or any wheel in pan mode) zooms around the pointer, Shift+wheel zooms x only; drag
      pans in pan mode; double-click resets. While zoomed, the facet's marks are clipped to the
-     frame. -->
+     frame. With `interactive={false}` (an export of the current view) it only clips. -->
 <script lang="ts">
   import { usePlot } from 'svelteplot'
   import { getZoom, zoomable, type ZScale } from './zoom.svelte'
 
-  /** the current x/y scales, for the toolbar's zoom buttons (the same in every facet) */
-  let { probe = $bindable() }: { probe?: { x: ZScale; y: ZScale } } = $props()
-  const z = getZoom()!
+  /** the current x/y scales and facet values, for the toolbar and keyboard (same in every facet) */
+  let {
+    probe = $bindable(),
+    interactive = true,
+    clip = false,
+  }: { probe?: { x: ZScale; y: ZScale; fx: unknown[] }; interactive?: boolean; clip?: boolean } = $props()
+  const z = getZoom()
   const plot = usePlot()
   $effect(() => {
-    if (plot.scales) probe = { x: plot.scales.x as unknown as ZScale, y: plot.scales.y as unknown as ZScale }
+    if (plot.scales) probe = { x: plot.scales.x as unknown as ZScale, y: plot.scales.y as unknown as ZScale, fx: [...((plot.scales as any).fx?.domain ?? [])] }
   })
+  const clipping = $derived(interactive ? !!z?.zoomed : clip)
   const id = `pkv-zoom-clip-${Math.random().toString(36).slice(2, 10)}`
   let overlay: SVGRectElement | undefined = $state()
 
@@ -36,9 +41,9 @@
   // wheel on the whole plot (the overlay ignores pointer events in brush mode)
   $effect(() => {
     const svg = overlay?.ownerSVGElement
-    if (!svg) return
+    if (!svg || !interactive) return
     const onWheel = (ev: WheelEvent) => {
-      if (!(ev.ctrlKey || ev.metaKey || z.mode === 'pan')) return
+      if (!z || !(ev.ctrlKey || ev.metaKey || z.mode === 'pan')) return
       const p = local(ev)
       if (!frame || p.x < frame.x || p.x > frame.x + frame.w || p.y < frame.y || p.y > frame.y + frame.h) return
       ev.preventDefault()
@@ -54,7 +59,7 @@
   // that arrive before the plot has re-rendered do not accumulate errors
   let drag = $state.raw<{ x: number; y: number; sx: ZScale; sy: ZScale } | null>(null)
   function down(ev: PointerEvent) {
-    if (z.mode !== 'pan' || ev.button !== 0) return
+    if (!z || z.mode !== 'pan' || ev.button !== 0) return
     const p = local(ev)
     const { sx, sy } = scales()
     // the scale objects are replaced on every change, so these are snapshots
@@ -62,7 +67,7 @@
     overlay!.setPointerCapture(ev.pointerId)
   }
   function move(ev: PointerEvent) {
-    if (!drag) return
+    if (!drag || !z) return
     const p = local(ev)
     z.touch()
     z.view = { ...z.view, ...panned(drag, p.x - drag.x, p.y - drag.y) }
@@ -93,10 +98,11 @@
     const apply = () => {
       for (const c of g.children)
         if (isMark(c)) {
-          if (z.zoomed) c.setAttribute('clip-path', `url(#${id})`)
+          if (clipping) c.setAttribute('clip-path', `url(#${id})`)
           else if (c.getAttribute('clip-path') === `url(#${id})`) c.removeAttribute('clip-path')
         }
     }
+    void clipping
     apply()
     const o = new MutationObserver(apply)
     o.observe(g, { childList: true })
@@ -109,18 +115,18 @@
   <rect
     bind:this={overlay}
     class="pkv-zoom-overlay"
-    data-testid="zoom-overlay"
+    data-testid={interactive ? 'zoom-overlay' : null}
     x={frame.x}
     y={frame.y}
     width={frame.w}
     height={frame.h}
     fill="transparent"
-    style:cursor={z.mode === 'pan' ? (drag ? 'grabbing' : 'grab') : null}
-    pointer-events={z.mode === 'pan' ? 'all' : 'none'}
+    style:cursor={interactive && z?.mode === 'pan' ? (drag ? 'grabbing' : 'grab') : null}
+    pointer-events={interactive && z?.mode === 'pan' ? 'all' : 'none'}
     role="presentation"
     onpointerdown={down}
     onpointermove={move}
     onpointerup={up}
     onpointercancel={up}
-    ondblclick={() => z.reset()} />
+    ondblclick={() => z?.reset()} />
 {/if}

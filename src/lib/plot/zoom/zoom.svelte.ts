@@ -29,16 +29,24 @@ export const SETTLE_MS = 140
 
 export class ZoomState {
   view = $state<View>({})
-  mode = $state<'brush' | 'pan'>('brush')
+  /** null: follow the plot (brush when it has a Brush, pan otherwise) until the user chooses */
+  private chosen = $state<'brush' | 'pan' | null>(null)
+  /** Brush marks inside this plot register here */
+  brushes = $state(0)
   /** true while a wheel or drag gesture runs: canvas layers preview instead of redrawing */
   interacting = $state(false)
-  /** the plot has a brush: dragging brushes unless pan mode is on */
-  readonly hasBrush: boolean
   private timer: ReturnType<typeof setTimeout> | null = null
 
-  constructor(hasBrush: boolean) {
-    this.hasBrush = hasBrush
-    if (!hasBrush) this.mode = 'pan'
+  get hasBrush(): boolean {
+    return this.brushes > 0
+  }
+
+  get mode(): 'brush' | 'pan' {
+    return this.chosen ?? (this.hasBrush ? 'brush' : 'pan')
+  }
+
+  set mode(m: 'brush' | 'pan') {
+    this.chosen = m
   }
 
   get zoomed(): boolean {
@@ -81,6 +89,32 @@ export class ZoomState {
     if (x) v.x = x
     if (y) v.y = y
     this.view = v
+  }
+
+  /**
+   * Keyboard: + / = zoom in, - zoom out (around the frame centre), arrow keys pan by a tenth of
+   * the frame, 0 resets. Returns true when the key was handled.
+   */
+  key(k: string, sx: ZScale, sy: ZScale): boolean {
+    const mid = (s: ZScale) => {
+      const [a, b] = s.fn.range()
+      return (a + b) / 2
+    }
+    const span = (s: ZScale) => {
+      const [a, b] = s.fn.range()
+      return Math.abs(b - a) / 10
+    }
+    if (k === '+' || k === '=') this.zoomAt(sx, sy, mid(sx), mid(sy), 1.5)
+    else if (k === '-' || k === '_') this.zoomAt(sx, sy, mid(sx), mid(sy), 1 / 1.5)
+    else if (k === '0') this.reset()
+    // arrows move the view: ArrowRight shows what lies to the right (the content moves left)
+    else if (k === 'ArrowLeft') this.panBy(sx, sy, span(sx), 0)
+    else if (k === 'ArrowRight') this.panBy(sx, sy, -span(sx), 0)
+    else if (k === 'ArrowUp') this.panBy(sx, sy, 0, span(sy))
+    else if (k === 'ArrowDown') this.panBy(sx, sy, 0, -span(sy))
+    else return false
+    this.touch()
+    return true
   }
 }
 
@@ -130,4 +164,19 @@ export function setZoom(z: ZoomState): void {
 
 export function getZoom(): ZoomState | undefined {
   return getContext(KEY)
+}
+
+/** Plot options with a view's domains applied (the options themselves when nothing is zoomed). */
+export function withView(opts: Record<string, any>, view: View | undefined): Record<string, any> {
+  if (!view || (!view.x && !view.y)) return opts
+  // an explicit tick list (e.g. the time axes' 0, 1, 10, … ticks) keeps only the ticks inside the
+  // view: SveltePlot draws listed ticks, and their grid lines, even outside the domain
+  const axis = (o: Record<string, any> | undefined, d: Domain | undefined) => {
+    if (!d) return o
+    const lo = Math.min(d[0], d[1])
+    const hi = Math.max(d[0], d[1])
+    const ticks = Array.isArray(o?.ticks) ? { ticks: o!.ticks.filter((t: number) => +t >= lo && +t <= hi) } : {}
+    return { ...o, domain: d, ...ticks }
+  }
+  return { ...opts, x: axis(opts.x, view.x), y: axis(opts.y, view.y) }
 }

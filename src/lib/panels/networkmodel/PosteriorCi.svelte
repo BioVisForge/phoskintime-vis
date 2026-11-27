@@ -31,7 +31,7 @@
 {#if !post}<Loading />{:else}
   <label>Group <select value={g} onchange={(e) => (group = e.currentTarget.value)}>{#each groups as x}<option value={x}>{groupLabel(bundle, x)}</option>{/each}</select></label>
   <label><input type="checkbox" bind:checked={log} /> log x</label>
-  <Plot height={Math.max(160, 14 * rows.length + 60)} marginLeft={190} grid x={{ type: log ? 'log' : 'linear', label: 'posterior median and 90 % interval' }} y={{ label: '', domain: rows.map((r) => r.label) }}>
+  <Plot zoom="main" height={Math.max(160, 14 * rows.length + 60)} marginLeft={190} grid x={{ type: log ? 'log' : 'linear', label: 'posterior median and 90 % interval' }} y={{ label: '', domain: rows.map((r) => r.label) }}>
     <RuleY data={rows} y="label" x1="q05" x2="q95" stroke="var(--pkv-ink)" />
     <Dot data={rows} x="q50" y="label" fill="#1f77b4" r={3} title={(d: any) => `${d.label}: median ${d.q50.toPrecision(4)} [${d.q05.toPrecision(4)}, ${d.q95.toPrecision(4)}]`} />
   </Plot>

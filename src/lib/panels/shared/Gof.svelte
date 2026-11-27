@@ -90,7 +90,7 @@
   <p class="hint" data-export-skip>Brush the overall plot to select points and see their trajectories. Ctrl/⌘ + wheel zooms; “pan” drags the view.</p>
   <div class="two">
     <div>
-      <Plot zoom="brush" height={380} grid inset={6} aspectRatio={1} title="Overall" x={{ label: 'Observed' }} y={{ label: workflow === 'protwise' ? 'Fitted' : 'Predicted' }} color={{ legend: true }}>
+      <Plot zoom height={380} grid inset={6} aspectRatio={1} title="Overall" x={{ label: 'Observed' }} y={{ label: workflow === 'protwise' ? 'Fitted' : 'Predicted' }} color={{ legend: true }}>
         <Line data={bandLines(overall.min, overall.max, overall.d95, overall.d99)} x="x" y="y" z="k" stroke={(d: any) => (d.k === 'identity' ? '#555' : d.k.includes('95') ? '#d62728' : '#888')} strokeDasharray={(d: any) => (d.k === 'identity' ? 'none' : d.k.includes('95') ? '5 3' : '1 3')} />
         <Dot canvas={pts.length > CANVAS_MIN} data={pts} x="obs" y="pred" fill="layer" r={2.5} opacity={0.55} stroke="var(--pkv-ink)" strokeWidth={0.3} />
         <!-- P4: ring glyph for points beyond the 95 % band -->
@@ -106,7 +106,7 @@
       <p class="legend">grey: identity · red dashed: 95 % band · grey dotted: 99 % band · red rings: outside 95 % (P4, up to 25 labelled)</p>
     </div>
     {#if workflow === 'networkmodel'}
-      <Plot height={300} grid inset={6} fx={{ label: '' }} x={{ label: 'Observed' }} y={{ label: 'Predicted' }} color={{ legend: true }}>
+      <Plot zoom="per-layer" height={300} grid inset={6} fx={{ label: '' }} x={{ label: 'Observed' }} y={{ label: 'Predicted' }} color={{ legend: true }}>
         <Line data={facetLines} x="x" y="y" z="k" fx="facet" stroke={(d: any) => (d.k === 'identity' ? '#555' : d.k.includes('95') ? '#d62728' : '#888')} strokeDasharray={(d: any) => (d.k === 'identity' ? 'none' : d.k.includes('95') ? '5 3' : '1 3')} />
         <Dot canvas={pts.length > CANVAS_MIN} data={pts} x="obs" y="pred" fx="layer" fill="layer" r={2} opacity={0.5} />
         {#if showReg}<RegressionY data={pts} x="obs" y="pred" fx="layer" stroke="var(--pkv-ink)" confidence={0.95} />{/if}
@@ -115,7 +115,7 @@
   </div>
   <Selection ids={(limit?: number) => (limit === undefined ? selected : selected.slice(0, limit)).map((p) => `${labelOf(p)}@${p.time}`)} count={selected.length} label="points in brush" name="gof_selection" />
   {#if highlight.length}
-    <Plot height={240} grid x={{ type: 'symlog', ticks: TIME_TICKS, label: 'Time (min), symlog' }} y={{ label: 'Best-fit FC of selected states' }} color={{ legend: true }}>
+    <Plot zoom="selected-trajectories" height={240} grid x={{ type: 'symlog', ticks: TIME_TICKS, label: 'Time (min), symlog' }} y={{ label: 'Best-fit FC of selected states' }} color={{ legend: true }}>
       <Line data={highlight} x="time" y="pred" z="state" stroke="state" strokeWidth={1.4} />
       <Dot canvas data={highlight.filter((r) => r.obs !== null)} x="time" y="obs" stroke="state" r={2} />
     </Plot>

@@ -34,13 +34,13 @@
     <Plot height={240} grid x={{ label: 'final objective' }} y={{ label: 'starts' }}>
       <RectY data={hist} x1="x1" x2="x2" y1={0} y2="count" fill="#9ecae1" stroke="white" />
     </Plot>
-    <Plot height={240} grid inset={8} x={{ label: 'rank' }} y={{ label: 'final objective' }}>
+    <Plot zoom="ranked" height={240} grid inset={8} x={{ label: 'rank' }} y={{ label: 'final objective' }}>
       <Line data={rows} x="rank" y="objective" stroke="#999" />
       <Dot data={rows} x="rank" y="objective" r={4} fill={(d: any) => (inB(d) ? '#d62728' : d.selected ? 'var(--pkv-ink)' : '#3182bd')} />
       {#if brush.enabled}<Rect {...brush} opacity={0.08} />{/if}
       <Brush bind:brush constrainToDomain stroke={false} />
     </Plot>
-    <Plot height={240} grid x={{ type: 'band', label: '' }} y={{ label: 'final objective' }}>
+    <Plot zoom="distribution" height={240} grid x={{ type: 'band', label: '' }} y={{ label: 'final objective' }}>
       <BoxY data={rows} x="all" y="objective" fill="#c7dcef" tickMedian={{ stroke: 'var(--pkv-ink)', strokeWidth: 2 }} />
       {#if rows.length < 30}<Dot data={rows} x="all" y="objective" r={2.5} fill="var(--pkv-ink)" opacity={0.6} />{/if}
     </Plot>

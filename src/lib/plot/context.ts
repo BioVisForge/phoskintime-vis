@@ -8,6 +8,8 @@ export interface ExportMode {
   vectorMax: number
   /** Pixel ratio for layers that stay raster (export dpi / 96). */
   pixelRatio: number
+  /** "Export current view": the panel's zoomed plots, by zoom key (decision 0006, pan-zoom.md) */
+  views?: Map<string, import('./zoom/views').PlotViews>
 }
 
 const EXPORT = Symbol('pkv-export')

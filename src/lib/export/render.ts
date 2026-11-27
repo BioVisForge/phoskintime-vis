@@ -17,6 +17,8 @@ export interface ExportTarget {
   bundleIds: string[]
   /** registry id whose persisted controls the render should use (default: id) */
   panelId?: string
+  /** zoom keys whose current view this target shows (default: every zoomed plot of the panel) */
+  zoomKeys?: string[]
   commits: string[]
   /** CSV rows (the plotted data) and column units */
   report?: PanelReport

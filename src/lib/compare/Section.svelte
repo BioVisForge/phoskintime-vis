@@ -7,8 +7,10 @@
   import { loadSettings } from '../export/settings'
   import type { Format } from '../export/formats'
 
-  let { id, title, patterns = [], rows = [], note = '', tikz = true, children }: { id: string; title: string; patterns?: string[]; rows?: Record<string, unknown>[]; note?: string; /** false for table-only sections (no plot to emit) */ tikz?: boolean; children: Snippet } = $props()
+  let { id, title, patterns = [], rows = [], note = '', tikz = true, zoomable = false, children }: { id: string; title: string; patterns?: string[]; rows?: Record<string, unknown>[]; note?: string; /** false for table-only sections (no plot to emit) */ tikz?: boolean; /** the section's plot is zoomable (offers "current view" exports) */ zoomable?: boolean; children: Snippet } = $props()
   let raw = $state(false)
+  /** export the zoomed view of this section's plot (caption states the ranges) instead of the full range */
+  let current = $state(false)
   let busy = $state(false)
   async function exp(fmt: Format) {
     const a = app.byId(app.compareA)
@@ -18,10 +20,10 @@
     const snapshot = $state.snapshot(rows) as Record<string, unknown>[]
     const make = async () => [await compareTarget(id, title, note || title, a, b, snapshot)]
     try {
-      saveFiles(await runExport(await make(), [fmt], loadSettings()))
+      saveFiles(await runExport(await make(), [fmt], { ...loadSettings(), view: current ? 'current' : 'full' }))
     } catch (e) {
       // does not fit at the chosen pt size: the export dialog shows the warning and its fixes
-      if (e instanceof FitError) openExport([], false, { formats: [fmt], fit: e.issues, custom: { title, make } })
+      if (e instanceof FitError) openExport([], false, { formats: [fmt], fit: e.issues, view: current ? 'current' : 'full', custom: { title, make } })
       else app.toast = `Export failed: ${(e as Error).message}`
     } finally {
       busy = false
@@ -35,12 +37,14 @@
   {#if note}<p class="note">{note}</p>{/if}
   <div class="tools" data-export-skip>
     <button onclick={() => (raw = !raw)}>{raw ? 'Hide' : 'View'} data ({rows.length})</button>
+    {#if zoomable}<label class="cur" title="Export the zoomed view of this plot; the caption states the shown ranges"><input type="checkbox" bind:checked={current} data-testid="cmp-export-view" /> current view</label>{/if}
     {#each (['png', 'pdf', 'svg', 'csv', 'tikz'] as const).filter((f) => tikz || f !== 'tikz') as f}<button disabled={busy} onclick={() => exp(f)} data-testid={`cmp-export-${f}`}>{f === 'tikz' ? 'TikZ' : f.toUpperCase()}</button>{/each}
   </div>
   {#if raw}<RawRows {rows} />{/if}
 </section>
 
 <style>
+  .cur { font-size: 0.78rem; margin-right: 6px; }
   .cs { border: 1px solid var(--pkv-border); border-radius: var(--pkv-radius); padding: var(--pkv-space-3) var(--pkv-space-4); margin: 0 0 var(--pkv-space-4); background: var(--pkv-surface); }
   header { display: flex; gap: 6px; align-items: baseline; }
   h3 { margin: 0 8px 4px 0; font-size: 1rem; }

@@ -36,6 +36,9 @@ export async function compareTarget(id: string, title: string, caption: string, 
   const { default: Compare } = await import('../ui/Compare.svelte')
   return {
     id: `compare-${id}`,
+    // the comparison plots publish their zoomed views under 'compare', keyed by section id
+    panelId: 'compare',
+    zoomKeys: [id],
     title: `${title} (A ${a.label} vs B ${b.label})`,
     caption,
     component: Compare,
@@ -47,7 +50,7 @@ export async function compareTarget(id: string, title: string, caption: string, 
   }
 }
 
-export function openExport(ids: string[], all = false, extra: { formats?: Format[]; fit?: FitIssue[]; custom?: { title: string; make: () => Promise<ExportTarget[]> } } = {}) {
+export function openExport(ids: string[], all = false, extra: { formats?: Format[]; fit?: FitIssue[]; view?: 'full' | 'current'; custom?: { title: string; make: () => Promise<ExportTarget[]> } } = {}) {
   app.export = { open: true, targetIds: ids, all, ...extra }
 }
 

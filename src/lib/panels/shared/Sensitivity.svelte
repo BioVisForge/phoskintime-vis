@@ -60,7 +60,7 @@
     </Plot>
   </div>
   <div class="two">
-    <Plot height={300} grid inset={8} x={{ label: 'μ*' }} y={{ label: 'σ' }}>
+    <Plot zoom="mu-sigma" height={300} grid inset={8} x={{ label: 'μ*' }} y={{ label: 'σ' }}>
       <Dot data={rows} x="mu_star" y="sigma" r={4} fill={(d: any) => (inB(d) ? '#d62728' : 'green')} title={(d: any) => d.label} />
       {#if rows.length <= 30}<Text data={rows} x="mu_star" y="sigma" text="parameter" dy={-8} fontSize={8} />{/if}
       {#if brush.enabled}<Rect {...brush} opacity={0.08} />{/if}
@@ -68,7 +68,7 @@
     </Plot>
     {#if workflow === 'protwise'}
       <div>
-        <Plot height={Math.max(140, 18 * bars.length + 60)} marginLeft={260} grid x={{ label: 'μ* and σ on one axis (replaces radar)' }} y={{ label: '', domain: bars.map((b) => b.label) }} color={{ legend: true }}>
+        <Plot zoom="ranking" height={Math.max(140, 18 * bars.length + 60)} marginLeft={260} grid x={{ label: 'μ* and σ on one axis (replaces radar)' }} y={{ label: '', domain: bars.map((b) => b.label) }} color={{ legend: true }}>
           <RuleY data={bars} y="label" x1={(d: any) => Math.min(d.mu_star, d.sigma)} x2={(d: any) => Math.max(d.mu_star, d.sigma)} stroke="#ccc" />
           <Dot data={long} x="value" y="label" fill="index" r={4} />
         </Plot>

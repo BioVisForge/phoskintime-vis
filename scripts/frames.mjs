@@ -87,9 +87,14 @@ async function gesture(page, name, box, fn) {
 }
 
 const cases = [
-  { fixture: 'network', hash: '#/fit?only=nm-gof', panel: 'nm-gof', label: 'GOF overall, 4,912 points (network)', brush: true },
-  { fixture: 'gof-100k', hash: '#/fit?only=nm-gof', panel: 'nm-gof', label: 'GOF overall, 102,868 points (gof-100k)', brush: true },
-  { fixture: 'network', hash: '#/dynamics?only=nm-all-trajectories', panel: 'nm-all-trajectories', label: 'raw lines, 56,000 points per plot (network)', raw: true },
+  { fixture: 'network', hash: '#/fit?only=nm-gof', panel: 'nm-gof', key: 'Overall', label: 'GOF overall, 4,912 points (network)', brush: true },
+  { fixture: 'gof-100k', hash: '#/fit?only=nm-gof', panel: 'nm-gof', key: 'Overall', label: 'GOF overall, 102,868 points (gof-100k)', brush: true },
+  // the three heaviest scatter plots by dot count: GOF per-layer and residuals (102,868 dots in
+  // three facets each, gof-100k) and parameter parallel coordinates (2,400 dots, network)
+  { fixture: 'gof-100k', hash: '#/fit?only=nm-gof', panel: 'nm-gof', key: 'per-layer', label: 'GOF per-layer facets, 102,868 points (gof-100k)' },
+  { fixture: 'gof-100k', hash: '#/fit?only=nm-residuals', panel: 'nm-residuals', key: 'main', label: 'Residuals, 102,868 points in 3 facets (gof-100k)' },
+  { fixture: 'network', hash: '#/parameters?only=nm-param-parallel', panel: 'nm-param-parallel', key: 'main', label: 'Parameter parallel coordinates, 2,400 dots (network)' },
+  { fixture: 'network', hash: '#/dynamics?only=nm-all-trajectories', panel: 'nm-all-trajectories', key: 'mRNA', label: 'raw lines, 56,000 points per plot (network)', raw: true },
 ]
 for (const c of cases) {
   const ctx = await browser.newContext({ viewport: { width: 1360, height: 1000 } })
@@ -101,7 +106,8 @@ for (const c of cases) {
   if (c.raw) await page.check('[data-testid=raw-lines]')
   await card.locator('[data-testid=zoom-in]').first().waitFor({ timeout: 120000 })
   await page.waitForTimeout(1500)
-  const wrap = card.locator('.pkv-zoomwrap').first()
+  const wrap = card.locator(`.pkv-zoomwrap[data-zoom-key="${c.key}"]`).first()
+  await wrap.scrollIntoViewIfNeeded()
   // the plot's own svg (legend swatches are small svgs too)
   const box = (await wrap.locator('svg').evaluateAll((ss) => ss.map((s) => s.getBoundingClientRect()).filter((r) => r.width > 100).map((r) => ({ x: r.x, y: r.y, width: r.width, height: r.height }))))[0]
   await wrap.locator('[data-testid=zoom-in]').click()

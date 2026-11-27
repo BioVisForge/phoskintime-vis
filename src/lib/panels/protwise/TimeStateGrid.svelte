@@ -36,7 +36,7 @@
 </script>
 
 {#if !t}<Loading />{:else}
-  <Plot height={220} grid fy={{ label: '' }} fx={{ label: 'State' }} x={{ type: 'band', label: 'Time (min), categorical as in PhosKinTime', domain: [...new Set(rows.map((r) => r.time))] }} y={{ label: 'Model FC' }}>
+  <Plot zoom="main" height={220} grid fy={{ label: '' }} fx={{ label: 'State' }} x={{ type: 'band', label: 'Time (min), categorical as in PhosKinTime', domain: [...new Set(rows.map((r) => r.time))] }} y={{ label: 'Model FC' }}>
     <BoxY data={rows.filter((r) => r.state === states[0] || true)} x="time" y="value" fx="state" fill="#a6c3e0" tickMedian={{ stroke: 'var(--pkv-ink)', strokeWidth: 2 }} />
     {#if nPer < 30}<Dot data={rows} x="time" y="value" fx="state" r={1.2} fill="var(--pkv-ink)" opacity={0.5} />{/if}
   </Plot>

@@ -22,7 +22,7 @@
 </script>
 
 {#if !t}<Loading />{:else}
-  <Plot height={260} grid fx={{ label: '', domain: bundle.meta.layers.length ? ['protein', 'rna', 'phospho'].map((l) => layerLabel(bundle, l)) : undefined }} x={{ label: 'Time (min)' }} y={{ label: 'FC' }} color={{ legend: true }}>
+  <Plot zoom="main" height={260} grid fx={{ label: '', domain: bundle.meta.layers.length ? ['protein', 'rna', 'phospho'].map((l) => layerLabel(bundle, l)) : undefined }} x={{ label: 'Time (min)' }} y={{ label: 'FC' }} color={{ legend: true }}>
     <Line data={rows} x="time" y="obs" z="state" fx="panel" stroke="series" strokeOpacity={0.35} />
     <Dot data={rows.filter((r) => r.obs !== null)} x="time" y="obs" fx="panel" stroke="series" symbol="square" r={3} opacity={0.5} />
     <Line data={rows} x="time" y="pred" z="state" fx="panel" stroke="series" strokeWidth={2} />

@@ -136,6 +136,8 @@ function inlineSvg(svg: SVGSVGElement, raster: Composed['rasterLayers']): SVGSVG
     if (Math.abs(shifts[i]) > 0.01) d.setAttribute('transform', `${d.getAttribute('transform') ?? ''} translate(0 ${shifts[i].toFixed(2)})`.trim())
     d.removeAttribute('class')
   })
+  // the zoom layer's frame rectangle (transparent, interaction only) is not part of the figure
+  for (const r of clone.querySelectorAll('rect.pkv-zoom-overlay')) r.remove()
   const srcFO = svg.querySelectorAll('foreignObject')
   const dstFO = clone.querySelectorAll('foreignObject')
   srcFO.forEach((fo, i) => {
@@ -149,6 +151,9 @@ function inlineSvg(svg: SVGSVGElement, raster: Composed['rasterLayers']): SVGSVG
     img.setAttribute('href', canvas.toDataURL('image/png'))
     img.setAttribute('preserveAspectRatio', 'none')
     img.setAttribute('data-raster-layer', kind)
+    // a zoomed view clips its layers to the frame ("export current view")
+    const clip = fo.getAttribute('clip-path')
+    if (clip) img.setAttribute('clip-path', clip)
     dstFO[i].replaceWith(img)
   })
   return clone
@@ -235,6 +240,24 @@ export function drawnRect(el: Element): { left: number; right: number; top: numb
   return el.getBoundingClientRect()
 }
 
+/**
+ * An element inside a zoomed plot ("export current view") is clipped to the plot frame: what
+ * it can occupy is its box intersected with the frame (the zoom layer's frame rectangle in the
+ * same facet). Unclipped elements keep their box.
+ */
+function clippedRect(el: Element, r: { left: number; right: number; top: number; bottom: number; width: number; height: number }) {
+  const g = el.closest('[clip-path^="url(#pkv-zoom-clip-"]')
+  const frame = g?.parentElement?.querySelector(':scope > rect.pkv-zoom-overlay')
+  if (!frame) return r
+  const f = frame.getBoundingClientRect()
+  const left = Math.max(r.left, f.left)
+  const right = Math.min(r.right, f.right)
+  const top = Math.max(r.top, f.top)
+  const bottom = Math.min(r.bottom, f.bottom)
+  if (right <= left || bottom <= top) return { left: 0, right: 0, top: 0, bottom: 0, width: 0, height: 0 }
+  return { left, right, top, bottom, width: right - left, height: bottom - top }
+}
+
 interface Extent {
   minX: number
   maxX: number
@@ -259,10 +282,10 @@ function extentOf(figure: HTMLElement, W0: number, part: 'ticks' | 'rest', lines
     if (l < -0.5) offenders.push({ kind, text, side: 'left' })
     else if (r > W0 + 0.5) offenders.push({ kind, text, side: 'right' })
   }
-  const els = part === 'ticks' ? figure.querySelectorAll(`svg g.tick :is(text, line, path)`) : [...figure.querySelectorAll(MEASURED)].filter((el) => !el.closest('g.tick'))
+  const els = part === 'ticks' ? figure.querySelectorAll(`svg g.tick :is(text, line, path)`) : [...figure.querySelectorAll(MEASURED)].filter((el) => !el.closest('g.tick') && !el.classList.contains('pkv-zoom-overlay'))
   for (const el of els) {
     if (hidden(el)) continue
-    const r = drawnRect(el)
+    const r = clippedRect(el, drawnRect(el))
     if (!r.width && !r.height) continue
     const l = r.left - base.left
     const rt = r.right - base.left

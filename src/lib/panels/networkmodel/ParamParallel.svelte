@@ -61,7 +61,7 @@
 {#if !post}<Loading />{:else}
   <label>Group <select value={g} onchange={(e) => (group = e.currentTarget.value)}>{#each groups as x}<option value={x}>{x}</option>{/each}</select></label>
   <label>Axis <select bind:value={norm}><option value="bounds">bounds-normalised (log)</option><option value="extent">extent</option><option value="log">log10 raw</option></select></label>
-  <Plot height={Math.max(200, 34 * new Set(rows.map((r) => r.parameter)).size + 60)} marginLeft={190} grid inset={8} x={{ label: norm === 'bounds' ? 'log position between lower (0) and upper (1) bound' : norm === 'extent' ? 'normalised to extent' : 'log10 value', domain: norm === 'bounds' ? [0, 1] : undefined }} y={{ label: '' }} color={{ legend: true }}>
+  <Plot zoom="main" height={Math.max(200, 34 * new Set(rows.map((r) => r.parameter)).size + 60)} marginLeft={190} grid inset={8} x={{ label: norm === 'bounds' ? 'log position between lower (0) and upper (1) bound' : norm === 'extent' ? 'normalised to extent' : 'log10 value', domain: norm === 'bounds' ? [0, 1] : undefined }} y={{ label: '' }} color={{ legend: true }}>
     <Line {...plotted as any} stroke="chain" strokeOpacity={0.25} strokeWidth={0.7} />
     <Dot canvas={rows.length > CANVAS_MIN} {...plotted as any} fill="chain" r={1.2} title={(d: any) => `${d.parameter}: ${d.raw.toPrecision(4)} (bounds ${d.lo} … ${d.hi})`} />
   </Plot>

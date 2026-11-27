@@ -71,7 +71,7 @@ class AppState {
   /** Per-bundle, per-panel local controls (shared by screen and offscreen export renders). */
   private ui = new Map<string, Record<string, unknown>>()
   /** Export dialog: registry panels by id, all panels, or custom targets (comparison sections). */
-  export = $state<{ open: boolean; targetIds: string[]; all: boolean; formats?: Format[]; fit?: FitIssue[]; custom?: { title: string; make: () => Promise<ExportTarget[]> } }>({ open: false, targetIds: [], all: false })
+  export = $state<{ open: boolean; targetIds: string[]; all: boolean; formats?: Format[]; fit?: FitIssue[]; view?: 'full' | 'current'; custom?: { title: string; make: () => Promise<ExportTarget[]> } }>({ open: false, targetIds: [], all: false })
   toast = $state<string | null>(null)
 
   constructor() {

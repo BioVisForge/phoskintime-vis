@@ -45,7 +45,7 @@
 {#if !t}<Loading />{:else}
   <label>x <select value={X} onchange={(e) => (ox = e.currentTarget.value)}>{#each wide.objs as o}<option value={o}>{o}</option>{/each}</select></label>
   <label>y <select value={Y} onchange={(e) => (oy = e.currentTarget.value)}>{#each wide.objs as o}<option value={o}>{o}</option>{/each}</select></label>
-  <Plot height={320} grid inset={8} x={{ label: X }} y={{ label: Y }}>
+  <Plot zoom="main" height={320} grid inset={8} x={{ label: X }} y={{ label: Y }}>
     <Dot data={wide.rows} x={X} y={Y} r={4} fill={(d: any) => (inB(d) ? '#d62728' : '#6a8caf')} />
     <Dot data={wide.rows.filter((r) => r.selected)} x={X} y={Y} r={8} stroke="var(--pkv-ink)" strokeWidth={2} />
     {#if brush.enabled}<Rect {...brush} opacity={0.08} />{/if}
