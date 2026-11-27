@@ -1,0 +1,11 @@
+# Default owner for everything
+* @bibymaths
+
+# Contracts shared with PhosKinTime: changes need a deliberate review
+/contracts/ @bibymaths
+
+# Release and workflow configuration
+/.github/ @bibymaths
+/cliff.toml @bibymaths
+/CITATION.cff @bibymaths
+/SECURITY.md @bibymaths
