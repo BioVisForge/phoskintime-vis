@@ -1,8 +1,15 @@
 import { expect, type Page } from '@playwright/test'
+import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 export const APP = 'file://' + resolve('dist-single/index.html')
 export const FIX = (n: string) => resolve(`tests/fixtures/out/${n}`)
+
+/** bundle_id of a generated fixture, read from its manifest. The fixtures are regenerated on every
+ *  machine and their floats can differ in the last bits between CPUs, so the ids are never hard-coded. */
+export const bundleId = (n: string): string => JSON.parse(readFileSync(FIX(`${n}.pkt/manifest.json`), 'utf8')).bundle_id
+/** the 8 hex digits an export file name carries (pkt-3d14d0f8… -> 3d14d0f8) */
+export const shortId = (n: string): string => bundleId(n).slice(4, 12)
 
 /** Collect console errors and page errors for the no-console-errors check. */
 export function watchErrors(page: Page): string[] {

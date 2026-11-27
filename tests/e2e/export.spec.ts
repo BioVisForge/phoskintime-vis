@@ -3,12 +3,16 @@ import { readFileSync } from 'node:fs'
 import { unzipSync, strFromU8 } from 'fflate'
 import { PNG } from 'pngjs'
 import { PDFDocument, PDFName, PDFDict } from 'pdf-lib'
-import { APP, openZip, waitVerified, goSection } from './helpers'
+import { APP, openZip, waitVerified, goSection, bundleId, shortId } from './helpers'
 import { readPngInfo } from '../../src/lib/export/png'
 
 // exports are heavy; Chromium only (Firefox runs the UI specs)
 test.skip(({ browserName }) => browserName !== 'chromium', 'export specs run in Chromium')
 test.setTimeout(240_000)
+
+const NET = bundleId('network')
+const NET8 = shortId('network')
+const SMALL8 = shortId('small-protwise')
 
 async function openNetwork(page: Page, section: string) {
   await page.goto(APP)
@@ -49,11 +53,11 @@ async function pdfInfo(bytes: Buffer) {
 test('PNG: true 600 dpi pixel size, pHYs, provenance text chunks, filename', async ({ page, browser }) => {
   await openNetwork(page, 'fit')
   const png = await exportVia(page, 'nm-gof', 'png')
-  expect(png.name).toMatch(/^nm-gof_3d14d0f8_\d{8}\.png$/)
+  expect(png.name).toMatch(new RegExp(`^nm-gof_${NET8}_\\d{8}\\.png$`))
   const info = readPngInfo(new Uint8Array(png.bytes))
   expect(info.width).toBe(Math.round((85 / 25.4) * 600))
   expect(info.dpiX).toBe(600)
-  expect(info.text.bundle_id).toBe('pkt-3d14d0f826776869')
+  expect(info.text.bundle_id).toBe(NET)
   expect(info.text.panel_id).toBe('nm-gof')
   expect(info.text.phoskintime_commit).toMatch(/^e634e17/)
   expect(info.text.Software).toMatch(/^PhosKinTime-Vis /)
@@ -91,8 +95,8 @@ test('PDF: page size in mm, embedded PKV Sans, extractable axis labels, provenan
   expect(i.text).toContain('Predicted')
   expect(i.text).toMatch(/Robust-σ/)
   expect(i.meta.Title).toContain('nm-gof')
-  expect(i.meta.Subject).toContain('pkt-3d14d0f8')
-  expect(i.meta.Keywords).toContain('bundle_id=pkt-3d14d0f826776869')
+  expect(i.meta.Subject).toContain(`pkt-${NET8}`)
+  expect(i.meta.Keywords).toContain(`bundle_id=${NET}`)
   expect(i.images).toBe(0) // 4,912 + 4,912 points < 50,000: fully vector
 })
 
@@ -116,7 +120,7 @@ test('SVG: size in mm, embedded font, light theme; CSV: provenance header and un
   expect(svg).not.toContain('<canvas')
   const csv = (await exportVia(page, 'nm-gof', 'csv')).bytes.toString('utf8')
   expect(csv.split('\n')[0]).toBe('# PhosKinTime-Vis export: Goodness of fit (overall and per layer)')
-  expect(csv).toContain('# bundle_id: pkt-3d14d0f826776869')
+  expect(csv).toContain(`# bundle_id: ${NET}`)
   expect(csv).toMatch(/# units: .*time=min/)
   expect(csv).toContain('# empty field = null (missing value, never zero)')
 })
@@ -124,7 +128,7 @@ test('SVG: size in mm, embedded font, light theme; CSV: provenance header and un
 test('TikZ: zip with tikzpicture, standalone document, full-precision data, README', async ({ page }) => {
   await openNetwork(page, 'uncertainty')
   const z = await exportVia(page, 'nm-post-ridge', 'tikz')
-  expect(z.name).toMatch(/^nm-post-ridge_3d14d0f8_\d{8}_tikz\.zip$/)
+  expect(z.name).toMatch(new RegExp(`^nm-post-ridge_${NET8}_\\d{8}_tikz\\.zip$`))
   const files = unzipSync(new Uint8Array(z.bytes))
   const names = Object.keys(files)
   expect(names).toContain('nm-post-ridge.tex')
@@ -133,7 +137,7 @@ test('TikZ: zip with tikzpicture, standalone document, full-precision data, READ
   expect(names.some((n) => n.startsWith('data/') && n.endsWith('.dat'))).toBe(true)
   const tex = strFromU8(files['nm-post-ridge.tex'])
   expect(tex).toMatch(/^% PhosKinTime-Vis PGFPlots export: Posterior ridgeline/)
-  expect(tex).toContain('% bundle_id: pkt-3d14d0f826776869')
+  expect(tex).toContain(`% bundle_id: ${NET}`)
   expect(tex).toContain('\\begin{tikzpicture}')
   expect(strFromU8(files['nm-post-ridge-standalone.tex'])).toContain('\\pgfplotsset{compat=1.18}')
   const dat = strFromU8(files[names.find((n) => n.startsWith('data/'))!])
@@ -153,10 +157,10 @@ test('Export all panels: one zip with every available panel, settings remembered
   if (!(await page.locator('[data-testid=fmt-csv]').isChecked())) await page.click('[data-testid=fmt-csv]')
   await page.fill('[data-testid=export-font]', '9')
   const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 180_000 }), page.click('[data-testid=export-run]')])
-  expect(dl.suggestedFilename()).toMatch(/^all-panels_84f58800_\d{8}\.zip$/)
+  expect(dl.suggestedFilename()).toMatch(new RegExp(`^all-panels_${SMALL8}_\\d{8}\\.zip$`))
   const files = Object.keys(unzipSync(new Uint8Array(readFileSync((await dl.path())!))))
   expect(files.length).toBe(15) // every available protwise panel
-  expect(files.every((f) => /_84f58800_\d{8}\.csv$/.test(f))).toBe(true)
+  expect(files.every((f) => new RegExp(`_${SMALL8}_\\d{8}\\.csv$`).test(f))).toBe(true)
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('pkv.export.settings.v1') ?? '{}'))
   expect(saved.fontPt).toBe(9)
 })

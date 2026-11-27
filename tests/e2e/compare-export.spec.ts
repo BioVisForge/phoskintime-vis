@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 import { readFileSync } from 'node:fs'
 import { unzipSync, strFromU8 } from 'fflate'
 import { PDFDocument } from 'pdf-lib'
-import { APP, openZip, waitVerified, watchErrors } from './helpers'
+import { APP, openZip, waitVerified, watchErrors, shortId } from './helpers'
 import { readPngInfo } from '../../src/lib/export/png'
 
 test.skip(({ browserName }) => browserName !== 'chromium', 'export specs run in Chromium')
@@ -10,7 +10,8 @@ test.setTimeout(480_000)
 
 /** sections and the number of PGFPlots axes their TikZ export holds (0: table only, no TikZ button) */
 const SECTIONS: Record<string, number> = { provenance: 0, gof: 0, overlay: 1, 'delta-lines': 1, 'delta-raster': 1, params: 3 }
-const IDS = '3d14d0f8_vs_7d715977'
+const [A8, B8] = [shortId('network'), shortId('network-after-fix')]
+const IDS = `${A8}_vs_${B8}`
 /** the side-by-side GOF table is wider than a single column: PNG, PDF and SVG warn at 85 mm */
 const TOO_WIDE = new Set(['gof png', 'gof pdf', 'gof svg'])
 
@@ -50,7 +51,7 @@ test('comparison sections export as PNG, PDF, SVG, CSV and TikZ', async ({ page 
         expect(bytes.toString('utf8'), what).toMatch(new RegExp(`^<svg[^>]+width="${mm}mm"`))
       } else if (fmt === 'csv') {
         const lines = bytes.toString('utf8').split('\n')
-        expect(lines[2], what).toMatch(/^# bundle_id: pkt-3d14d0f8\S* vs pkt-7d715977/)
+        expect(lines[2], what).toMatch(new RegExp(`^# bundle_id: pkt-${A8}\\S* vs pkt-${B8}`))
         expect(lines.filter((l) => l && !l.startsWith('#')).length, what).toBeGreaterThan(1)
       } else {
         const files = unzipSync(new Uint8Array(bytes))
