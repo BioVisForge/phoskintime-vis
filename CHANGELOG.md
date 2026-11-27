@@ -20,6 +20,7 @@ All notable changes to PhosKinTime-Vis are documented here. The project follows
 - **tikz:** PGFPlots emitter from the figure spec, standalone zip, compile script and manual TeX CI job
 - **ui:** App shell with sections by question, global context, command palette, inspector, panel cards, themes
 - **export:** Fit to width needs confirmation; TikZ of a comparison section holds only its plots
+- **brand:** Logo, wordmarks and favicons combining the BioVisForge forge and the PhosKinTime wave
 
 ### Fixed
 
@@ -38,6 +39,7 @@ All notable changes to PhosKinTime-Vis are documented here. The project follows
 - Screenshots, gallery and measured performance; test(unit): registry availability and engine URL
 - Export and UI decisions, performance before/after, galleries, sample exports
 - Fit to width, text baselines and opacity, axe in Firefox, refreshed performance numbers
+- **site:** Zensical site with user guide, generated reference and release pages; Pages publishes it with the demo
 
 ### Tests
 
@@ -49,6 +51,7 @@ All notable changes to PhosKinTime-Vis are documented here. The project follows
 - Export, UI, axe and visual-regression specs
 - **plot:** Arrow direction with unequal x/y scales; pixel-space angle as a pure function
 - **e2e:** Comparison exports, PDF/PNG comparison, opacity guard, axe in Firefox; TeX job compiles comparisons
+- Allow for a loaded machine when panels render and samples export
 
 ### Build and CI
 
@@ -60,3 +63,6 @@ All notable changes to PhosKinTime-Vis are documented here. The project follows
 - **docs:** Generated screenshots and gallery out of git; docs-assets CI artifact and Pages copy
 - **font:** Bundle PKV Sans (Noto Sans subset + Noto Sans Math operators, OFL)
 - **scripts:** Perf, screenshots, galleries, sample exports and PDF bench for the new UI
+- Ruff, tox and pre-commit configuration; fix the findings
+- **release:** Versioned release workflow, changelog, release notes, citation, Zenodo, security and code owners
+
