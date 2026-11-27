@@ -1,112 +1,62 @@
-# Handoff (2026-11-26)
+# Handoff (2026-11-27)
 
-## Branch state
+## Branch state (all local; nothing pushed, no PR, Pages not deployed)
 
-| Branch | Based on | Commits | Last commit | Pushed |
-|---|---|---|---|---|
-| `main` | — | 1 | `36cac96` Initial commit | yes (origin) |
-| `feat/foundation` | `main` | 20 | `a4b962f` test(e2e): tampered and future-major also as folders | **no** |
-| `feat/export-ui` | `feat/foundation` | 9 (+ this handoff commit) | `94b47a5` fix(export): rasters up to the vector limit export as one rect per cell | **no** |
+| Branch | Based on | Content |
+|---|---|---|
+| `main` | — | `36cac96` Initial commit (origin) |
+| `feat/foundation` | `main` | viewer, compare, tests, CI; generated docs assets out of history |
+| `feat/export-ui` | `feat/foundation` | exports, UI, fit to width, PDF fidelity |
+| `feat/docs-release` | `feat/export-ui` | documentation site, brand, release and tooling files |
 
-Nothing is pushed, no PR is open and Pages has not been deployed. Neither feature branch has an
-upstream. The phoskintime checkout (`~/Documents/phoskintime-sci`, `sci/2026-12`) was only read.
+Local tags `backup/foundation-pre-clean` and `backup/export-ui-pre-clean` keep the history from
+before generated files were removed (about 30 MB). Do not push them; delete them once the PRs are
+merged. A clone of the branches without them is about 3 MB.
 
-## How to resume
+## Merge plan (stacked squash PRs into protected `main`)
+
+1. PR 1: `feat/foundation` → `main`.
+2. PR 2: `feat/export-ui` → `feat/foundation`. After PR 1 is squash-merged:
+   `git fetch && git rebase --onto origin/main feat/foundation feat/export-ui`, force-push the
+   feature branch (allowed; only `main` is protected) and retarget the PR to `main`.
+3. PR 3: `feat/docs-release` → `feat/export-ui`, same steps after PR 2.
+
+## After merging
+
+- `tikz-compile` and `pages` are manual workflows; GitHub offers manual dispatch only once they are
+  on `main`. The TikZ compile step was run locally in the same image
+  (`texlive/texlive:TL2025-historic`, with udocker): 41 of 41 compiled. The GitHub job itself has
+  not run.
+- GitHub settings to switch on: Pages source "GitHub Actions"; private vulnerability reporting;
+  Zenodo's GitHub integration (before the first release).
+- No CI workflow has ever run on GitHub.
+
+## Resume
 
 ```bash
-cd ~/Documents/phoskintime-vis
-git switch feat/export-ui
-nvm use && npm ci                       # Node 24
-# dev-only Python (numpy, pyarrow with snappy, scipy, pandas, pillow): the system python3 lacks snappy
+nvm use                      # .nvmrc says 24; this host has only 22 and 26, tests ran on 26
+npm ci
 uv venv .venv --python 3.13 && uv pip install --python .venv/bin/python -r tests/requirements-dev.txt
-
-PYTHON=.venv/bin/python npm run fixtures          # synthetic spec-fixture bundles -> tests/fixtures/out/
-npm run build:single                              # dist-single/index.html (offline, file://)
-npm run build                                     # dist/ (Pages build)
-
-npm run lint && npm run check && npm test         # lint, types, 77 unit tests
-PYTHON=.venv/bin/python npm run test:parity       # 10 parity tests (rtol 1e-9)
-npx playwright install chromium firefox           # once
-npm run test:e2e                                  # Chromium + Firefox, from file:// (about 7 min)
-npm run test:visual                               # 16 screenshot baselines (Chromium)
+PYTHON=.venv/bin/python npm run fixtures
+npm run build:single && npm run lint && npm run check && npm test
+PYTHON=.venv/bin/python npm run test:parity
+npm run test:e2e             # about 16 min; needs Ghostscript
+npm run test:visual
 ```
 
-TikZ (needs TeX Live with LuaLaTeX and pgfplots):
+This host is shared and was at a load of 60–105 on 96 cores during the last runs; two timeouts
+seen then led to longer limits in the e2e helper and the sample export script.
 
-```bash
-node tests/tikz/export_all.mjs network tests/tikz/out tikz
-bash tests/tikz/compile_all.sh tests/tikz/out/all-panels_*.zip /tmp/tikz-work
-```
+## Known limitations
 
-Viewing from another machine (this host has no display): open `dist-single/index.html`
-directly, or serve the folder and forward the port.
-
-```bash
-cd dist-single && python3 -m http.server 8000 --bind 127.0.0.1
-# on your laptop:  ssh -L 8000:127.0.0.1:8000 <this-host>   then open http://localhost:8000/
-```
-
-The mock engine (What-if preview) runs on another loopback port:
-`node scripts/mock-engine.mjs tests/fixtures/out/small-protwise.pkt`, then open the page with
-`?engine=mock` and forward port 8765 as well.
-
-Regenerating docs assets (all synthetic): `node scripts/screenshots.mjs`, `node scripts/gallery.mjs`,
-`node scripts/export-samples.mjs`, `node scripts/perf.mjs chromium|firefox`, and for the TikZ
-gallery `node tests/tikz/gallery.mjs <png-zips> -- <compile-workdirs>` followed by
-`.venv/bin/python tests/tikz/downscale_viewer_pngs.py`.
-
-## Open decisions for you
-
-a) **Generated files in git (about 30 MB, all synthetic).** Proposal:
-   - keep the visual-regression baselines (`tests/visual/visual.spec.ts-snapshots/`, 2.8 MB),
-     losslessly optimised;
-   - move the screenshots, gallery images (`docs/screenshots/`) and sample exports
-     (`docs/samples/exports/`) out of git, for example to a release asset or CI artifact,
-     regenerated by the scripts above;
-   - rewrite the unpushed history before the first push, so the large files never reach the
-     remote. Both feature branches are local only, so this is safe now and not after pushing.
-
-   Nothing has been moved or removed yet.
-
-b) **Merge strategy into protected `main`** (linear history, no force-push):
-   - two stacked squash PRs: `feat/foundation` first, then `feat/export-ui` rebased onto the
-     squashed result; or
-   - temporarily allow rebase merges, so the topical commits survive.
-
-c) **Fit-to-width.** When long axis labels do not fit the chosen width, the export currently
-   scales the whole figure down and states the percentage in the caption. GOF at 85 mm becomes
-   94 %, so its text is smaller than the chosen pt size. Proposal: warn in the export dialog
-   and offer fixes (wider preset, abbreviated labels, a larger left margin) instead of scaling
-   silently below the chosen pt.
-
-## Pending work
-
-- Add the comparison-section exports (PNG/PDF/SVG/CSV/TikZ) to the e2e tests and to the TikZ
-  compile test. They work by hand but neither covers them.
-- Investigate the Firefox page crash during the full axe sweep (two bundles, every section).
-  The axe spec currently runs in Chromium only.
-- Run the manual `tikz-compile` CI job once. The `texlive/texlive:TL2025-historic` image tag
-  has not been tried.
-- Add a regression test for arrow direction with unequal x/y scales (`PixelArrows`: the angle
-  must come from pixel space).
-- Check that no panel relies on group-level opacity, which the PDF folding into fill/stroke
-  opacity would not reproduce, or add a PNG-vs-PDF pixel comparison for three panels.
+- At 85 mm some panels with long parameter labels or wide tables ask for a fix before export.
+- The GOF per-layer facet titles touch the y-axis title in exports.
+- The Firefox axe run removes `ariaLabelledByElements` (a crash in Playwright's Firefox under the
+  test runner; stock Firefox untested).
+- Safari is untested.
 
 ## Still blocked on upstream (PhosKinTime)
 
-- `phoskintime bundle create|verify|inspect` and a published bundle schema
-  (`common/bundle/schema/manifest-*.schema.json`). The viewer uses the DRAFT 1.0 contract and
-  spec fixtures.
-- Manifest fields: `known_issues_open`, `fold_change_baseline`, parameter `label`/`group`/`unit`.
-- Missing data: protwise observed mRNA/protein, steady-state dynamics, kinase activity as the RHS
-  uses it, PCA spectrum, Pareto parameter vectors, S(t) table, additive drive contributions.
-- `pktengine` (HTTP API, bundle schema 1.1 `resim/`). The What-if view runs only against the mock.
-
-Ready-to-paste issues for all of these are in `docs/upstream-proposals.md`.
-
-## Pointers
-
-- `docs/upstream-status.md`: what PhosKinTime provides today (read at `e634e17` and `96d9309`)
-- `docs/decisions/0001`–`0004`: Parquet reader, PDF/PNG/SVG export, TikZ emitter, UI stack
-- `docs/performance.md` (+ `performance-baseline.json`, `performance.json`): before/after numbers
-- `docs/tikz-compile-results.txt`: 37/37 LuaLaTeX, 34/37 pdfLaTeX
+`phoskintime bundle` and a published schema; manifest fields `known_issues_open`,
+`fold_change_baseline`, parameter `label`/`group`/`unit`; data not saved by PhosKinTime (see
+`docs/upstream-proposals.md`); `pktengine`.
