@@ -47,6 +47,11 @@ screenshots) and commit them with the change that caused them, stating why in th
 - The PDF/PNG comparison in `tests/e2e/pdf-fidelity.spec.ts` needs Ghostscript (`gs`).
 - The TikZ gallery: `node tests/tikz/gallery.mjs <png-zips> -- <compile-workdirs>`, then `python tests/tikz/downscale_viewer_pngs.py` (needs TeX Live and Ghostscript).
 
+## Hooks
+
+`pre-commit install` (see `.pre-commit-config.yaml`) runs formatting checks, ruff and eslint on
+commit, checks the commit message, and runs the type check and unit tests before a push.
+
 ## Checks before a PR
 
 ```bash

@@ -1,0 +1,18 @@
+{
+  "title": "PhosKinTime-Vis: offline viewer and run comparison for PhosKinTime run bundles",
+  "description": "PhosKinTime-Vis opens PhosKinTime run bundles in the browser, verifies their files, redraws the model's plots from the stored data, compares runs and exports publication figures (PNG, PDF, SVG, CSV and TikZ/PGFPlots). It works offline from a single HTML file and uploads nothing. All example data distributed with the software is synthetic.",
+  "upload_type": "software",
+  "version": "0.1.0",
+  "access_right": "open",
+  "license": "BSD-3-Clause",
+  "language": "eng",
+  "creators": [
+    { "name": "Mishra, Abhinav", "orcid": "0009-0005-3179-7408" }
+  ],
+  "keywords": ["phosphorylation", "kinetics", "systems biology", "scientific visualization", "ODE modeling", "reproducibility", "Svelte"],
+  "related_identifiers": [
+    { "relation": "isSupplementTo", "identifier": "https://github.com/BioVisForge/phoskintime-vis", "resource_type": "software", "scheme": "url" },
+    { "relation": "references", "identifier": "https://github.com/bibymaths/phoskintime", "resource_type": "software", "scheme": "url" },
+    { "relation": "isDocumentedBy", "identifier": "https://biovisforge.github.io/phoskintime-vis/", "resource_type": "publication-softwaredocumentation", "scheme": "url" }
+  ]
+}

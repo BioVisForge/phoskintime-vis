@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: If you use PhosKinTime-Vis in your research, please cite it using this metadata.
+title: "PhosKinTime-Vis: offline viewer and run comparison for PhosKinTime run bundles"
+abstract: >-
+  PhosKinTime-Vis opens PhosKinTime run bundles in the browser, verifies their files, redraws the
+  model's plots from the stored data, compares runs and exports publication figures. It works
+  offline and uploads nothing.
+type: software
+authors:
+  - family-names: Mishra
+    given-names: Abhinav
+    orcid: "https://orcid.org/0009-0005-3179-7408"
+version: "0.1.0"
+license: BSD-3-Clause
+repository-code: "https://github.com/BioVisForge/phoskintime-vis"
+url: "https://biovisforge.github.io/phoskintime-vis/"
+keywords:
+  - phosphorylation
+  - kinetics
+  - systems biology
+  - scientific visualization
+  - ODE modeling
+  - Svelte
+references:
+  - type: software
+    title: "phoskintime: ODE-based modeling of phosphorylation kinetics and transcriptional time-series"
+    authors:
+      - family-names: Mishra
+        given-names: Abhinav
+        orcid: "https://orcid.org/0009-0005-3179-7408"
+    repository-code: "https://github.com/bibymaths/phoskintime"

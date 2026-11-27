@@ -1,0 +1,29 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "PhosKinTime-Vis TypeScript API",
+  "plugin": ["typedoc-plugin-markdown"],
+  "entryPoints": [
+    "src/lib/contracts/index.ts",
+    "src/lib/contracts/version.ts",
+    "src/lib/sources/types.ts",
+    "src/lib/sources/folder.ts",
+    "src/lib/sources/zip.ts",
+    "src/lib/sources/memory.ts",
+    "src/lib/sources/engine.ts",
+    "src/lib/engine/types.ts",
+    "src/lib/model/types.ts",
+    "src/lib/model/bundle.ts",
+    "src/lib/io/npy.ts",
+    "src/lib/io/parquet.ts",
+    "src/lib/io/sha256.ts",
+    "src/lib/transforms/*.ts"
+  ],
+  "tsconfig": "tsconfig.json",
+  "out": "website/reference/api",
+  "readme": "none",
+  "entryFileName": "index.md",
+  "excludePrivate": true,
+  "excludeExternals": true,
+  "disableSources": false,
+  "gitRevision": "main"
+}

@@ -1,0 +1,15 @@
+/* BioVisForge navy and copper with the PhosKinTime teal */
+:root {
+  --md-primary-fg-color: #1f2a44;
+  --md-primary-fg-color--light: #34415f;
+  --md-primary-fg-color--dark: #141c30;
+  --md-primary-bg-color: #ffffff;
+  --md-accent-fg-color: #a3531f;
+  --md-typeset-a-color: #0f6f67;
+}
+[data-md-color-scheme='slate'] {
+  --md-accent-fg-color: #e8935c;
+  --md-typeset-a-color: #4fd1c5;
+}
+.hero img { max-width: 560px; width: 100%; }
+.shot { border: 1px solid var(--md-default-fg-color--lightest); border-radius: 8px; }

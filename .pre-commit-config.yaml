@@ -1,0 +1,56 @@
+# Install once: pre-commit install --hook-type pre-commit --hook-type commit-msg --hook-type pre-push
+# Fast checks on commit; the type check and unit tests run before a push. Browser tests stay in CI.
+default_install_hook_types: [pre-commit, commit-msg, pre-push]
+exclude: '^(package-lock\.json|CHANGELOG\.md|contracts/|docs/[^/]*\.json$|tests/unit/__snapshots__/|tests/visual/.*-snapshots/|assets/brand/)'
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+        exclude: '^tsconfig\.json$'
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: check-added-large-files
+        args: [--maxkb=600]
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.6
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v4.2.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+  - repo: local
+    hooks:
+      - id: eslint
+        name: eslint
+        entry: npx --no-install eslint
+        language: system
+        files: '\.(ts|js|mjs|svelte)$'
+      - id: release-metadata
+        name: version, citation, Zenodo and changelog agree
+        entry: node scripts/check-release.mjs --current
+        language: system
+        pass_filenames: false
+        files: '^(package\.json|CITATION\.cff|\.zenodo\.json|\.bumpversion\.toml|CHANGELOG\.md|release-notes/)'
+      - id: svelte-check
+        name: svelte-check
+        entry: npm run --silent check
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+      - id: unit-tests
+        name: unit tests
+        entry: npm test --silent
+        language: system
+        pass_filenames: false
+        stages: [pre-push]

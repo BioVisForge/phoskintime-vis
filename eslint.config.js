@@ -4,7 +4,7 @@ import svelte from 'eslint-plugin-svelte'
 import globals from 'globals'
 
 export default ts.config(
-  { ignores: ['src/lib/contracts/generated/', 'dist/', 'dist-single/', 'node_modules/', 'tests/fixtures/out/', 'test-results/', 'playwright-report/', '.venv/', 'bench/'] },
+  { ignores: ['src/lib/contracts/generated/', 'dist/', 'dist-single/', 'node_modules/', 'tests/fixtures/out/', 'test-results/', 'playwright-report/', '.venv/', 'bench/', 'site/', 'website/', 'release_assets/'] },
   js.configs.recommended,
   ...ts.configs.recommended,
   ...svelte.configs.recommended,

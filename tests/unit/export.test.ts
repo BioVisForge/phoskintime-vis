@@ -88,4 +88,3 @@ describe('fit to width settings', () => {
     vi.unstubAllGlobals()
   })
 })
-

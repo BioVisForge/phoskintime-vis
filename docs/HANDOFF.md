@@ -1,4 +1,25 @@
-# Handoff (2026-11-27)
+# Handoff (2026-11-27, end of session)
+
+**Rule from the owner: push and open PRs only after the owner confirms.**
+
+## Where to continue
+
+Verification finished on 2026-11-27 (results below); the three branches are pushed and the
+stacked PRs are open. Next: merge them in order following the merge plan below; then the
+post-merge steps. A Node 24 run has not happened locally; the first CI run covers it.
+
+## Test status at the end of the session
+
+| Branch | Last full result |
+|---|---|
+| `feat/foundation` `fb7a7e3` | all passed (Node 26): lint, types, unit 44, parity 10, e2e 42, builds, `docs:assets` |
+| `feat/export-ui` `8e6d60b` | e2e 73 passed, **1 failed** (Firefox, reordered-params), visual 16, **`docs:assets` failed** |
+| `feat/export-ui` `0244bd8` (longer timeouts for both) | all passed 2026-11-27 (Node 26, load ~2): lint, types, unit 82, parity 10, e2e 74 + 18 skipped, visual 16, builds, `docs:assets` |
+| `feat/docs-release` | all passed 2026-11-27 (Node 26): lint, types, unit 82, parity 10, e2e 74 + 18 skipped, visual 16, builds, `tox -e lint`, `tox -e docs` (strict build), pre-commit |
+
+The two failures: the Firefox test passed 6 of 6 afterwards and the sample export twice in a row;
+the host was at load 60-105. Most likely timeouts (5 s panel render, 30 s click), now longer, but
+not proven: the detailed output of the failing run was overwritten.
 
 ## Branch state (all local; nothing pushed, no PR, Pages not deployed)
 

@@ -1,0 +1,52 @@
+# Publish a GitHub release when a vX.Y.Z tag is pushed. Nothing is released unless the versions
+# agree and every test passes.
+name: release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+concurrency: { group: 'release-${{ github.ref }}', cancel-in-progress: false }
+jobs:
+  release:
+    name: Test, build and publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: npm }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.13' }
+      - name: Versions, changelog and release notes agree
+        run: node scripts/check-release.mjs "$GITHUB_REF_NAME"
+      - run: pip install -r tests/requirements-dev.txt
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium firefox
+      - name: Ghostscript (PDF/PNG comparison)
+        run: sudo apt-get update && sudo apt-get install -y ghostscript
+      - run: python tests/fixtures/make_fixtures.py
+      - run: npm run lint && npm run check && npm test && npm run test:parity
+      - run: npm run build:single
+      - run: npm run test:e2e
+      - name: Assemble release assets
+        run: |
+          name="phoskintime-vis-${GITHUB_REF_NAME}"
+          mkdir -p release_assets "$name"
+          cp dist-single/index.html "$name/phoskintime-vis.html"
+          cp LICENSE THIRD_PARTY.md CITATION.cff "$name/"
+          cp "release-notes/${GITHUB_REF_NAME}.md" "$name/RELEASE-NOTES.md"
+          cp tests/fixtures/out/{small-protwise,network,network-after-fix}.pkt.zip "$name/"
+          zip -r "release_assets/$name.zip" "$name"
+          cp dist-single/index.html "release_assets/$name.html"
+          (cd release_assets && sha256sum * > SHA256SUMS)
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pre=()
+          [[ "$GITHUB_REF_NAME" == *-* ]] && pre=(--prerelease)
+          gh release create "$GITHUB_REF_NAME" release_assets/* \
+            --title "PhosKinTime-Vis ${GITHUB_REF_NAME#v}" \
+            --notes-file "release-notes/${GITHUB_REF_NAME}.md" \
+            --verify-tag "${pre[@]}"
