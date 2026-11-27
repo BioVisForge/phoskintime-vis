@@ -2,6 +2,7 @@ import type { LoadedBundle } from '../model/bundle'
 import { num, str } from '../transforms/table'
 import { alignParameters, alignTrajectories, compareMetrics, issueDiff, type NamedValue, type TrajPoint } from '../transforms/compare'
 import { bestRows, gofByLayer, gofPoints } from './trajectories'
+import { timed } from '../perf/spans'
 
 export async function parameterValues(b: LoadedBundle): Promise<NamedValue[]> {
   const t = await b.table('parameters')
@@ -19,7 +20,7 @@ export async function parameterValues(b: LoadedBundle): Promise<NamedValue[]> {
   return out
 }
 
-export async function bestTrajectory(b: LoadedBundle): Promise<TrajPoint[]> {
+async function bestTrajectory_(b: LoadedBundle): Promise<TrajPoint[]> {
   const t = await b.table('trajectories')
   const idx = bestRows(t)
   const ST = str(t, 'state')
@@ -70,3 +71,5 @@ export async function compareRuns(a: LoadedBundle, b: LoadedBundle) {
 }
 
 export type Comparison = Awaited<ReturnType<typeof compareRuns>>
+
+export const bestTrajectory = timed('shaping', 'bestTrajectory', bestTrajectory_)

@@ -4,6 +4,7 @@ import { checkCanvasSize, physChunk, pngPixelSize, textChunk, withChunks } from 
 import { exportFilename, provenanceText, LAYOUT_PX_PER_MM, type ExportSettings, type Provenance } from './settings'
 import { fontBase64, FONT_FAMILY } from './fonts'
 import { toCsv } from '../transforms/table'
+import { span, spanAsync } from '../perf/spans'
 
 export type Format = 'png' | 'pdf' | 'svg' | 'csv' | 'tikz'
 export const FORMATS: Format[] = ['png', 'pdf', 'svg', 'csv', 'tikz']
@@ -26,7 +27,7 @@ export function rasterNote(r: Rendered, dpi: number): string[] {
 }
 
 function compose(t: ExportTarget, r: Rendered, s: ExportSettings, embedFont = true): Composed {
-  return composeSvg(r.figure, s, { title: t.title, caption: t.caption, provenance: provenanceOf(t), notes: rasterNote(r, s.dpi) }, embedFont)
+  return span('export compose', t.id, () => composeSvg(r.figure, s, { title: t.title, caption: t.caption, provenance: provenanceOf(t), notes: rasterNote(r, s.dpi) }, embedFont))
 }
 
 const enc = (s: string) => new TextEncoder().encode(s)
@@ -131,12 +132,18 @@ export async function exportTarget(t: ExportTarget, fmt: Format, s: ExportSettin
 async function renderAs(t: ExportTarget, fmt: Format, s: ExportSettings): Promise<ExportFile> {
   const prov = provenanceOf(t)
   const name = (ext: string) => exportFilename(t.id, t.bundleIds, ext)
-  const r = await renderOffscreen(t, s)
+  const r = await spanAsync('export render', t.id, () => renderOffscreen(t, s))
   try {
     if (fmt === 'csv') return { name: name('csv'), data: enc(csvWithHeader(t, prov, t.report?.rows.length ? t.report.rows : r.report.rows)), mime: 'text/csv' }
     if (fmt === 'svg') return { name: name('svg'), data: enc(compose(t, r, s, s.svgEmbedFont).svg), mime: 'image/svg+xml' }
-    if (fmt === 'png') return { name: name('png'), data: await svgToPng(compose(t, r, s, true), s, prov), mime: 'image/png' }
-    if (fmt === 'pdf') return { name: name('pdf'), data: await svgToPdf(compose(t, r, s, false), t, prov), mime: 'application/pdf' }
+    if (fmt === 'png') {
+      const c = compose(t, r, s, true)
+      return { name: name('png'), data: await spanAsync('export encode', 'png', () => svgToPng(c, s, prov)), mime: 'image/png' }
+    }
+    if (fmt === 'pdf') {
+      const c = compose(t, r, s, false)
+      return { name: name('pdf'), data: await spanAsync('export encode', 'pdf', () => svgToPdf(c, t, prov)), mime: 'application/pdf' }
+    }
     // TikZ: PGFPlots lays out its own text at the chosen pt, so the SVG fit-to-width check does not apply
     const { tikzZip } = await import('../tikz/zip')
     return { name: name('zip').replace(/\.zip$/, '_tikz.zip'), data: await tikzZip(t, r, s, prov), mime: 'application/zip' }

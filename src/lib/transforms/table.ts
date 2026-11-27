@@ -1,14 +1,15 @@
 import type { Column, Table } from '../model/types'
+import { timed } from '../perf/spans'
 
 /** Numeric value or NaN for null. */
-export function num(t: Table, col: string): Float64Array {
+function num_(t: Table, col: string): Float64Array {
   const c = t.columns[col]
   if (!c) throw new Error(`column ${col} missing from ${t.name}`)
   if (c.values instanceof Float64Array) return c.values
   return Float64Array.from(c.values as unknown[], (v) => (v === null || v === undefined ? NaN : Number(v)))
 }
 
-export function str(t: Table, col: string): (string | null)[] {
+function str_(t: Table, col: string): (string | null)[] {
   const c = t.columns[col]
   if (!c) throw new Error(`column ${col} missing from ${t.name}`)
   if (c.values instanceof Float64Array) return Array.from(c.values, (v, i) => (c.valid && !c.valid[i] ? null : String(v)))
@@ -20,7 +21,7 @@ export function has(t: Table, col: string): boolean {
 }
 
 /** Materialise rows as objects (for plotting/raw view). Numeric nulls become null, never 0. */
-export function rows(t: Table, cols?: string[], idx?: ArrayLike<number>): Record<string, unknown>[] {
+function rows_(t: Table, cols?: string[], idx?: ArrayLike<number>): Record<string, unknown>[] {
   const names = cols ?? Object.keys(t.columns)
   const getters = names.map((n) => {
     const c: Column = t.columns[n]
@@ -64,3 +65,7 @@ export function toCsv(records: Record<string, unknown>[], cols?: string[]): stri
   }
   return [names.join(','), ...records.map((r) => names.map((n) => q(r[n])).join(','))].join('\n') + '\n'
 }
+
+export const num = timed('shaping', 'num', num_)
+export const str = timed('shaping', 'str', str_)
+export const rows = timed('shaping', 'rows', rows_)

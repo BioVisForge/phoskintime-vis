@@ -1,5 +1,6 @@
 import { unzipSync } from 'fflate'
 import { findRoot, SourceError, type DataSource } from './types'
+import { span } from '../perf/spans'
 
 /** A `<run>.pkt.zip` bundle. The archive is inflated once, in memory. */
 export class BundleZipSource implements DataSource {
@@ -9,7 +10,7 @@ export class BundleZipSource implements DataSource {
   constructor(readonly label: string, bytes: Uint8Array) {
     let entries: Record<string, Uint8Array>
     try {
-      entries = unzipSync(bytes)
+      entries = span('zip inflate', label, () => unzipSync(bytes))
     } catch (e) {
       throw new SourceError(`Could not read zip archive: ${(e as Error).message}`)
     }

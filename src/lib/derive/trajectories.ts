@@ -5,9 +5,10 @@ import { klRow, klByGene, type KlRow } from '../transforms/kl'
 import { envelopes } from '../transforms/envelope'
 import { quantile, mean, std } from '../transforms/stats'
 import { npyIndex } from '../io/npy'
+import { timed } from '../perf/spans'
 
 /** Row indices of the best-fit sample ('best' if present, otherwise the first sample_id). */
-export function bestRows(t: Table): Int32Array {
+function bestRows_(t: Table): Int32Array {
   const sid = str(t, 'sample_id')
   const target = sid.includes('best') ? 'best' : sid[0]
   const out: number[] = []
@@ -27,7 +28,7 @@ export interface GofPoint {
 }
 
 /** Observed/predicted pairs of the best fit; pairs with a null side are not points (gaps). */
-export function gofPoints(t: Table): GofPoint[] {
+function gofPoints_(t: Table): GofPoint[] {
   const idx = bestRows(t)
   const L = str(t, 'layer')
   const P = str(t, 'protein')
@@ -44,7 +45,7 @@ export function gofPoints(t: Table): GofPoint[] {
   return out
 }
 
-export function gofByLayer(points: GofPoint[]): { overall: GofStats; layers: Record<string, GofStats> } {
+function gofByLayer_(points: GofPoint[]): { overall: GofStats; layers: Record<string, GofStats> } {
   const overall = networkGof(points.map((p) => p.obs), points.map((p) => p.pred))
   const layers: Record<string, GofStats> = {}
   for (const l of [...new Set(points.map((p) => p.layer))]) {
@@ -64,7 +65,7 @@ export function protwiseOffsets(t: Table, layers = ['protein', 'phospho']) {
   return protwiseGofOffsets(v)
 }
 
-export function klFromTrajectories(t: Table, layers = ['protein', 'phospho']): { rows: KlRow[]; byGene: ReturnType<typeof klByGene> } {
+function klFromTrajectories_(t: Table, layers = ['protein', 'phospho']): { rows: KlRow[]; byGene: ReturnType<typeof klByGene> } {
   const idx = bestRows(t)
   const L = str(t, 'layer')
   const P = str(t, 'protein')
@@ -108,7 +109,7 @@ export function predEnvelopes(t: Table, states?: Set<string>) {
 }
 
 /** All draws (chains concatenated, as PhosKinTime's summary does) of parameter column j. */
-export function posteriorColumn(a: NpyArray, j: number): Float64Array {
+function posteriorColumn_(a: NpyArray, j: number): Float64Array {
   const [C, D] = a.shape
   const out = new Float64Array(C * D)
   for (let c = 0; c < C; c++) for (let d = 0; d < D; d++) out[c * D + d] = Number(a.data[npyIndex(a, [c, d, j])])
@@ -116,6 +117,13 @@ export function posteriorColumn(a: NpyArray, j: number): Float64Array {
 }
 
 /** BayesianInference.py summary: mean, sd (ddof 0), 5/50/95 % quantiles (a 90 % interval). */
-export function credible(values: ArrayLike<number>) {
+function credible_(values: ArrayLike<number>) {
   return { mean: mean(values), sd: std(values, 0), q05: quantile(values, 0.05), q50: quantile(values, 0.5), q95: quantile(values, 0.95) }
 }
+
+export const bestRows = timed('shaping', 'bestRows', bestRows_)
+export const gofPoints = timed('shaping', 'gofPoints', gofPoints_)
+export const gofByLayer = timed('transform', 'gofByLayer', gofByLayer_)
+export const klFromTrajectories = timed('transform', 'klFromTrajectories', klFromTrajectories_)
+export const posteriorColumn = timed('shaping', 'posteriorColumn', posteriorColumn_)
+export const credible = timed('transform', 'credible', credible_)

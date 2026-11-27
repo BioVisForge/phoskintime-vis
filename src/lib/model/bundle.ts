@@ -4,6 +4,7 @@ import { parseNpy } from '../io/npy'
 import { decodeTable } from '../workers/client'
 import type { DataSource } from '../sources/types'
 import { enqueueRender } from '../ui/renderQueue'
+import { spanAsync } from '../perf/spans'
 import type { BundleMeta, FileCheck, FileEntry, NpyArray, Table, VerifyState } from './types'
 
 /** An opened bundle: validated manifest, adapted metadata, lazy table/array access, sha256 checks. */
@@ -105,7 +106,8 @@ export class LoadedBundle {
     let done = 0
     for (const f of this.meta.files) {
       try {
-        const actual = await sha256Hex(await this.source.read(f.path))
+        const bytes = await this.source.read(f.path)
+        const actual = await spanAsync('sha256', f.path, () => sha256Hex(bytes))
         out.push({ path: f.path, expected: f.sha256, actual, ok: actual === f.sha256 })
       } catch (e) {
         out.push({ path: f.path, expected: f.sha256, actual: null, ok: false, error: (e as Error).message })

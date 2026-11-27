@@ -1,6 +1,7 @@
 <script lang="ts">
   import { usePlot } from 'svelteplot'
   import { getExportMode, registerMark } from '../../plot'
+  import { span } from '../../perf/spans'
 
   /**
    * Swappable drawing layer for very many polylines (P6 at 8,000+ series). It draws typed arrays
@@ -41,6 +42,11 @@
 
   $effect(() => {
     if (!canvas || vector) return
+    span('canvas draw', 'FastLines', draw)
+  })
+
+  function draw() {
+    if (!canvas) return
     const fx = plot.scales.x.fn as unknown as (v: number) => number
     const fy = plot.scales.y.fn as unknown as (v: number) => number
     const dpr = exp ? exp.pixelRatio : window.devicePixelRatio || 1
@@ -70,7 +76,7 @@
       }
     }
     ctx.stroke()
-  })
+  }
 </script>
 
 {#if vector}

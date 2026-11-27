@@ -1,11 +1,12 @@
 import { finite, std } from './stats'
+import { timed } from '../perf/spans'
 
 /**
  * Port of networkmodel/BayesianInference.py `_smooth_density_1d` (e634e17): Gaussian KDE on a
  * 256-point grid over [min - 0.1*span, max + 0.1*span], Silverman bandwidth
  * 1.06 * sd(ddof=1) * n^(-1/5) floored at max(span/200, 1e-8), density normalised to peak 1.
  */
-export function smoothDensity1d(values: ArrayLike<number>, gridSize = 256): { x: number[]; density: number[] } {
+function smoothDensity1d_(values: ArrayLike<number>, gridSize = 256): { x: number[]; density: number[] } {
   const v = finite(values)
   if (!v.length) return { x: [0, 1], density: [0, 0] }
   const allClose = v.every((a) => Math.abs(a - v[0]) <= 1e-8 + 1e-5 * Math.abs(v[0]))
@@ -57,7 +58,7 @@ export function linspace(a: number, b: number, n: number): number[] {
  * Ridge for one parameter as `_plot_ridgeline_parameter_distributions` draws it: grid normalised
  * to the posterior's own [min, max] and clipped to [0, 1] (np.clip; no reflection).
  */
-export function ridgeNormalised(values: ArrayLike<number>): { xNorm: number[]; density: number[]; vmin: number; vmax: number } {
+function ridgeNormalised_(values: ArrayLike<number>): { xNorm: number[]; density: number[]; vmin: number; vmax: number } {
   const v = finite(values)
   const vmin = Math.min(...v)
   const vmax = Math.max(...v)
@@ -70,3 +71,6 @@ export function ridgeNormalised(values: ArrayLike<number>): { xNorm: number[]; d
   const { x, density } = smoothDensity1d(v)
   return { xNorm: x.map((xi) => Math.min(1, Math.max(0, (xi - vmin) / (vmax - vmin)))), density, vmin, vmax }
 }
+
+export const smoothDensity1d = timed('transform', 'smoothDensity1d', smoothDensity1d_)
+export const ridgeNormalised = timed('transform', 'ridgeNormalised', ridgeNormalised_)

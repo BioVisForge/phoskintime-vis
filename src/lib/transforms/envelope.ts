@@ -1,4 +1,5 @@
 import { quantileSorted } from './stats'
+import { timed } from '../perf/spans'
 
 export type Envelope = {
   key: string
@@ -18,7 +19,7 @@ export type Envelope = {
  * samples: min/max and linear quantiles 1/5/50/95/99 % (the networkmodel sensitivity cloud's
  * `_summarize_band` quantiles). Nulls are skipped.
  */
-export function envelopes(keys: ArrayLike<string | null>, times: ArrayLike<number>, values: ArrayLike<number>): Envelope[] {
+function envelopes_(keys: ArrayLike<string | null>, times: ArrayLike<number>, values: ArrayLike<number>): Envelope[] {
   const groups = new Map<string, { key: string; time: number; v: number[] }>()
   for (let i = 0; i < values.length; i++) {
     const v = values[i]
@@ -81,3 +82,5 @@ export function stepEval(grid: number[], values: number[], t: number): number {
   const idx = Math.min(Math.max(lo - 1, 0), grid.length - 1)
   return values[idx]
 }
+
+export const envelopes = timed('transform', 'envelopes', envelopes_)

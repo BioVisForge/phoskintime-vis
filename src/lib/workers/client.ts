@@ -1,6 +1,7 @@
 import { decodeParquet } from '../io/parquet'
 import type { FileEntry, Table } from '../model/types'
 import type { DecodeResponse } from './decode.worker'
+import { record, span } from '../perf/spans'
 
 let worker: Worker | null = null
 let seq = 0
@@ -26,7 +27,10 @@ async function getWorker(): Promise<Worker | null> {
       if (!p) return
       pending.delete(ev.data.id)
       if (ev.data.error) p.rej(new Error(ev.data.error))
-      else p.res(ev.data.table!)
+      else {
+        record('decode (worker)', ev.data.table!.name, performance.now() - (ev.data.ms ?? 0), ev.data.ms ?? 0)
+        p.res(ev.data.table!)
+      }
     }
   }
   return worker
@@ -35,7 +39,7 @@ async function getWorker(): Promise<Worker | null> {
 /** Decode a Parquet file in the worker (falls back to the calling thread where workers don't exist). */
 export async function decodeTable(buf: ArrayBuffer, name: string, path: string, entry?: FileEntry): Promise<Table> {
   const w = await getWorker()
-  if (!w) return decodeParquet(buf, name, path, entry)
+  if (!w) return span('decode (main)', name, () => decodeParquet(buf, name, path, entry))
   const id = ++seq
   return new Promise((res, rej) => {
     pending.set(id, { res, rej })
