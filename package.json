@@ -23,6 +23,9 @@
     "fixtures": "${PYTHON:-python3} tests/fixtures/make_fixtures.py",
     "validators": "node scripts/build-validators.mjs",
     "docs:assets": "node scripts/screenshots.mjs && node scripts/gallery.mjs && node scripts/export-samples.mjs",
+    "docs:build": "node scripts/build-docs.mjs",
+    "release": "node scripts/release.mjs",
+    "brand": "python3 scripts/build_brand.py && node scripts/build-brand-rasters.mjs",
     "predev": "node scripts/build-validators.mjs",
     "prebuild": "node scripts/build-validators.mjs",
     "prebuild:single": "node scripts/build-validators.mjs",
@@ -60,10 +63,13 @@
     "pngjs": "7.0.0",
     "svelte-check": "4.7.8",
     "tsx": "4.23.15",
+    "typedoc": "0.28.20",
+    "typedoc-plugin-markdown": "4.14.1",
     "typescript": "6.0.3",
     "typescript-eslint": "8.74.0",
     "vite": "8.4.0",
     "vite-plugin-singlefile": "2.3.4",
-    "vitest": "5.1.2"
+    "vitest": "5.1.2",
+    "yaml": "2.9.1"
   }
 }

@@ -1,4 +1,15 @@
-# phoskintime-vis
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/wordmark-dark.svg">
+    <img alt="PhosKinTime-Vis by BioVisForge" src="assets/brand/wordmark-light.svg" width="520">
+  </picture>
+</p>
+
+# PhosKinTime-Vis
+
+**Documentation:** <https://biovisforge.github.io/phoskintime-vis/> (published by the manual `pages`
+workflow) · [Release notes](release-notes/) · [Changelog](CHANGELOG.md) ·
+[Cite](CITATION.cff) · [Security](SECURITY.md)
 
 Offline viewer and run-comparison tool for **PhosKinTime run bundles**, built with Svelte 5 and
 [SveltePlot](https://svelteplot.dev). It opens a bundle (`<run>.pkt/` folder or `<run>.pkt.zip`),
@@ -93,12 +104,11 @@ network at all.
 - `docs/decisions/0002-pdf-export.md`, `0003-tikz-export.md`, `0004-ui-stack.md`: export pipeline, PGFPlots emitter, UI stack
 - `THIRD_PARTY.md`: bundled font licence (OFL) and runtime libraries
 - `docs/performance.md`: measured performance
-- Generated docs assets (synthetic data, not kept in git): `docs/screenshots/gallery.html` (every
-  section in light and dark, every panel, comparison mode, exports) and `docs/samples/exports/`
-  (sample exports in every format). Run `npm run docs:assets` after `npm run fixtures` and
-  `npm run build:single`, or download the `docs-assets` artifact of a CI run. The Pages demo
-  publishes both under `docs/`. The TikZ gallery (`docs/screenshots/tikz-gallery.html`, each
-  panel's compiled TikZ next to the viewer's PNG export) needs TeX Live; see `CONTRIBUTING.md`.
+- Documentation site sources are in `website/`; `npm run docs:build` writes `site/` (see
+  `website/development/index.md`).
+- Generated docs assets (synthetic data, not kept in git): `docs/screenshots/gallery.html` and
+  `docs/samples/exports/`, from `npm run docs:assets`, the `docs-assets` artifact of a CI run, or
+  the published site under `gallery/`. The TikZ gallery needs TeX Live; see `CONTRIBUTING.md`.
 
 All data in this repository (fixtures, screenshots, demo) is synthetic.
 
