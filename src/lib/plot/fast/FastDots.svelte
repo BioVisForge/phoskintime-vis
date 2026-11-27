@@ -10,7 +10,7 @@
   import { resolveColor } from 'svelteplot/marks/helpers/canvas.js'
   import { devicePixelRatio } from 'svelte/reactivity/window'
   import { facetRows, proxyIndices, resolveColumns } from './dots'
-  import { cancelDraw, scaleSignature, scheduleDraw } from './frames'
+  import { cancelDraw, frameDeadline, scaleSignature, scheduleDraw } from './frames'
   import { span } from '../../perf/spans'
   import { getZoom } from '../zoom/zoom.svelte'
   import { drawPreview, emptySnapshot, keepSnapshot } from '../zoom/preview'
@@ -70,14 +70,14 @@
 
   type Job = { el: HTMLCanvasElement; dpr: number; width: number; height: number; scales: any; unknown: unknown; cols: ReturnType<typeof resolveColumns>; rows: Int32Array; p: Record<string, any> }
 
-  /** Layers with more dots than this are drawn in slices of SLICE_MS per frame (see start()). */
+  /** Layers with more dots than this are drawn in slices (see start()); the frame budget is shared. */
   const DIRECT_MAX = 20_000
-  const SLICE_MS = 10
   let buffer: HTMLCanvasElement | null = null
 
   /**
    * Returns a step function that draws until done (true) or until its time slice is used up
-   * (false; call again in the next frame). Up to DIRECT_MAX dots are drawn in one step onto the
+   * (false; call again in the next frame; the budget, FRAME_BUDGET_MS, is shared by every layer
+   * drawing in the frame, so three facets slicing at once stay within one frame). Up to DIRECT_MAX dots are drawn in one step onto the
    * visible canvas. Larger layers are drawn into a buffer canvas, slice by slice, and copied onto
    * the visible canvas when complete: the same operations in the same order on one context, so
    * the pixels do not depend on where the slices end, and no frame is blocked for long.
@@ -118,10 +118,11 @@
     let lastW = NaN
     let k = 0
     return () => {
-      const t0 = performance.now()
+      // at least one batch per call, so a layer always makes progress
+      const first = k
       while (k < rows.length) {
         const i = rows[k++]
-        if ((k & 255) === 0 && sliced && performance.now() - t0 > SLICE_MS) {
+        if ((k & 255) === 0 && sliced && k - first > 256 && performance.now() > frameDeadline()) {
           k--
           return false
         }

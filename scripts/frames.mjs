@@ -12,6 +12,7 @@
 import { chromium, firefox } from '@playwright/test'
 import { resolve } from 'node:path'
 import { writeFileSync } from 'node:fs'
+import { loadavg } from 'node:os'
 
 const args = process.argv.slice(2)
 const which = args.find((a) => !a.startsWith('--')) ?? 'chromium'
@@ -19,7 +20,8 @@ const out = args.includes('--out') ? args[args.indexOf('--out') + 1] : null
 const FIX = (n) => resolve(`tests/fixtures/out/${n}.pkt.zip`)
 
 const browser = await (which === 'firefox' ? firefox : chromium).launch()
-const result = { browser: `${which} ${browser.version()}`, date: new Date().toISOString(), gestures: [] }
+// the host load matters for frame times on a shared machine: recorded before and after
+const result = { browser: `${which} ${browser.version()}`, date: new Date().toISOString(), loadBefore: +loadavg()[0].toFixed(1), gestures: [] }
 
 async function open(page, fixture, hash) {
   await page.goto('file://' + resolve('dist-single/index.html'))
@@ -143,5 +145,6 @@ for (const c of cases) {
   await ctx.close()
 }
 await browser.close()
+result.loadAfter = +loadavg()[0].toFixed(1)
 if (out) writeFileSync(out, JSON.stringify(result, null, 1))
 console.log(JSON.stringify(result, null, 1))

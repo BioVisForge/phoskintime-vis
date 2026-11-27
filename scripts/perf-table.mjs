@@ -41,7 +41,8 @@ if (pb && pa) {
 for (const b of ['chromium', 'firefox']) {
   const f = j(`frames.${b}.json`)
   if (!f) continue
-  out += `\n**Frame intervals during gestures, ${f.browser}** (60 Hz: 16.7 ms is one frame)\n\n| Gesture | frames | median | p95 | max | after the gesture: max (frames > 20 ms) |\n|---|---|---|---|---|---|\n`
+  const load = f.loadBefore != null ? `; host load ${f.loadBefore} → ${f.loadAfter}` : ''
+  out += `\n**Frame intervals during gestures, ${f.browser}** (60 Hz: 16.7 ms is one frame${load})\n\n| Gesture | frames | median | p95 | max | after the gesture: max (frames > 20 ms) |\n|---|---|---|---|---|---|\n`
   for (const g of f.gestures) out += `| ${g.name} | ${g.frames} | ${g.medianMs} | ${g.p95Ms} | ${g.maxMs} | ${g.afterGesture.maxMs} (${g.afterGesture.framesOver20ms}) |\n`
 }
 console.log(out)

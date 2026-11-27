@@ -1,12 +1,13 @@
 {
  "browser": "firefox 159.0",
- "date": "2026-11-27T18:48:01.429Z",
+ "date": "2026-11-27T21:46:37.903Z",
+ "loadBefore": 1.4,
  "gestures": [
   {
    "name": "GOF overall, 4,912 points (network): Ctrl+wheel zoom in, 30 steps",
-   "frames": 62,
+   "frames": 58,
    "medianMs": 17.1,
-   "p95Ms": 17.1,
+   "p95Ms": 34.2,
    "maxMs": 50.3,
    "afterGesture": {
     "maxMs": 17.1,
@@ -15,10 +16,10 @@
   },
   {
    "name": "GOF overall, 4,912 points (network): pan, 40 steps",
-   "frames": 46,
+   "frames": 44,
    "medianMs": 17.1,
-   "p95Ms": 33.2,
-   "maxMs": 50.2,
+   "p95Ms": 33.3,
+   "maxMs": 50.3,
    "afterGesture": {
     "maxMs": 17.1,
     "framesOver20ms": 0
@@ -28,19 +29,19 @@
    "name": "GOF overall, 4,912 points (network): brush, 40 steps",
    "frames": 43,
    "medianMs": 17.1,
-   "p95Ms": 33.3,
-   "maxMs": 33.3,
+   "p95Ms": 17.1,
+   "maxMs": 33.2,
    "afterGesture": {
-    "maxMs": 300.3,
+    "maxMs": 300.2,
     "framesOver20ms": 1
    }
   },
   {
    "name": "GOF overall, 102,868 points (gof-100k): Ctrl+wheel zoom in, 30 steps",
-   "frames": 69,
+   "frames": 56,
    "medianMs": 17.1,
-   "p95Ms": 50.2,
-   "maxMs": 67.3,
+   "p95Ms": 49.3,
+   "maxMs": 50.3,
    "afterGesture": {
     "maxMs": 17.1,
     "framesOver20ms": 0
@@ -51,7 +52,7 @@
    "frames": 42,
    "medianMs": 17.1,
    "p95Ms": 33.2,
-   "maxMs": 33.2,
+   "maxMs": 34.1,
    "afterGesture": {
     "maxMs": 17.1,
     "framesOver20ms": 0
@@ -61,17 +62,83 @@
    "name": "GOF overall, 102,868 points (gof-100k): brush, 40 steps",
    "frames": 43,
    "medianMs": 33.2,
-   "p95Ms": 34.1,
+   "p95Ms": 33.2,
    "maxMs": 34.2,
    "afterGesture": {
-    "maxMs": 349.5,
+    "maxMs": 416.9,
     "framesOver20ms": 2
    }
   },
   {
-   "name": "raw lines, 56,000 points per plot (network): Ctrl+wheel zoom in, 30 steps",
-   "frames": 33,
+   "name": "GOF per-layer facets, 102,868 points (gof-100k): Ctrl+wheel zoom in, 30 steps",
+   "frames": 65,
    "medianMs": 17.1,
+   "p95Ms": 50.3,
+   "maxMs": 67.3,
+   "afterGesture": {
+    "maxMs": 83.4,
+    "framesOver20ms": 1
+   }
+  },
+  {
+   "name": "GOF per-layer facets, 102,868 points (gof-100k): pan, 40 steps",
+   "frames": 41,
+   "medianMs": 17.1,
+   "p95Ms": 33.2,
+   "maxMs": 33.2,
+   "afterGesture": {
+    "maxMs": 83.4,
+    "framesOver20ms": 1
+   }
+  },
+  {
+   "name": "Residuals, 102,868 points in 3 facets (gof-100k): Ctrl+wheel zoom in, 30 steps",
+   "frames": 64,
+   "medianMs": 17.1,
+   "p95Ms": 50.3,
+   "maxMs": 66.3,
+   "afterGesture": {
+    "maxMs": 100.4,
+    "framesOver20ms": 2
+   }
+  },
+  {
+   "name": "Residuals, 102,868 points in 3 facets (gof-100k): pan, 40 steps",
+   "frames": 41,
+   "medianMs": 33.2,
+   "p95Ms": 34.2,
+   "maxMs": 99.5,
+   "afterGesture": {
+    "maxMs": 99.4,
+    "framesOver20ms": 1
+   }
+  },
+  {
+   "name": "Parameter parallel coordinates, 2,400 dots (network): Ctrl+wheel zoom in, 30 steps",
+   "frames": 62,
+   "medianMs": 17.1,
+   "p95Ms": 133.6,
+   "maxMs": 149.7,
+   "afterGesture": {
+    "maxMs": 17.1,
+    "framesOver20ms": 0
+   }
+  },
+  {
+   "name": "Parameter parallel coordinates, 2,400 dots (network): pan, 40 steps",
+   "frames": 43,
+   "medianMs": 100.5,
+   "p95Ms": 116.6,
+   "maxMs": 117.5,
+   "afterGesture": {
+    "maxMs": 17.1,
+    "framesOver20ms": 0
+   }
+  },
+  {
+   "name": "raw lines, 56,000 points per plot (network): Ctrl+wheel zoom in, 30 steps",
+   "frames": 37,
+   "medianMs": 17,
    "p95Ms": 17.1,
    "maxMs": 17.1,
    "afterGesture": {
@@ -81,7 +148,7 @@
   },
   {
    "name": "raw lines, 56,000 points per plot (network): pan, 40 steps",
-   "frames": 42,
+   "frames": 40,
    "medianMs": 17.1,
    "p95Ms": 17.1,
    "maxMs": 17.1,
@@ -90,5 +157,6 @@
     "framesOver20ms": 0
    }
   }
- ]
+ ],
+ "loadAfter": 0.9
 }

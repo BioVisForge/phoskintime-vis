@@ -8,9 +8,18 @@
 const pending = new Map<object, () => void>()
 let waiters: (() => void)[] = []
 let frameRequested = false
+/** Time one frame may spend on sliced drawing, shared by every layer drawing in that frame. */
+export const FRAME_BUDGET_MS = 10
+let deadline = 0
+
+/** performance.now() value after which a sliced draw stops until the next frame. */
+export function frameDeadline(): number {
+  return deadline
+}
 
 function flush() {
   frameRequested = false
+  deadline = performance.now() + FRAME_BUDGET_MS
   const jobs = [...pending.values()]
   pending.clear()
   for (const j of jobs) j()

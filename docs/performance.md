@@ -13,7 +13,7 @@ the time went before: `docs/performance-profile.md`. What changed and why: decis
 |---|---|---|
 | open → first panel ≤ 1.0 s (Chromium) / ≤ 1.5 s (Firefox) | 1,000 ms: met (at the limit) | 1,230 ms: met |
 | GOF ≤ 0.5 s | 713 ms: **not met** | 782 ms: **not met** |
-| pan/zoom/brush on 100k+ marks ≤ 20 ms per redraw | met: p95 ≤ 16.8 ms in every gesture | **not met**: p95 33–50 ms (median 17.1 ms) |
+| pan/zoom/brush on 100k+ marks ≤ 20 ms per frame (p95) | **partly met**: GOF (overall and facets) and raw lines p95 ≤ 16.8 ms; residuals zoom p95 33.4 ms | **not met**: p95 33–50 ms on GOF and residuals (median 17.1–33.2 ms); raw lines 17.1 ms |
 | no regression | none found (see below) | none found |
 
 GOF floor: measured as the GOF panel opened from the overview, while the trajectories table is
@@ -23,9 +23,14 @@ SveltePlot laying out four plot frames (overall + three facets), their axes, the
 the flagged labels; GOF with its two dot layers removed entirely took 561 ms (experiment in the
 profile), so the dots now cost ≈ 150 ms and the remaining floor is SveltePlot's, not the data's.
 
-Firefox frames: during a gesture the data layers only draw a transformed bitmap; the frames over
-one vsync are SveltePlot recomputing scales and re-rendering the axes, which Firefox does more
-slowly than Chromium. After a brush the selected states' trajectories plot is mounted once
+Firefox frames (and the residuals zoom in Chromium): during a gesture the data layers only draw a
+transformed bitmap; the frames over one vsync are SveltePlot recomputing scales and re-rendering
+axes and SVG marks for every view change, which Firefox does more slowly than Chromium. The
+measured floor is therefore SveltePlot's per-view-change cost: one frame (16.7 ms) in Chromium
+for most plots, two to three (33–50 ms) in Firefox. Plots with many SVG lines are slower in both
+(parameter parallel coordinates, 200 polylines: Chromium p95 50 ms, Firefox 117–134 ms;
+follow-up e). After a gesture, faceted plots redraw their three 34k-dot layers in slices that
+share one 10 ms budget per frame (one frame over 20 ms at most, 66–100 ms). After a brush the selected states' trajectories plot is mounted once
 (Chromium 183–233 ms, Firefox 300–350 ms: the "after the gesture" column), when the pointer pauses.
 
 | Measure | Chromium | Firefox |
@@ -63,33 +68,45 @@ slowly than Chromium. After a brush the selected states' trajectories plot is mo
 | nm-post-density | 74 ms → 69 ms (−7 %) | 118 ms → 115 ms (−3 %) |
 | nm-kinase | 66 ms → 56 ms (−15 %) | 96 ms → 97 ms (+1 %) |
 
-Single file: 1,869,277 → 1,887,743 B
+Single file: 1,866,036 B on main → 1,895,297 B in the final build of this branch (+29,261 B, +1.6 %; budget 2.5 MB). The per-panel runs above used the build before pan/zoom on every scatter plot (1,887,743 B).
 
-**Frame intervals during gestures, chromium 159.0.8154.6** (60 Hz: 16.7 ms is one frame)
+**Frame intervals during gestures, chromium 159.0.8154.6** (60 Hz: 16.7 ms is one frame; host load 3.2 → 1.4)
 
 | Gesture | frames | median | p95 | max | after the gesture: max (frames > 20 ms) |
 |---|---|---|---|---|---|
-| GOF overall, 4,912 points (network): Ctrl+wheel zoom in, 30 steps | 90 | 16.7 | 16.7 | 33.4 | 16.8 (0) |
-| GOF overall, 4,912 points (network): pan, 40 steps | 43 | 16.7 | 16.7 | 16.7 | 16.8 (0) |
+| GOF overall, 4,912 points (network): Ctrl+wheel zoom in, 30 steps | 109 | 16.7 | 16.8 | 33.2 | 16.8 (0) |
+| GOF overall, 4,912 points (network): pan, 40 steps | 43 | 16.7 | 16.7 | 16.8 | 16.8 (0) |
 | GOF overall, 4,912 points (network): brush, 40 steps | 43 | 16.7 | 16.8 | 16.8 | 183.3 (1) |
 | GOF overall, 102,868 points (gof-100k): Ctrl+wheel zoom in, 30 steps | 91 | 16.7 | 16.7 | 16.8 | 16.7 (0) |
-| GOF overall, 102,868 points (gof-100k): pan, 40 steps | 47 | 16.7 | 16.8 | 16.8 | 16.8 (0) |
-| GOF overall, 102,868 points (gof-100k): brush, 40 steps | 44 | 16.7 | 16.8 | 16.8 | 233.3 (1) |
-| raw lines, 56,000 points per plot (network): Ctrl+wheel zoom in, 30 steps | 80 | 16.7 | 16.7 | 16.8 | 16.8 (0) |
-| raw lines, 56,000 points per plot (network): pan, 40 steps | 40 | 16.7 | 16.8 | 16.8 | 16.8 (0) |
+| GOF overall, 102,868 points (gof-100k): pan, 40 steps | 44 | 16.7 | 16.8 | 16.8 | 16.8 (0) |
+| GOF overall, 102,868 points (gof-100k): brush, 40 steps | 44 | 16.7 | 16.7 | 16.8 | 250 (1) |
+| GOF per-layer facets, 102,868 points (gof-100k): Ctrl+wheel zoom in, 30 steps | 90 | 16.7 | 16.7 | 33.3 | 66.6 (1) |
+| GOF per-layer facets, 102,868 points (gof-100k): pan, 40 steps | 45 | 16.7 | 16.8 | 16.8 | 83.2 (1) |
+| Residuals, 102,868 points in 3 facets (gof-100k): Ctrl+wheel zoom in, 30 steps | 90 | 16.7 | 33.4 | 50 | 83.3 (1) |
+| Residuals, 102,868 points in 3 facets (gof-100k): pan, 40 steps | 86 | 16.7 | 16.7 | 33.4 | 66.6 (1) |
+| Parameter parallel coordinates, 2,400 dots (network): Ctrl+wheel zoom in, 30 steps | 91 | 16.7 | 50.1 | 50.1 | 16.8 (0) |
+| Parameter parallel coordinates, 2,400 dots (network): pan, 40 steps | 87 | 16.7 | 50.1 | 50.1 | 16.8 (0) |
+| raw lines, 56,000 points per plot (network): Ctrl+wheel zoom in, 30 steps | 61 | 16.7 | 16.8 | 16.8 | 16.8 (0) |
+| raw lines, 56,000 points per plot (network): pan, 40 steps | 40 | 16.7 | 16.8 | 16.8 | 16.7 (0) |
 
-**Frame intervals during gestures, firefox 159.0** (60 Hz: 16.7 ms is one frame)
+**Frame intervals during gestures, firefox 159.0** (60 Hz: 16.7 ms is one frame; host load 1.4 → 0.9)
 
 | Gesture | frames | median | p95 | max | after the gesture: max (frames > 20 ms) |
 |---|---|---|---|---|---|
-| GOF overall, 4,912 points (network): Ctrl+wheel zoom in, 30 steps | 62 | 17.1 | 17.1 | 50.3 | 17.1 (0) |
-| GOF overall, 4,912 points (network): pan, 40 steps | 46 | 17.1 | 33.2 | 50.2 | 17.1 (0) |
-| GOF overall, 4,912 points (network): brush, 40 steps | 43 | 17.1 | 33.3 | 33.3 | 300.3 (1) |
-| GOF overall, 102,868 points (gof-100k): Ctrl+wheel zoom in, 30 steps | 69 | 17.1 | 50.2 | 67.3 | 17.1 (0) |
-| GOF overall, 102,868 points (gof-100k): pan, 40 steps | 42 | 17.1 | 33.2 | 33.2 | 17.1 (0) |
-| GOF overall, 102,868 points (gof-100k): brush, 40 steps | 43 | 33.2 | 34.1 | 34.2 | 349.5 (2) |
-| raw lines, 56,000 points per plot (network): Ctrl+wheel zoom in, 30 steps | 33 | 17.1 | 17.1 | 17.1 | 17.1 (0) |
-| raw lines, 56,000 points per plot (network): pan, 40 steps | 42 | 17.1 | 17.1 | 17.1 | 17.1 (0) |
+| GOF overall, 4,912 points (network): Ctrl+wheel zoom in, 30 steps | 58 | 17.1 | 34.2 | 50.3 | 17.1 (0) |
+| GOF overall, 4,912 points (network): pan, 40 steps | 44 | 17.1 | 33.3 | 50.3 | 17.1 (0) |
+| GOF overall, 4,912 points (network): brush, 40 steps | 43 | 17.1 | 17.1 | 33.2 | 300.2 (1) |
+| GOF overall, 102,868 points (gof-100k): Ctrl+wheel zoom in, 30 steps | 56 | 17.1 | 49.3 | 50.3 | 17.1 (0) |
+| GOF overall, 102,868 points (gof-100k): pan, 40 steps | 42 | 17.1 | 33.2 | 34.1 | 17.1 (0) |
+| GOF overall, 102,868 points (gof-100k): brush, 40 steps | 43 | 33.2 | 33.2 | 34.2 | 416.9 (2) |
+| GOF per-layer facets, 102,868 points (gof-100k): Ctrl+wheel zoom in, 30 steps | 65 | 17.1 | 50.3 | 67.3 | 83.4 (1) |
+| GOF per-layer facets, 102,868 points (gof-100k): pan, 40 steps | 41 | 17.1 | 33.2 | 33.2 | 83.4 (1) |
+| Residuals, 102,868 points in 3 facets (gof-100k): Ctrl+wheel zoom in, 30 steps | 64 | 17.1 | 50.3 | 66.3 | 100.4 (2) |
+| Residuals, 102,868 points in 3 facets (gof-100k): pan, 40 steps | 41 | 33.2 | 34.2 | 99.5 | 99.4 (1) |
+| Parameter parallel coordinates, 2,400 dots (network): Ctrl+wheel zoom in, 30 steps | 62 | 17.1 | 133.6 | 149.7 | 17.1 (0) |
+| Parameter parallel coordinates, 2,400 dots (network): pan, 40 steps | 43 | 100.5 | 116.6 | 117.5 | 17.1 (0) |
+| raw lines, 56,000 points per plot (network): Ctrl+wheel zoom in, 30 steps | 37 | 17 | 17.1 | 17.1 | 17.1 (0) |
+| raw lines, 56,000 points per plot (network): pan, 40 steps | 40 | 17.1 | 17.1 | 17.1 | 17.1 (0) |
 
 Per-panel rows are single runs. The two that read slower were re-measured with 5 runs each,
 main vs this branch (median): nm-param-corr Chromium 888 → 861 ms, Firefox 1,105 → 1,120 ms;

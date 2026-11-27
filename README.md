@@ -58,11 +58,12 @@ CPU rasteriser in WASM was slower than the browsers' Canvas2D (decision 0006).
 |---|---|---|
 | Open → first panel ≤ 1.0 s / 1.5 s | 1,000 ms (met) | 1,230 ms (met) |
 | GOF panel ≤ 0.5 s | **713 ms: not met** | **782 ms: not met** |
-| Pan/zoom/brush frames on 100k+ marks ≤ 20 ms (p95) | ≤ 16.8 ms (met) | **33–50 ms: not met** |
+| Pan/zoom/brush frames on 100k+ marks ≤ 20 ms (p95) | GOF, raw lines ≤ 16.8 ms (met); residuals zoom **33 ms: not met** | **33–50 ms: not met** |
 
 Not met: GOF's floor is ≈ 550 ms of SveltePlot laying out four plot frames and their axes (plus
 ≈ 140 ms decode wait in the measured scenario); Firefox frames during a gesture are SveltePlot
-recomputing scales and axes (the data layers only redraw a transformed bitmap). Follow-ups:
+recomputing scales and axes (the data layers only redraw a transformed bitmap); plots with many
+SVG lines (parameter parallel coordinates) are slower in both browsers. Follow-ups:
 `docs/follow-ups.md`.
 
 ## Contract-only design

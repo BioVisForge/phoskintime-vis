@@ -67,8 +67,9 @@ without a long frame. The export waits for pending draws instead of a fixed 250 
 
 ### 3. Pan and zoom
 
-The GOF overall plot and the raw-lines plots zoom with Ctrl/⌘ + wheel or the toolbar, pan in
-pan mode, and reset by double-click or the toolbar (`src/lib/plot/zoom/`). The view is defined in
+Every plot with dot marks and the raw-lines plots zoom with Ctrl/⌘ + wheel, the toolbar or the
+keyboard, pan in pan mode, and reset by double-click, `0` or the toolbar (`src/lib/plot/zoom/`,
+list in `docs/pan-zoom.md`). The view is defined in
 pixel space, so a datum's new pixel is an affine function of its old pixel for linear, log and
 symlog scales: during a gesture canvas layers show their last bitmap through that map (one
 `drawImage`, independent of the number of marks) and redraw when it pauses. Marks are clipped
@@ -122,14 +123,16 @@ and one render, the Firefox raw-lines PNG export went from 23.5 s to ≈ 3.3 s.
 - Consequently no `kernels/` crate, no `rust-toolchain.toml`, no wasm-bindgen, no Rust CI job,
   no WASM parity suites: there is no WASM code in the app. The 10 parity tests run unchanged.
 - **Workers / OffscreenCanvas** for drawing were not adopted either: after the changes above no
-  screen draw blocks a frame for long (pan/zoom and brush stay at the frame rate in Chromium), and
+  canvas draw blocks a frame for long (gestures show a transformed bitmap; large redraws are sliced;
+  the frames over 20 ms that remain are SveltePlot's scale/axis/SVG work, not drawing), and
   Firefox's Canvas2D cost at export resolution (≈ 1.1 s for one 56,000-point layer) is the same
   in a worker; it would only move it.
 
 ## Size
 
-Single file: 1,866,036 B (main) → 1,887,890 B (+21,854 B, +1.2 %): fast layers, zoom, frame
-scheduler and the opt-in profiling spans. Budget 2.5 MB. No `.wasm`, no JS glue.
+Single file: 1,866,036 B (main) → 1,895,297 B (+29,261 B, +1.6 %): fast layers, pan/zoom on
+every plot with dot marks, frame scheduler and the opt-in profiling spans. Budget 2.5 MB
+(604,703 B left). No `.wasm`, no JS glue.
 
 ## Consequences
 

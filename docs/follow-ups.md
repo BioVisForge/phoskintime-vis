@@ -51,3 +51,12 @@ points through SveltePlot's Mark pipeline (≈ 1 s). Options: a fast line/area l
 (canvas; pixel parity against SveltePlot's canvas Line/Area would need its own tolerance study since
 these are SVG today), computing the 25 KDEs in the existing worker in parallel with the first paint,
 or rendering the visible ridges first.
+
+## e) Zooming plots with many SVG lines: parameter parallel coordinates
+
+Measured with `scripts/frames.mjs` (Chromium): zoom/pan p95 50–83 ms per frame on
+`nm-param-parallel` (2,400 dots on the fast layer, but 200 polylines of 12 points drawn by
+SveltePlot's Line as SVG). Every view change re-runs SveltePlot's Mark pipeline for the lines and
+re-renders 200 `<path>` elements. Options: draw the lines with the existing FastLines canvas
+layer on screen (exports unchanged, as for the dots; pixel parity against SveltePlot's canvas
+Line needs its own check), or during a gesture transform the line group like the canvas preview.
