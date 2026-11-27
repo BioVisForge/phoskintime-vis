@@ -6,6 +6,7 @@ import { availability } from '../panels/availability'
 import { app } from '../ui/state.svelte'
 import { download } from './figure'
 import { exportTarget, type Format, type ExportFile } from './formats'
+import { FitError, type FitIssue } from './compose'
 import type { ExportTarget } from './render'
 import { exportFilename, loadSettings, type ExportSettings } from './settings'
 
@@ -46,18 +47,31 @@ export async function compareTarget(id: string, title: string, caption: string, 
   }
 }
 
-export function openExport(ids: string[], all = false) {
-  app.export = { open: true, targetIds: ids, all }
+export function openExport(ids: string[], all = false, extra: { formats?: Format[]; fit?: FitIssue[]; custom?: { title: string; make: () => Promise<ExportTarget[]> } } = {}) {
+  app.export = { open: true, targetIds: ids, all, ...extra }
 }
 
+/**
+ * Export every target in every format. A target that does not fit its width is not exported; the
+ * others still run so that one FitError lists every such panel, and no partial set is returned.
+ */
 export async function runExport(targets: ExportTarget[], formats: Format[], s: ExportSettings, onProgress?: (msg: string) => void): Promise<ExportFile[]> {
   const files: ExportFile[] = []
+  const issues: FitIssue[] = []
   for (const t of targets) {
     for (const f of formats) {
       onProgress?.(`${t.title}: ${f.toUpperCase()}`)
-      files.push(await exportTarget(t, f, s))
+      try {
+        files.push(await exportTarget(t, f, s))
+      } catch (e) {
+        if (!(e instanceof FitError)) throw e
+        // same figure, same width: the other formats would not fit either
+        for (const i of e.issues) if (!issues.some((x) => x.panelId === i.panelId)) issues.push(i)
+        break
+      }
     }
   }
+  if (issues.length) throw new FitError(issues)
   return files
 }
 
@@ -78,6 +92,12 @@ export async function quickExport(def: PanelDef, b: LoadedBundle, fmt: Format) {
     saveFiles(files)
     app.toast = `Saved ${files[0].name}`
   } catch (e) {
+    // does not fit at the chosen pt size: open the dialog with the warning and its fixes
+    if (e instanceof FitError) {
+      app.toast = `${def.title} does not fit ${loadSettings().widthMm} mm at ${loadSettings().fontPt} pt`
+      openExport([def.id], false, { formats: [fmt], fit: e.issues })
+      return
+    }
     app.toast = `Export failed: ${(e as Error).message}`
   }
 }

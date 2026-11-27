@@ -3,6 +3,7 @@
 import { chromium } from '@playwright/test'
 import { mkdirSync } from 'node:fs'
 import { resolve, join } from 'node:path'
+import { confirmFit } from './lib/confirm-fit.mjs'
 
 const out = resolve(process.argv[2] ?? 'docs/samples/exports')
 mkdirSync(out, { recursive: true })
@@ -28,7 +29,11 @@ for (const s of SAMPLES) {
   await page.waitForFunction((id) => { const el = document.querySelector(`[data-panel="${id}"]`); return el?.dataset.rendered === 'true' && !el.querySelector('.loading') }, s.panel, { timeout: 60000 })
   for (const fmt of ['png', 'pdf', 'svg', 'csv', 'tikz']) {
     await card.locator('[data-testid=panel-menu]').click()
-    const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 180000 }), card.locator(`[data-testid=export-${fmt}]`).click()])
+    const download = page.waitForEvent('download', { timeout: 180000 })
+    await card.locator(`[data-testid=export-${fmt}]`).click()
+    const fixes = await confirmFit(page, download)
+    if (fixes.length) console.log(`${s.panel} ${fmt}: does not fit 85 mm, applied ${fixes.join(', ')} (stated in the caption)`)
+    const dl = await download
     const p = join(out, dl.suggestedFilename())
     await dl.saveAs(p)
     files.push(p)

@@ -96,7 +96,7 @@
 
 {#if cmp && A && B}
   <div bind:this={root} data-testid="compare-ready">
-    <Section id="provenance" title="Provenance and compatibility" patterns={['P4']} rows={[{ run: 'A', ...cmp.provenance.a }, { run: 'B', ...cmp.provenance.b }]}>
+    <Section id="provenance" title="Provenance and compatibility" patterns={['P4']} tikz={false} rows={[{ run: 'A', ...cmp.provenance.a }, { run: 'B', ...cmp.provenance.b }]}>
       <table class="prov">
         <thead><tr><th></th><th>A (before)</th><th>B (after)</th></tr></thead>
         <tbody>
@@ -129,7 +129,7 @@
       {/if}
     </Section>
 
-    <Section id="gof" title="Goodness of fit per layer, side by side" rows={gofRows} note="Same definitions as the GOF panel (robust σ, R² = squared Pearson r, RMSE about identity), computed on each run's best fit.">
+    <Section id="gof" title="Goodness of fit per layer, side by side" tikz={false} rows={gofRows} note="Same definitions as the GOF panel (robust σ, R² = squared Pearson r, RMSE about identity), computed on each run's best fit.">
       <table class="prov" data-testid="gof-compare">
         <thead><tr><th>subset</th><th>n A</th><th>n B</th><th>R² A</th><th>R² B</th><th>ΔR²</th><th>RMSE A</th><th>RMSE B</th><th>ΔRMSE</th></tr></thead>
         <tbody>{#each gofRows as g}<tr><td>{g.subset}</td><td>{g.n_a}</td><td>{g.n_b}</td><td>{fmt(g.r2_a ?? NaN, 4)}</td><td>{fmt(g.r2_b ?? NaN, 4)}</td><td class:neg={g.d_r2 < 0} class:pos={g.d_r2 > 0}>{fmt(g.d_r2, 4)}</td><td>{fmt(g.rmse_a ?? NaN, 4)}</td><td>{fmt(g.rmse_b ?? NaN, 4)}</td><td class:neg={g.d_rmse > 0} class:pos={g.d_rmse < 0}>{fmt(g.d_rmse, 4)}</td></tr>{/each}</tbody>

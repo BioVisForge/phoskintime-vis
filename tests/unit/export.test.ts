@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { crc32, physChunk, textChunk, withChunks, readPngInfo, pngPixelSize, checkCanvasSize } from '../../src/lib/export/png'
-import { exportFilename, normalise, DEFAULTS, ptToLayoutPx, provenanceText } from '../../src/lib/export/settings'
+import { exportFilename, normalise, nextPreset, loadSettings, saveSettings, DEFAULTS, ptToLayoutPx, provenanceText } from '../../src/lib/export/settings'
 import { deflateSync } from 'node:zlib'
 
 function tinyPng(w: number, h: number): Uint8Array {
@@ -72,3 +72,20 @@ describe('export settings', () => {
     expect(provenanceText({ bundleIds: ['pkt-3d14d0f826776869'], commits: ['e634e17aaaa'], panelId: 'nm-gof', viewerVersion: '0.2.0', exportDate: '' })).toBe('bundle pkt-3d14d0f8 · PhosKinTime e634e17 · panel nm-gof · PhosKinTime-Vis 0.2.0')
   })
 })
+
+describe('fit to width settings', () => {
+  it('offers the next journal preset, none above the widest', () => {
+    expect([nextPreset(85), nextPreset(100), nextPreset(114), nextPreset(174), nextPreset(300)]).toEqual(['onehalf', 'onehalf', 'double', null, null])
+  })
+  it('never remembers a fix, in particular not a confirmed "scale anyway"', () => {
+    const store = new Map<string, string>()
+    vi.stubGlobal('localStorage', { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => void store.set(k, v) })
+    saveSettings({ ...DEFAULTS, fontPt: 9, fitScale: true, fitShortenLabels: true, fitFewerTicks: true, fitReflow: true, fitReservePx: 40 })
+    expect([...store.values()][0]).not.toMatch(/"fit/)
+    // a value left over in storage is ignored too
+    store.set([...store.keys()][0], JSON.stringify({ ...DEFAULTS, fontPt: 9, fitScale: true }))
+    expect(loadSettings()).toMatchObject({ fontPt: 9, fitScale: false })
+    vi.unstubAllGlobals()
+  })
+})
+

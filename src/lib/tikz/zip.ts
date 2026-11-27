@@ -1,6 +1,5 @@
 import { zipSync, strToU8 } from 'fflate'
 import type { ExportTarget, Rendered } from '../export/render'
-import type { Composed } from '../export/compose'
 import type { ExportSettings, Provenance } from '../export/settings'
 import { provenanceText } from '../export/settings'
 import { fontBase64 } from '../export/fonts'
@@ -116,7 +115,9 @@ function rasterFor(spec: PlotSpec, pixelRatio: number) {
 
 export async function emitTarget(t: ExportTarget, r: Rendered, s: ExportSettings): Promise<EmitResult> {
   const name = t.id.replace(/[^A-Za-z0-9]+/g, '-')
-  const plots: EmitPlot[] = r.collector.plots.filter((p) => p.body?.isConnected && (p.body.querySelector('svg')?.getBoundingClientRect().width ?? 0) > 0).map((spec) => ({ spec, geom: geometry(spec, r.figure), rasterPng: rasterFor(spec, s.dpi / 142.24) }))
+  // only the plots of this figure: a comparison section is rendered inside the whole comparison view
+  const plots: EmitPlot[] = r.collector.plots.filter((p) => p.body?.isConnected && r.figure.contains(p.body) && (p.body.querySelector('svg')?.getBoundingClientRect().width ?? 0) > 0).map((spec) => ({ spec, geom: geometry(spec, r.figure), rasterPng: rasterFor(spec, s.dpi / 142.24) }))
+  if (!plots.length) throw new Error(`${t.title} has no plot to export as TikZ; use CSV for its table (or PDF/SVG).`)
   setVarScope(r.host.querySelector('[data-export-root]'))
   try {
     return await emitFigure(plots, { name, fontPt: s.fontPt, downsample: s.tikzDownsample })
@@ -199,7 +200,7 @@ Licensed under the SIL Open Font License, Version 1.1: https://openfontlicense.o
 The full licence text is in THIRD_PARTY.md of phoskintime-vis.
 `
 
-export async function tikzZip(t: ExportTarget, r: Rendered, s: ExportSettings, prov: Provenance, _composed: Composed): Promise<Uint8Array> {
+export async function tikzZip(t: ExportTarget, r: Rendered, s: ExportSettings, prov: Provenance): Promise<Uint8Array> {
   const e = await emitTarget(t, r, s)
   const stemName = t.id.replace(/[^A-Za-z0-9]+/g, '-')
   const header = texHeader(t, prov, e)

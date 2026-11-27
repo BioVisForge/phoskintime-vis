@@ -1,7 +1,7 @@
-import { composeSvg, type Composed } from './compose'
+import { composeSvg, FitError, type Composed } from './compose'
 import { renderOffscreen, type ExportTarget, type Rendered } from './render'
 import { checkCanvasSize, physChunk, pngPixelSize, textChunk, withChunks } from './png'
-import { exportFilename, provenanceText, type ExportSettings, type Provenance } from './settings'
+import { exportFilename, provenanceText, LAYOUT_PX_PER_MM, type ExportSettings, type Provenance } from './settings'
 import { fontBase64, FONT_FAMILY } from './fonts'
 import { toCsv } from '../transforms/table'
 
@@ -114,6 +114,21 @@ export function csvWithHeader(t: ExportTarget, prov: Provenance, rows: Record<st
 
 /** Export one target in one format. TikZ is delegated to the tikz module. */
 export async function exportTarget(t: ExportTarget, fmt: Format, s: ExportSettings): Promise<ExportFile> {
+  let reserve = 0
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await renderAs(t, fmt, { ...s, fitReservePx: reserve })
+    } catch (e) {
+      // "next width preset": render again, drawing the plots narrower by what still sticks out
+      if (!(e instanceof FitError) || !s.fitReflow || attempt >= 2) throw e
+      reserve += e.issues[0].overPx + 2
+      // more than 40 % of the page for labels would leave no readable plot: report it instead
+      if (reserve > 0.4 * s.widthMm * LAYOUT_PX_PER_MM) throw e
+    }
+  }
+}
+
+async function renderAs(t: ExportTarget, fmt: Format, s: ExportSettings): Promise<ExportFile> {
   const prov = provenanceOf(t)
   const name = (ext: string) => exportFilename(t.id, t.bundleIds, ext)
   const r = await renderOffscreen(t, s)
@@ -122,8 +137,9 @@ export async function exportTarget(t: ExportTarget, fmt: Format, s: ExportSettin
     if (fmt === 'svg') return { name: name('svg'), data: enc(compose(t, r, s, s.svgEmbedFont).svg), mime: 'image/svg+xml' }
     if (fmt === 'png') return { name: name('png'), data: await svgToPng(compose(t, r, s, true), s, prov), mime: 'image/png' }
     if (fmt === 'pdf') return { name: name('pdf'), data: await svgToPdf(compose(t, r, s, false), t, prov), mime: 'application/pdf' }
+    // TikZ: PGFPlots lays out its own text at the chosen pt, so the SVG fit-to-width check does not apply
     const { tikzZip } = await import('../tikz/zip')
-    return { name: name('zip').replace(/\.zip$/, '_tikz.zip'), data: await tikzZip(t, r, s, prov, compose(t, r, s, true)), mime: 'application/zip' }
+    return { name: name('zip').replace(/\.zip$/, '_tikz.zip'), data: await tikzZip(t, r, s, prov), mime: 'application/zip' }
   } finally {
     r.destroy()
   }

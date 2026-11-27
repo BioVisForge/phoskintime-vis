@@ -3,6 +3,7 @@
 import { chromium } from '@playwright/test'
 import { mkdirSync } from 'node:fs'
 import { resolve, join } from 'node:path'
+import { confirmFit } from '../../scripts/lib/confirm-fit.mjs'
 
 const [fixture = 'network', outDir = 'tests/tikz/out', formats = 'tikz', dpi = '600'] = process.argv.slice(2)
 mkdirSync(resolve(outDir), { recursive: true })
@@ -25,8 +26,11 @@ for (const f of ['png', 'pdf', 'svg', 'csv', 'tikz']) {
 }
 await page.selectOption('[data-testid=export-dpi]', dpi)
 const t0 = Date.now()
-const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 1_200_000 }), page.click('[data-testid=export-run]')])
+const download = page.waitForEvent('download', { timeout: 1_200_000 })
+await page.click('[data-testid=export-run]')
+const fixes = await confirmFit(page, download)
+const dl = await download
 const p = join(resolve(outDir), dl.suggestedFilename())
 await dl.saveAs(p)
-console.log(JSON.stringify({ zip: p, ms: Date.now() - t0, errors }))
+console.log(JSON.stringify({ zip: p, ms: Date.now() - t0, fixes, errors }))
 await browser.close()

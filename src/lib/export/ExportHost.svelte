@@ -20,7 +20,7 @@
     axis: { tickFontSize: F * 0.875, titleFontSize: F } as any,
     text: { fontSize: F * 0.875 } as any,
   })
-  const width = Math.round(s.widthMm * LAYOUT_PX_PER_MM)
+  const width = Math.round(s.widthMm * LAYOUT_PX_PER_MM) - s.fitReservePx
   const C = untrack(() => component)
 </script>
 
@@ -36,7 +36,11 @@
   .export-root :global(*:not(svg):not(svg *)) { font-size: inherit !important; font-family: inherit !important; }
   .export-root :global(table), .export-root :global(p), .export-root :global(.color-legend), .export-root :global(.symbol-legend) { font-size: 0.875em !important; }
   .export-root :global(.svelteplot h2), .export-root :global(.svelteplot h3) { font-size: 1em !important; font-weight: 600; margin: 0.4em 0 0.2em; }
-  /* multi-column panel layouts stack at journal widths */
-  .export-root :global(.two), .export-root :global(.three) { grid-template-columns: 1fr !important; }
+  /* multi-column panel layouts stack at journal widths; minmax(0, 1fr), not 1fr (= minmax(auto, 1fr)):
+     a plot's min-content width must not push its column wider than the figure */
+  .export-root :global(.two), .export-root :global(.three) { grid-template-columns: minmax(0, 1fr) !important; }
+  /* tables use the figure width and tighter padding, so they do not widen the figure */
+  .export-root :global(table) { max-width: 100%; border-collapse: collapse; }
+  .export-root :global(table td), .export-root :global(table th) { padding: 1px 0.25em !important; }
   .export-root :global(svg text) { font-family: inherit; }
 </style>

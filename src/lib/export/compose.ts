@@ -18,6 +18,50 @@ export interface Composed {
   texts: string[]
 }
 
+/** One element that sticks out of the chosen width. */
+export interface FitOffender {
+  kind: 'tick' | 'axis-title' | 'text' | 'html' | 'mark'
+  text: string
+  side: 'left' | 'right'
+}
+
+/** A figure that does not fit its width at the chosen pt size. */
+export interface FitIssue {
+  panelId: string
+  title: string
+  widthMm: number
+  fontPt: number
+  /** width the content needs at this layout (an estimate: a wider layout reflows) */
+  neededMm: number
+  /** scale that would fit, and the pt size text would then have */
+  scale: number
+  scaledPt: number
+  /** layout px by which the content is wider than the page */
+  overPx: number
+  /** tick labels are among the offenders: "shorter labels" / "fewer ticks" can help */
+  tickLabels: boolean
+  /** fixes already applied in this attempt */
+  applied: string[]
+  offenders: FitOffender[]
+}
+
+/** Thrown instead of silently scaling text below the chosen pt size. */
+export class FitError extends Error {
+  constructor(public issues: FitIssue[]) {
+    super(issues.map((i) => `${i.title}: needs about ${i.neededMm.toFixed(0)} mm but the figure is ${i.widthMm} mm wide; fitting would set text at ${i.scaledPt.toFixed(1)} pt instead of ${i.fontPt} pt.`).join(' '))
+    this.name = 'FitError'
+  }
+}
+
+/** Content may overhang by this fraction without counting as "does not fit" (sub-pixel rounding). */
+export const FIT_TOLERANCE = 0.005
+/** A tick label that is a number (with optional sign, exponent, SI suffix or %): never shortened. */
+export const NUMERIC = /^[-+−]?(\d[\d,.\u202f\u2009]*|\.\d+)(e[-+−]?\d+)?\s?[%kKMGTµmnp]?$/i
+/** Shortest tick label the "shorter labels" fix produces (including the ellipsis). */
+export const MIN_LABEL_CHARS = 4
+/** Largest tick step the "fewer ticks" fix uses (every 4th label). */
+export const MAX_TICK_STEP = 4
+
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
 const STYLE_PROPS = ['fill', 'stroke', 'stroke-width', 'stroke-opacity', 'fill-opacity', 'opacity', 'stroke-dasharray', 'stroke-linecap', 'stroke-linejoin', 'font-size', 'font-weight', 'font-style', 'text-anchor', 'paint-order', 'mix-blend-mode', 'visibility', 'display']
 
@@ -161,8 +205,191 @@ function htmlText(lines: HtmlLine[], ox: number, oy: number, texts: string[]): s
     .join('')
 }
 
-export function composeSvg(figure: HTMLElement, s: ExportSettings, metaIn: { title: string; caption: string; provenance: Provenance; notes?: string[] }, embedFont = true): Composed {
-  let meta = metaIn
+interface Extent {
+  minX: number
+  maxX: number
+  offenders: FitOffender[]
+}
+
+const TITLE_CLASS = /axis-[xy]-title/
+
+const MEASURED = 'svg text, svg path, svg rect, svg circle, svg line, svg image'
+
+/**
+ * Horizontal extent of what is drawn (tick labels can overhang a plot's own box) and what sticks
+ * out. part 'ticks': only axis ticks (the fixes change those); 'rest': everything else, including
+ * the HTML text lines. The fix loops measure 'ticks' again and reuse 'rest'.
+ */
+function extentOf(figure: HTMLElement, W0: number, part: 'ticks' | 'rest', lines: HtmlLine[] = []): Extent {
+  const base = figure.getBoundingClientRect()
+  let minX = 0
+  let maxX = W0
+  const offenders: FitOffender[] = []
+  const note = (kind: FitOffender['kind'], text: string, l: number, r: number) => {
+    if (l < -0.5) offenders.push({ kind, text, side: 'left' })
+    else if (r > W0 + 0.5) offenders.push({ kind, text, side: 'right' })
+  }
+  const els = part === 'ticks' ? figure.querySelectorAll(`svg g.tick :is(text, line, path)`) : [...figure.querySelectorAll(MEASURED)].filter((el) => !el.closest('g.tick'))
+  for (const el of els) {
+    if (hidden(el)) continue
+    const r = el.getBoundingClientRect()
+    if (!r.width && !r.height) continue
+    const l = r.left - base.left
+    const rt = r.right - base.left
+    minX = Math.min(minX, l)
+    maxX = Math.max(maxX, rt)
+    const isText = el.tagName === 'text'
+    const kind: FitOffender['kind'] = !isText ? 'mark' : part === 'ticks' ? 'tick' : TITLE_CLASS.test(el.getAttribute('class') ?? '') ? 'axis-title' : 'text'
+    note(kind, isText ? (el.textContent ?? '').trim() : el.tagName, l, rt)
+  }
+  for (const l of lines) {
+    minX = Math.min(minX, l.left - base.left)
+    maxX = Math.max(maxX, l.right - base.left)
+    note('html', l.text, l.left - base.left, l.right - base.left)
+  }
+  return { minX, maxX, offenders }
+}
+
+const merge = (a: Extent, b: Extent): Extent => ({ minX: Math.min(a.minX, b.minX), maxX: Math.max(a.maxX, b.maxX), offenders: [...a.offenders, ...b.offenders] })
+
+function extent(figure: HTMLElement, W0: number, lines: HtmlLine[]): Extent {
+  return merge(extentOf(figure, W0, 'rest', lines), extentOf(figure, W0, 'ticks'))
+}
+
+const fits = (e: Extent, W0: number) => W0 / Math.ceil(e.maxX - Math.floor(e.minX)) >= 1 - FIT_TOLERANCE
+
+/** The axes (parents of g.tick) that hold an overflowing tick label. */
+function overflowingAxes(figure: HTMLElement, W0: number): Element[] {
+  const base = figure.getBoundingClientRect()
+  const axes = new Set<Element>()
+  for (const t of figure.querySelectorAll('svg g.tick text')) {
+    const r = t.getBoundingClientRect()
+    if ((r.width || r.height) && (r.left - base.left < -0.5 || r.right - base.left > W0 + 0.5)) {
+      const g = t.closest('g.tick')?.parentElement
+      if (g) axes.add(g)
+    }
+  }
+  return [...axes]
+}
+
+/**
+ * "Fewer ticks": on the axes that overflow, keep every k-th tick (k = 2..MAX_TICK_STEP), trying
+ * each offset so that an overhanging first or last label can be the one dropped. Mutates the
+ * offscreen render.
+ */
+function fewerTicks(figure: HTMLElement, W0: number, Wr: number, measure: () => Extent): string | null {
+  const axes = overflowingAxes(figure, Wr)
+  if (!axes.length) return null
+  const ticks = axes.map((a) => [...a.children].filter((c) => c.matches('g.tick')) as SVGGElement[])
+  const keep = (k: number, o: number) => (i: number) => i % k === o
+  const show = (f: (i: number) => boolean) => ticks.forEach((list) => list.forEach((g, i) => g.style.setProperty('display', f(i) ? '' : 'none')))
+  let best: [number, number] = [MAX_TICK_STEP, 0]
+  search: for (let k = 2; k <= MAX_TICK_STEP; k++) {
+    for (let o = 0; o < k; o++) {
+      show(keep(k, o))
+      if (fits(measure(), W0)) {
+        best = [k, o]
+        break search
+      }
+    }
+  }
+  const [k, o] = best
+  ticks.forEach((list) => list.forEach((g, i) => (keep(k, o)(i) ? g.style.removeProperty('display') : g.remove())))
+  return `Every ${k === 2 ? '2nd' : k === 3 ? '3rd' : `${k}th`} tick label shown on ${axes.length === 1 ? 'one axis' : `${axes.length} axes`} to fit the width.`
+}
+
+/**
+ * "Shorter labels": truncate tick labels with an ellipsis to the longest length that fits
+ * (binary search; shorter labels never make the figure wider). Mutates the offscreen render.
+ */
+function shortenLabels(figure: HTMLElement, W0: number, Wr: number, measure: () => Extent): string | null {
+  const axes = overflowingAxes(figure, Wr)
+  if (!axes.length) return null
+  // leaf text holders on the overflowing axes: tspans, or text elements without tspans
+  // numbers are never truncated (a cut-off number reads as a different value)
+  const leaves = (axes.flatMap((a) => [...a.querySelectorAll(':scope > g.tick text')]) as SVGTextElement[])
+    .flatMap((t) => {
+      const sp = [...t.querySelectorAll('tspan')]
+      return sp.length ? sp : [t]
+    })
+    .filter((l) => !NUMERIC.test((l.textContent ?? '').trim())) as SVGElement[]
+  const orig = leaves.map((l) => [...(l.textContent ?? '')])
+  const longest = Math.max(0, ...orig.map((o) => o.length))
+  if (longest <= MIN_LABEL_CHARS) return null
+  const apply = (n: number) => leaves.forEach((l, i) => (l.textContent = orig[i].length > n ? orig[i].slice(0, n - 1).join('') + '…' : orig[i].join('')))
+  // largest n in [MIN_LABEL_CHARS, longest - 1] that fits; MIN_LABEL_CHARS when none does
+  let lo = MIN_LABEL_CHARS
+  let hi = longest - 1
+  apply(lo)
+  if (fits(measure(), W0)) {
+    while (lo < hi) {
+      const mid = Math.ceil((lo + hi) / 2)
+      apply(mid)
+      if (fits(measure(), W0)) lo = mid
+      else hi = mid - 1
+    }
+  }
+  apply(lo)
+  return `Tick labels on ${axes.length === 1 ? 'one axis' : `${axes.length} axes`} shortened to ${lo} characters (…) to fit the width; the CSV has the full labels.`
+}
+
+export interface ComposeMeta {
+  title: string
+  caption: string
+  provenance: Provenance
+  notes?: string[]
+}
+
+/**
+ * Width check and the fixes the user chose. Text is never scaled below the chosen pt size unless
+ * the user confirmed it (s.fitScale); otherwise a FitError describes what sticks out.
+ * Mutates the offscreen render (fixes) and returns the caption notes.
+ */
+export function fitToWidth(figure: HTMLElement, s: ExportSettings, meta: Pick<ComposeMeta, 'title' | 'provenance'>): string[] {
+  const W0 = Math.round(s.widthMm * LAYOUT_PX_PER_MM)
+  const Wr = W0 - s.fitReservePx // the width the figure was rendered at
+  const notes: string[] = []
+  // the fixes only touch axis ticks: measure everything else (marks, titles, HTML text) once
+  const rest = extentOf(figure, Wr, 'rest', htmlLines(figure))
+  const measure = () => merge(rest, extentOf(figure, Wr, 'ticks'))
+  let e = measure()
+  if (fits(e, W0)) return notes
+  const applied: string[] = []
+  if (s.fitFewerTicks) {
+    const n = fewerTicks(figure, W0, Wr, measure)
+    if (n) {
+      notes.push(n)
+      applied.push('fewer ticks')
+    }
+    e = measure()
+  }
+  if (!fits(e, W0) && s.fitShortenLabels) {
+    const n = shortenLabels(figure, W0, Wr, measure)
+    if (n) {
+      notes.push(n)
+      applied.push('shorter labels')
+    }
+    e = measure()
+  }
+  if (fits(e, W0)) return notes
+  const W = Math.ceil(e.maxX - Math.floor(e.minX))
+  const scale = W0 / W
+  const scaledPt = Math.floor(s.fontPt * scale * 10) / 10
+  if (s.fitScale) {
+    notes.push(`Scaled to ${Math.round(scale * 100)} % to fit ${s.widthMm} mm: text is ${scaledPt.toFixed(1)} pt instead of ${s.fontPt} pt.`)
+    return notes
+  }
+  const seen = new Set<string>()
+  const offenders = e.offenders.filter((o) => (seen.has(o.kind + o.text) ? false : (seen.add(o.kind + o.text), true)))
+  throw new FitError([
+    { panelId: meta.provenance.panelId, title: meta.title, widthMm: s.widthMm, fontPt: s.fontPt, neededMm: W / LAYOUT_PX_PER_MM, scale, scaledPt, overPx: W - W0, tickLabels: offenders.some((o) => o.kind === 'tick'), applied, offenders: offenders.slice(0, 12) },
+  ])
+}
+
+export function composeSvg(figure: HTMLElement, s: ExportSettings, metaIn: ComposeMeta, embedFont = true): Composed {
+  // fixes mutate the render before it is cloned; throws FitError when it still does not fit
+  const fitNotes = fitToWidth(figure, s, metaIn)
+  const meta = fitNotes.length ? { ...metaIn, notes: [...(metaIn.notes ?? []), ...fitNotes] } : metaIn
   const raster: Composed['rasterLayers'] = []
   const texts: string[] = []
   const F = ptToLayoutPx(s.fontPt)
@@ -186,25 +413,11 @@ export function composeSvg(figure: HTMLElement, s: ExportSettings, metaIn: { tit
   const lines = htmlLines(figure)
   const html = htmlText(lines, base.left, base.top, texts)
   for (const l of lines) contentH = Math.max(contentH, l.top - base.top + l.size * 1.25)
-  // real horizontal extent (tick labels can overhang a plot's own box)
-  let minX = 0
-  let maxX = Math.round(s.widthMm * LAYOUT_PX_PER_MM)
-  for (const el of figure.querySelectorAll('svg text, svg path, svg rect, svg circle, svg line, svg image')) {
-    if (hidden(el)) continue
-    const r = el.getBoundingClientRect()
-    if (!r.width && !r.height) continue
-    minX = Math.min(minX, r.left - base.left)
-    maxX = Math.max(maxX, r.right - base.left)
-  }
-  for (const l of lines) {
-    minX = Math.min(minX, l.left - base.left)
-    maxX = Math.max(maxX, l.right - base.left)
-  }
-  // content wider than the page (overhanging labels): the whole figure is scaled to fit
+  // real horizontal extent; wider than W0 only when the user confirmed "scale anyway" (or within FIT_TOLERANCE)
+  const { minX, maxX } = extent(figure, W0 - s.fitReservePx, lines)
   const x0 = Math.floor(minX)
-  const W = Math.ceil(maxX - x0)
-  const fit = W0 / W
-  if (fit < 0.97) meta = { ...meta, notes: [...(meta.notes ?? []), `Scaled to ${Math.round(fit * 100)} % to fit ${s.widthMm} mm (long axis labels).`] }
+  // a figure drawn narrower to make room for labels keeps the page width: nothing is scaled up
+  const W = s.fitReservePx ? Math.max(W0, Math.ceil(maxX - x0)) : Math.ceil(maxX - x0)
   // header / footer
   const pad = F * 0.6
   let y = 0

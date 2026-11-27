@@ -2,11 +2,12 @@
   import type { Snippet } from 'svelte'
   import RawRows from '../ui/RawRows.svelte'
   import { app } from '../ui/state.svelte'
-  import { compareTarget, runExport, saveFiles } from '../export/actions'
+  import { compareTarget, openExport, runExport, saveFiles } from '../export/actions'
+  import { FitError } from '../export/compose'
   import { loadSettings } from '../export/settings'
   import type { Format } from '../export/formats'
 
-  let { id, title, patterns = [], rows = [], note = '', children }: { id: string; title: string; patterns?: string[]; rows?: Record<string, unknown>[]; note?: string; children: Snippet } = $props()
+  let { id, title, patterns = [], rows = [], note = '', tikz = true, children }: { id: string; title: string; patterns?: string[]; rows?: Record<string, unknown>[]; note?: string; /** false for table-only sections (no plot to emit) */ tikz?: boolean; children: Snippet } = $props()
   let raw = $state(false)
   let busy = $state(false)
   async function exp(fmt: Format) {
@@ -14,11 +15,14 @@
     const b = app.byId(app.compareB)
     if (!a || !b) return
     busy = true
+    const snapshot = $state.snapshot(rows) as Record<string, unknown>[]
+    const make = async () => [await compareTarget(id, title, note || title, a, b, snapshot)]
     try {
-      const t = await compareTarget(id, title, note || title, a, b, $state.snapshot(rows) as Record<string, unknown>[])
-      saveFiles(await runExport([t], [fmt], loadSettings()))
+      saveFiles(await runExport(await make(), [fmt], loadSettings()))
     } catch (e) {
-      app.toast = `Export failed: ${(e as Error).message}`
+      // does not fit at the chosen pt size: the export dialog shows the warning and its fixes
+      if (e instanceof FitError) openExport([], false, { formats: [fmt], fit: e.issues, custom: { title, make } })
+      else app.toast = `Export failed: ${(e as Error).message}`
     } finally {
       busy = false
     }
@@ -31,7 +35,7 @@
   {#if note}<p class="note">{note}</p>{/if}
   <div class="tools" data-export-skip>
     <button onclick={() => (raw = !raw)}>{raw ? 'Hide' : 'View'} data ({rows.length})</button>
-    {#each ['png', 'pdf', 'svg', 'csv', 'tikz'] as const as f}<button disabled={busy} onclick={() => exp(f)} data-testid={`cmp-export-${f}`}>{f === 'tikz' ? 'TikZ' : f.toUpperCase()}</button>{/each}
+    {#each (['png', 'pdf', 'svg', 'csv', 'tikz'] as const).filter((f) => tikz || f !== 'tikz') as f}<button disabled={busy} onclick={() => exp(f)} data-testid={`cmp-export-${f}`}>{f === 'tikz' ? 'TikZ' : f.toUpperCase()}</button>{/each}
   </div>
   {#if raw}<RawRows {rows} />{/if}
 </section>
