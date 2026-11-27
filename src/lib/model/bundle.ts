@@ -74,6 +74,15 @@ export class LoadedBundle {
     return p.then((t) => new Promise<Table>((res) => enqueueRender(() => res(t))))
   }
 
+  /**
+   * Start decoding a table in the worker without waiting for it (most panels read
+   * `trajectories`; decoding it while the user looks at the overview makes the first panel
+   * they open faster). Errors surface when a panel asks for the table.
+   */
+  prefetch(name: string): void {
+    if (this.tableEntry(name)) this.tableRaw(name).catch(() => {})
+  }
+
   private tableRaw(name: string): Promise<Table> {
     let p = this.tables.get(name)
     if (!p) {

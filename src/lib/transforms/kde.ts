@@ -32,14 +32,19 @@ function smoothDensity1d_(values: ArrayLike<number>, gridSize = 256): { x: numbe
   let bw = 1.06 * sd * n ** (-1 / 5)
   bw = Math.max(bw, span / 200, 1e-8)
   const norm = bw * Math.sqrt(2 * Math.PI)
-  const density = x.map((xi) => {
+  // same arithmetic, in the same order, as `x.map(xi => sum over v of exp(-0.5 z²))`; an
+  // indexed loop over a typed array is about twice as fast as for…of over a number[]
+  const vv = Float64Array.from(v)
+  const density: number[] = new Array(x.length)
+  for (let g = 0; g < x.length; g++) {
+    const xi = x[g]
     let s = 0
-    for (const a of v) {
-      const z = (xi - a) / bw
+    for (let k = 0; k < n; k++) {
+      const z = (xi - vv[k]) / bw
       s += Math.exp(-0.5 * z * z)
     }
-    return s / n / norm
-  })
+    density[g] = s / n / norm
+  }
   const mx = Math.max(...density)
   return { x, density: mx > 0 ? density.map((d) => d / mx) : density }
 }

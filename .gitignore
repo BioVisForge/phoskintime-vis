@@ -184,3 +184,7 @@ website/reference/engine-api.md
 website/guide/panels.md
 website/development/contributing.md
 website/development/security.md
+
+# tiny-skia spike (decision 0006)
+bench/wasm-raster/crate/target/
+bench/wasm-raster/bench.html

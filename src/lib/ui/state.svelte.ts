@@ -160,6 +160,7 @@ class AppState {
       this.activeId = b.meta.bundleId
       if (!this.compareA) this.compareA = b.meta.bundleId
       else if (!this.compareB) this.compareB = b.meta.bundleId
+      b.prefetch('trajectories')
       this.verifyProgress[b.meta.bundleId] = 'checking…'
       b.verify((d, n) => (this.verifyProgress[b.meta.bundleId] = `checking ${d}/${n}`)).then(() => {
         this.verifyProgress[b.meta.bundleId] = b.verifyState

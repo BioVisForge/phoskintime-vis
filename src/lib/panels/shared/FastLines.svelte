@@ -2,6 +2,8 @@
   import { usePlot } from 'svelteplot'
   import { getExportMode, registerMark } from '../../plot'
   import { span } from '../../perf/spans'
+  import { onDestroy } from 'svelte'
+  import { cancelDraw, scheduleDraw } from '../../plot/fast/frames'
 
   /**
    * Swappable drawing layer for very many polylines (P6 at 8,000+ series). It draws typed arrays
@@ -40,24 +42,38 @@
     return d
   }
 
+  // the effect records what to draw (and tracks its dependencies); drawing happens once per frame
+  // (src/lib/plot/fast/frames.ts): while a panel mounts its scales settle over several updates
+  const key = {}
   $effect(() => {
     if (!canvas || vector) return
-    span('canvas draw', 'FastLines', draw)
+    const job = {
+      el: canvas,
+      fx: plot.scales.x.fn as unknown as (v: number) => number,
+      fy: plot.scales.y.fn as unknown as (v: number) => number,
+      dpr: exp ? exp.pixelRatio : window.devicePixelRatio || 1,
+      width: plot.width,
+      height: plot.height,
+      xs,
+      ys,
+      starts,
+      stroke,
+      opacity,
+      lw: width,
+    }
+    scheduleDraw(key, () => span('canvas draw', `FastLines ${xs.length} pts`, () => draw(job)))
   })
+  onDestroy(() => cancelDraw(key))
 
-  function draw() {
-    if (!canvas) return
-    const fx = plot.scales.x.fn as unknown as (v: number) => number
-    const fy = plot.scales.y.fn as unknown as (v: number) => number
-    const dpr = exp ? exp.pixelRatio : window.devicePixelRatio || 1
-    canvas.width = Math.round(plot.width * dpr)
-    canvas.height = Math.round(plot.height * dpr)
-    const ctx = canvas.getContext('2d')!
+  function draw({ el, fx, fy, dpr, width: w, height: h, xs, ys, starts, stroke, opacity, lw }: { el: HTMLCanvasElement; fx: (v: number) => number; fy: (v: number) => number; dpr: number; width: number; height: number; xs: Float64Array; ys: Float64Array; starts: Int32Array; stroke: string; opacity: number; lw: number }) {
+    el.width = Math.round(w * dpr)
+    el.height = Math.round(h * dpr)
+    const ctx = el.getContext('2d')!
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-    ctx.clearRect(0, 0, plot.width, plot.height)
+    ctx.clearRect(0, 0, w, h)
     ctx.strokeStyle = stroke
     ctx.globalAlpha = opacity
-    ctx.lineWidth = width
+    ctx.lineWidth = lw
     ctx.beginPath()
     for (let s = 0; s < starts.length; s++) {
       const a = starts[s]

@@ -3,7 +3,7 @@ import { num, str } from '../transforms/table'
 import { networkGof, protwiseGofOffsets, type GofStats } from '../transforms/gof'
 import { klRow, klByGene, type KlRow } from '../transforms/kl'
 import { envelopes } from '../transforms/envelope'
-import { quantile, mean, std } from '../transforms/stats'
+import { quantiles, mean, std } from '../transforms/stats'
 import { npyIndex } from '../io/npy'
 import { timed } from '../perf/spans'
 
@@ -118,7 +118,8 @@ function posteriorColumn_(a: NpyArray, j: number): Float64Array {
 
 /** BayesianInference.py summary: mean, sd (ddof 0), 5/50/95 % quantiles (a 90 % interval). */
 function credible_(values: ArrayLike<number>) {
-  return { mean: mean(values), sd: std(values, 0), q05: quantile(values, 0.05), q50: quantile(values, 0.5), q95: quantile(values, 0.95) }
+  const [q05, q50, q95] = quantiles(values, [0.05, 0.5, 0.95])
+  return { mean: mean(values), sd: std(values, 0), q05, q50, q95 }
 }
 
 export const bestRows = timed('shaping', 'bestRows', bestRows_)

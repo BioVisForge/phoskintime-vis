@@ -21,3 +21,8 @@ export function enqueueRender(fn: () => void) {
     running = false
   })()
 }
+
+/** True when no panel mount or table hand-off is waiting in the queue. */
+export function renderQueueIdle(): boolean {
+  return !running && !queue.length
+}

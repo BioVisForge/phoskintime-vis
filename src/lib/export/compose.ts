@@ -205,6 +205,36 @@ function htmlText(lines: HtmlLine[], ox: number, oy: number, texts: string[]): s
     .join('')
 }
 
+/**
+ * Client-space box of a drawn element. SVG text is measured by its glyph box (getBBox) mapped
+ * through its screen transform: Firefox's getBoundingClientRect pads SVG text by about 1 px on
+ * each side (its visual-overflow rect), which made 85 mm figures that fit in Chromium "not fit"
+ * in Firefox. For other elements, and where the transform is unavailable, getBoundingClientRect.
+ */
+export function drawnRect(el: Element): { left: number; right: number; top: number; bottom: number; width: number; height: number } {
+  if (el instanceof SVGTextElement || (typeof SVGTSpanElement !== 'undefined' && el instanceof SVGTSpanElement)) {
+    const g = el as SVGGraphicsElement
+    const m = g.getScreenCTM?.()
+    if (m) {
+      const b = g.getBBox()
+      const pts = [
+        [b.x, b.y],
+        [b.x + b.width, b.y],
+        [b.x, b.y + b.height],
+        [b.x + b.width, b.y + b.height],
+      ].map(([x, y]) => [m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f])
+      const xs = pts.map((p) => p[0])
+      const ys = pts.map((p) => p[1])
+      const left = Math.min(...xs)
+      const right = Math.max(...xs)
+      const top = Math.min(...ys)
+      const bottom = Math.max(...ys)
+      return { left, right, top, bottom, width: right - left, height: bottom - top }
+    }
+  }
+  return el.getBoundingClientRect()
+}
+
 interface Extent {
   minX: number
   maxX: number
@@ -232,7 +262,7 @@ function extentOf(figure: HTMLElement, W0: number, part: 'ticks' | 'rest', lines
   const els = part === 'ticks' ? figure.querySelectorAll(`svg g.tick :is(text, line, path)`) : [...figure.querySelectorAll(MEASURED)].filter((el) => !el.closest('g.tick'))
   for (const el of els) {
     if (hidden(el)) continue
-    const r = el.getBoundingClientRect()
+    const r = drawnRect(el)
     if (!r.width && !r.height) continue
     const l = r.left - base.left
     const rt = r.right - base.left
@@ -263,7 +293,7 @@ function overflowingAxes(figure: HTMLElement, W0: number): Element[] {
   const base = figure.getBoundingClientRect()
   const axes = new Set<Element>()
   for (const t of figure.querySelectorAll('svg g.tick text')) {
-    const r = t.getBoundingClientRect()
+    const r = drawnRect(t)
     if ((r.width || r.height) && (r.left - base.left < -0.5 || r.right - base.left > W0 + 0.5)) {
       const g = t.closest('g.tick')?.parentElement
       if (g) axes.add(g)

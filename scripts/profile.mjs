@@ -273,6 +273,23 @@ if (which === 'chromium' && !process.env.PROFILE_NO_CPU) {
   build = { dir, ...(await serve(dir)) }
 }
 
+// generic single-panel scenarios: `panel:<section>/<panel-id>` (rendered alone, after the bundle is open)
+for (const name of SCEN.filter((n) => n.startsWith('panel:'))) {
+  const [section, id] = name.slice(6).split('/')
+  scenarios[name] = [
+    async (page) => {
+      await openNetwork(page)
+      await go(page, '#/overview')
+    },
+    async (page) => {
+      const t = Date.now()
+      await go(page, `#/${section}?only=${id}`)
+      await ready(page, id)
+      return Date.now() - t
+    },
+  ]
+}
+
 const result = { browser: `${which} ${browser.version()}`, date: new Date().toISOString(), runs, scenarios: {} }
 for (const name of SCEN) {
   const [setup, act] = scenarios[name]
