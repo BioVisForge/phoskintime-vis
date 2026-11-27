@@ -19,25 +19,44 @@ export interface Composed {
 }
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
-const STYLE_PROPS = ['fill', 'stroke', 'stroke-width', 'stroke-opacity', 'fill-opacity', 'opacity', 'stroke-dasharray', 'stroke-linecap', 'stroke-linejoin', 'font-size', 'font-weight', 'font-style', 'text-anchor', 'dominant-baseline', 'paint-order', 'mix-blend-mode', 'visibility', 'display']
+const STYLE_PROPS = ['fill', 'stroke', 'stroke-width', 'stroke-opacity', 'fill-opacity', 'opacity', 'stroke-dasharray', 'stroke-linecap', 'stroke-linejoin', 'font-size', 'font-weight', 'font-style', 'text-anchor', 'paint-order', 'mix-blend-mode', 'visibility', 'display']
 
 /** Values equal to the SVG initial value are not inlined (keeps large exports small). */
 const STYLE_DEFAULTS: Record<string, string> = {
   opacity: '1', 'fill-opacity': '1', 'stroke-opacity': '1', 'stroke-dasharray': 'none', 'stroke-linecap': 'butt', 'stroke-linejoin': 'miter',
-  'font-style': 'normal', 'dominant-baseline': 'auto', 'paint-order': 'normal', 'mix-blend-mode': 'normal', visibility: 'visible', display: 'inline', 'text-anchor': 'start',
+  'font-style': 'normal', 'paint-order': 'normal', 'mix-blend-mode': 'normal', visibility: 'visible', display: 'inline', 'text-anchor': 'start',
 }
-const LEAF = new Set(['circle', 'path', 'rect', 'line', 'polygon', 'polyline', 'ellipse'])
+// elements whose own opacity can be folded into fill/stroke opacity (text included: tick labels carry opacity 0.8)
+const LEAF = new Set(['circle', 'path', 'rect', 'line', 'polygon', 'polyline', 'ellipse', 'text', 'tspan'])
 const NON_INHERITED = new Set(['opacity', 'display', 'mix-blend-mode'])
-const FONT_PROPS = new Set(['font-size', 'font-weight', 'font-style', 'text-anchor', 'dominant-baseline'])
+const FONT_PROPS = new Set(['font-size', 'font-weight', 'font-style', 'text-anchor'])
 
 function hidden(el: Element): boolean {
   return !!el.closest('select, option, button, input, label, textarea, [data-export-skip]')
+}
+
+/**
+ * svg2pdf ignores most dominant-baseline values, which moved tick labels and axis titles in the
+ * PDF. Resolve them to a plain offset, measured on the live element, so that every renderer
+ * places the glyphs where the browser drew them.
+ */
+function baselineShift(text: SVGTextElement): number {
+  const parts = [text, ...text.querySelectorAll('tspan')] as SVGElement[]
+  if (!parts.some((p) => !['auto', 'alphabetic'].includes(getComputedStyle(p).dominantBaseline))) return 0
+  const before = text.getBBox().y
+  const saved = parts.map((p) => p.getAttribute('style'))
+  for (const p of parts) p.style.setProperty('dominant-baseline', 'alphabetic', 'important')
+  const shift = before - text.getBBox().y
+  parts.forEach((p, i) => (saved[i] === null ? p.removeAttribute('style') : p.setAttribute('style', saved[i]!)))
+  return shift
 }
 
 function inlineSvg(svg: SVGSVGElement, raster: Composed['rasterLayers']): SVGSVGElement {
   const clone = svg.cloneNode(true) as SVGSVGElement
   const src = [svg, ...svg.querySelectorAll('*')]
   const dst = [clone, ...clone.querySelectorAll('*')]
+  // measured before any style is read or rewritten
+  const shifts = src.map((el) => (el.tagName === 'text' ? baselineShift(el as SVGTextElement) : 0))
   src.forEach((el, i) => {
     const d = dst[i] as SVGElement
     if (!d?.style) return
@@ -61,9 +80,16 @@ function inlineSvg(svg: SVGSVGElement, raster: Composed['rasterLayers']): SVGSVG
     const op = parseFloat(cs.getPropertyValue('opacity'))
     if (op < 1 && LEAF.has(el.tagName)) {
       d.style.removeProperty('opacity')
-      d.style.setProperty('fill-opacity', String(op * (parseFloat(cs.getPropertyValue('fill-opacity')) || 1)))
-      d.style.setProperty('stroke-opacity', String(op * (parseFloat(cs.getPropertyValue('stroke-opacity')) || 1)))
+      const own = (p: string) => {
+        const v = parseFloat(cs.getPropertyValue(p))
+        return Number.isFinite(v) ? v : 1
+      }
+      d.style.setProperty('fill-opacity', String(op * own('fill-opacity')))
+      d.style.setProperty('stroke-opacity', String(op * own('stroke-opacity')))
     }
+    d.removeAttribute('dominant-baseline')
+    d.removeAttribute('alignment-baseline')
+    if (Math.abs(shifts[i]) > 0.01) d.setAttribute('transform', `${d.getAttribute('transform') ?? ''} translate(0 ${shifts[i].toFixed(2)})`.trim())
     d.removeAttribute('class')
   })
   const srcFO = svg.querySelectorAll('foreignObject')
