@@ -1,4 +1,28 @@
-# Handoff (2026-11-27)
+# Handoff (2026-11-27, end of session)
+
+**Rule from the owner: push and open PRs only after the owner confirms.**
+
+## Where to continue
+
+1. Run the final verification that was stopped when the session ended (about 40 min):
+   full suite on `feat/export-ui` (`0244bd8`) and on `feat/docs-release`, plus
+   `npm run docs:build` there, and ideally a Node 24 pass on all three tips (CI uses Node 24).
+2. Show the owner: `git log` of the branches, `du -sh .git`, test results and the PR
+   descriptions in `docs/pr-drafts.md` (fill in the pending results).
+3. After confirmation: push, open the stacked PRs. Delete `docs/pr-drafts.md` before PR 3.
+
+## Test status at the end of the session
+
+| Branch | Last full result |
+|---|---|
+| `feat/foundation` `fb7a7e3` | all passed (Node 26): lint, types, unit 44, parity 10, e2e 42, builds, `docs:assets` |
+| `feat/export-ui` `8e6d60b` | e2e 73 passed, **1 failed** (Firefox, reordered-params), visual 16, **`docs:assets` failed** |
+| `feat/export-ui` `0244bd8` (longer timeouts for both) | lint, types, unit 82, parity 10, builds passed; **e2e, visual, `docs:assets` not completed** |
+| `feat/docs-release` | lint, types, unit 82, visual 16, ruff, pre-commit, tox (lint, fixtures, parity), strict docs build with 0 broken links passed on the working tree before the commits; **no full e2e run** |
+
+The two failures: the Firefox test passed 6 of 6 afterwards and the sample export twice in a row;
+the host was at load 60-105. Most likely timeouts (5 s panel render, 30 s click), now longer, but
+not proven: the detailed output of the failing run was overwritten.
 
 ## Branch state (all local; nothing pushed, no PR, Pages not deployed)
 
