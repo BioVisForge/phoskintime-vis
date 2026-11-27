@@ -273,6 +273,29 @@ if (which === 'chromium' && !process.env.PROFILE_NO_CPU) {
   build = { dir, ...(await serve(dir)) }
 }
 
+// brushing the GOF overall plot of the gof-100k fixture (102,868 points)
+scenarios.brush100k = [
+  async (page) => {
+    await page.setInputFiles('[data-testid=open-zip]', FIX('gof-100k'))
+    await page.waitForSelector('[data-testid=verify-badge][data-state=verified]', { timeout: 120000 })
+    await go(page, '#/fit?only=nm-gof')
+    await ready(page, 'nm-gof')
+    await page.waitForTimeout(1500)
+  },
+  async (page) => {
+    const box = (await page.locator('[data-panel="nm-gof"] .pkv-zoomwrap svg').evaluateAll((ss) => ss.map((s) => s.getBoundingClientRect()).filter((r) => r.width > 100).map((r) => ({ x: r.x, y: r.y, width: r.width, height: r.height }))))[0]
+    const t = Date.now()
+    await page.mouse.move(box.x + box.width * 0.35, box.y + box.height * 0.3)
+    await page.mouse.down()
+    await page.mouse.move(box.x + box.width * 0.7, box.y + box.height * 0.7, { steps: 20 })
+    await page.mouse.up()
+    // the selection applies when the pointer pauses: wait for it and the trajectories it shows
+    await page.locator('[data-panel="nm-gof"] [data-testid=selection] b').filter({ hasNotText: /^0$/ }).waitFor()
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))))
+    return Date.now() - t
+  },
+]
+
 // generic single-panel scenarios: `panel:<section>/<panel-id>` (rendered alone, after the bundle is open)
 for (const name of SCEN.filter((n) => n.startsWith('panel:'))) {
   const [section, id] = name.slice(6).split('/')

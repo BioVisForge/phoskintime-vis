@@ -3,7 +3,9 @@
   import { getExportMode, registerMark } from '../../plot'
   import { span } from '../../perf/spans'
   import { onDestroy } from 'svelte'
-  import { cancelDraw, scheduleDraw } from '../../plot/fast/frames'
+  import { cancelDraw, scaleSignature, scheduleDraw } from '../../plot/fast/frames'
+  import { getZoom } from '../../plot/zoom/zoom.svelte'
+  import { drawPreview, emptySnapshot, keepSnapshot } from '../../plot/zoom/preview'
 
   /**
    * Swappable drawing layer for very many polylines (P6 at 8,000+ series). It draws typed arrays
@@ -45,8 +47,12 @@
   // the effect records what to draw (and tracks its dependencies); drawing happens once per frame
   // (src/lib/plot/fast/frames.ts): while a panel mounts its scales settle over several updates
   const key = {}
+  const zoom = getZoom()
+  const snap = emptySnapshot()
+  const drawn: { sig: string; xs: unknown; ys: unknown; starts: unknown; el: unknown } = { sig: '', xs: null, ys: null, starts: null, el: null }
   $effect(() => {
     if (!canvas || vector) return
+    void zoom?.interacting
     const job = {
       el: canvas,
       fx: plot.scales.x.fn as unknown as (v: number) => number,
@@ -61,7 +67,18 @@
       opacity,
       lw: width,
     }
-    scheduleDraw(key, () => span('canvas draw', `FastLines ${xs.length} pts`, () => draw(job)))
+    // nothing that decides the pixels changed (new scale objects with the same values): skip
+    const sig = scaleSignature(plot.scales, ['x', 'y'], [job.width, job.height, job.dpr, stroke, opacity, width])
+    if (sig === drawn.sig && xs === drawn.xs && ys === drawn.ys && starts === drawn.starts && canvas === drawn.el) return
+    // pan/zoom gesture: show the last bitmap mapped to the new scales; draw when it pauses
+    if (zoom?.interacting && drawPreview(snap, canvas, plot.scales.x.fn as any, plot.scales.y.fn as any, job.dpr)) return cancelDraw(key)
+    scheduleDraw(key, () =>
+      span('canvas draw', `FastLines ${xs.length} pts`, () => {
+        draw(job)
+        Object.assign(drawn, { sig, xs: job.xs, ys: job.ys, starts: job.starts, el: job.el })
+        if (zoom) keepSnapshot(snap, job.el, plot.scales.x.fn as any, plot.scales.y.fn as any, job.dpr)
+      }),
+    )
   })
   onDestroy(() => cancelDraw(key))
 

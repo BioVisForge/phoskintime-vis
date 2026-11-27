@@ -83,6 +83,8 @@ export function symlogTicks(tmax: number): number[] {
 
 /** Marks with more elements than this draw on canvas (addendum rule; also avoids a Svelte runtime cost that grows with the number of SVG elements). */
 export const CANVAS_MIN = 1000
+/** A brush selection is applied when the pointer pauses this long (the rectangle itself follows at once). */
+export const BRUSH_SETTLE_MS = 120
 
 /**
  * State chosen for a panel: the global psite (or layer) when it names one of `states`, else the

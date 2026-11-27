@@ -10,8 +10,10 @@
   import { resolveColor } from 'svelteplot/marks/helpers/canvas.js'
   import { devicePixelRatio } from 'svelte/reactivity/window'
   import { facetRows, proxyIndices, resolveColumns } from './dots'
-  import { cancelDraw, scheduleDraw } from './frames'
+  import { cancelDraw, scaleSignature, scheduleDraw } from './frames'
   import { span } from '../../perf/spans'
+  import { getZoom } from '../zoom/zoom.svelte'
+  import { drawPreview, emptySnapshot, keepSnapshot } from '../zoom/preview'
 
   let { props }: { props: Record<string, any> } = $props()
   const plot = usePlot()
@@ -32,6 +34,9 @@
 
   // the effect records what to draw (and tracks its dependencies); drawing happens once per frame
   const key = {}
+  const zoom = getZoom()
+  const snap = emptySnapshot()
+  const drawn: { sig: string; cols: unknown; rows: unknown; el: unknown } = { sig: '', cols: null, rows: null, el: null }
   $effect(() => {
     void theme
     if (!canvas || !plot.scales) return
@@ -46,16 +51,43 @@
       rows,
       p: { fill: props.fill, stroke: props.stroke, r: props.r, opacity: props.opacity, fillOpacity: props.fillOpacity, strokeOpacity: props.strokeOpacity, strokeWidth: props.strokeWidth },
     }
-    scheduleDraw(key, () => span('canvas draw', 'FastDots', () => draw(job)))
+    // nothing that decides the pixels changed (new scale objects with the same values): skip
+    const sig = scaleSignature(plot.scales, ['x', 'y', 'color'], [job.width, job.height, job.dpr, theme, job.p, (plot.options as any).color?.unknown])
+    if (sig === drawn.sig && cols === drawn.cols && rows === drawn.rows && canvas === drawn.el) return
+    // pan/zoom gesture: show the last bitmap mapped to the new scales; draw when it pauses
+    if (zoom?.interacting && drawPreview(snap, canvas, plot.scales.x.fn as any, plot.scales.y.fn as any, job.dpr)) return cancelDraw(key)
+    let step: (() => boolean) | null = null
+    const tick = () =>
+      span('canvas draw', 'FastDots', () => {
+        step ??= start(job) // in the frame: superseded jobs never touch the canvas
+        if (!step()) return scheduleDraw(key, tick) // more slices in the next frame
+        Object.assign(drawn, { sig, cols: job.cols, rows: job.rows, el: job.el })
+        if (zoom) keepSnapshot(snap, job.el, job.scales.x.fn, job.scales.y.fn, job.dpr)
+      })
+    scheduleDraw(key, tick)
   })
   onDestroy(() => cancelDraw(key))
 
   type Job = { el: HTMLCanvasElement; dpr: number; width: number; height: number; scales: any; unknown: unknown; cols: ReturnType<typeof resolveColumns>; rows: Int32Array; p: Record<string, any> }
 
-  function draw({ el, dpr, width, height, scales, unknown, cols, rows, p }: Job) {
-    el.width = width * dpr
-    el.height = height * dpr
-    const ctx = el.getContext('2d')!
+  /** Layers with more dots than this are drawn in slices of SLICE_MS per frame (see start()). */
+  const DIRECT_MAX = 20_000
+  const SLICE_MS = 10
+  let buffer: HTMLCanvasElement | null = null
+
+  /**
+   * Returns a step function that draws until done (true) or until its time slice is used up
+   * (false; call again in the next frame). Up to DIRECT_MAX dots are drawn in one step onto the
+   * visible canvas. Larger layers are drawn into a buffer canvas, slice by slice, and copied onto
+   * the visible canvas when complete: the same operations in the same order on one context, so
+   * the pixels do not depend on where the slices end, and no frame is blocked for long.
+   */
+  function start({ el, dpr, width, height, scales, unknown, cols, rows, p }: Job): () => boolean {
+    const sliced = rows.length > DIRECT_MAX
+    const target = sliced ? (buffer ??= document.createElement('canvas')) : el
+    target.width = width * dpr
+    target.height = height * dpr
+    const ctx = target.getContext('2d')!
     const colorFn = scales.color.fn as (v: unknown) => string
     const cache = new Map<unknown, string>()
     const css = (c: unknown) => {
@@ -84,27 +116,45 @@
     let lastF: string | null = null
     let lastS: string | null = null
     let lastW = NaN
-    for (const i of rows) {
-      if (!isValid(x[i] as any) || !isValid(y[i] as any)) continue
-      const X = projectX('x', scales, x[i] as any)
-      const Y = projectY('y', scales, y[i] as any)
-      const f = colour(fill, p.fill, i)
-      const s = colour(stroke, p.stroke, i)
-      if (s && s !== 'none' && lineWidth !== lastW) ctx.lineWidth = lastW = lineWidth
-      const fs = f ? f : 'none'
-      const ss = s ? s : 'none'
-      if (fs !== lastF) ctx.fillStyle = lastF = fs
-      if (ss !== lastS) ctx.strokeStyle = lastS = ss
-      ctx.translate(X ?? 0, Y ?? 0)
-      ctx.beginPath()
-      ctx.moveTo(rr, 0)
-      ctx.arc(0, 0, rr, 0, 2 * Math.PI)
-      ctx.closePath()
-      ctx.globalAlpha = opacity * fillOpacity
-      if (f && f !== 'none') ctx.fill()
-      ctx.globalAlpha = opacity * strokeOpacity
-      if (s && s !== 'none') ctx.stroke()
-      ctx.translate(-(X ?? 0), -(Y ?? 0))
+    let k = 0
+    return () => {
+      const t0 = performance.now()
+      while (k < rows.length) {
+        const i = rows[k++]
+        if ((k & 255) === 0 && sliced && performance.now() - t0 > SLICE_MS) {
+          k--
+          return false
+        }
+        if (!isValid(x[i] as any) || !isValid(y[i] as any)) continue
+        const X = projectX('x', scales, x[i] as any)
+        const Y = projectY('y', scales, y[i] as any)
+        const f = colour(fill, p.fill, i)
+        const s = colour(stroke, p.stroke, i)
+        if (s && s !== 'none' && lineWidth !== lastW) ctx.lineWidth = lastW = lineWidth
+        const fs = f ? f : 'none'
+        const ss = s ? s : 'none'
+        if (fs !== lastF) ctx.fillStyle = lastF = fs
+        if (ss !== lastS) ctx.strokeStyle = lastS = ss
+        ctx.translate(X ?? 0, Y ?? 0)
+        ctx.beginPath()
+        ctx.moveTo(rr, 0)
+        ctx.arc(0, 0, rr, 0, 2 * Math.PI)
+        ctx.closePath()
+        ctx.globalAlpha = opacity * fillOpacity
+        if (f && f !== 'none') ctx.fill()
+        ctx.globalAlpha = opacity * strokeOpacity
+        if (s && s !== 'none') ctx.stroke()
+        ctx.translate(-(X ?? 0), -(Y ?? 0))
+      }
+      if (sliced) {
+        el.width = target.width
+        el.height = target.height
+        const out = el.getContext('2d')!
+        out.globalCompositeOperation = 'copy'
+        out.drawImage(target, 0, 0)
+        out.globalCompositeOperation = 'source-over'
+      }
+      return true
     }
   }
 </script>

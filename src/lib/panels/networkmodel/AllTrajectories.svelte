@@ -55,7 +55,7 @@
   {#if app.rawLines}
     <div class="three">
       {#each raw as r}
-        <Plot height={280} grid title={r.panel} x={{ type: 'symlog', ticks: TIME_TICKS, domain: r.xdom, label: 'Time (min), symlog' }} y={{ domain: r.ydom, label: 'Predicted FC' }}>
+        <Plot zoom height={280} grid title={r.panel} x={{ type: 'symlog', ticks: TIME_TICKS, domain: r.xdom, label: 'Time (min), symlog' }} y={{ domain: r.ydom, label: 'Predicted FC' }}>
           <FastLines xs={r.xs} ys={r.ys} starts={r.starts} />
           <Line data={hi.filter((h) => h.panel === r.panel)} x="time" y="v" z="z" stroke="#d62728" strokeWidth={1.8} />
         </Plot>
