@@ -79,7 +79,8 @@
         <CustomMark glyph="ring" data={flagged} x="obs" y="pred">
           {#snippet mark({ record }: any)}<circle cx={record.x} cy={record.y} r="6" fill="none" stroke="#d62728" stroke-width="1.5"><title>{record.datum.label}: residual {record.datum.resid.toFixed(3)}</title></circle>{/snippet}
         </CustomMark>
-        <Text data={flagged} x="obs" y="pred" text="label" dy={-9} fontSize={8} />
+        <!-- labels in the right half end at their point, so they stay inside the plot -->
+        <Text data={flagged} x="obs" y="pred" text="label" dy={-9} fontSize={8} textAnchor={(d: any) => (d.obs > (overall.min + overall.max) / 2 ? 'end' : 'start')} />
         {#if showReg}<RegressionY data={pts} x="obs" y="pred" stroke="var(--pkv-ink)" confidence={0.95} />{/if}
         {#if brush.enabled}<Rect {...brush} opacity={0.08} />{/if}
         <Brush bind:brush constrainToDomain stroke={false} />
@@ -106,7 +107,7 @@
 <style>
   .two { display: grid; grid-template-columns: minmax(320px, 1fr) 1.4fr; gap: 8px; }
   .stats { font-size: 0.8rem; border-collapse: collapse; margin-bottom: 6px; }
-  .stats td, .stats th { padding: 2px 8px; border-bottom: 1px solid #eee; text-align: right; }
+  .stats td, .stats th { padding: 2px 0.45em; border-bottom: 1px solid #eee; text-align: right; }
   .stats td:first-child, .stats th:first-child { text-align: left; }
   .legend { font-size: 0.75rem; color: var(--pkv-ink-2); margin: 0; }
   .hint { font-size: 0.78rem; color: var(--pkv-ink-2); margin: 2px 0; }

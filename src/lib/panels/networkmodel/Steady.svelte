@@ -4,7 +4,7 @@
   import type { PanelProps } from '../types'
   import type { Table } from '../../model/types'
   import { num, str } from '../../transforms/table'
-  import { histogram } from '../common'
+  import { histogram, symlogTicks } from '../common'
   import Loading from '../Loading.svelte'
 
   let { bundle, report }: PanelProps = $props()
@@ -32,7 +32,7 @@
 
 {#if !t}<Loading />{:else}
   <div class="two">
-    <Plot height={240} grid x={{ type: tmax > 100 ? 'symlog' : 'linear', constant: 10, label: 'Time (min)' }} y={{ label: 'Conc (a.u.)' }} color={{ legend: true }}>
+    <Plot height={240} grid x={{ type: tmax > 100 ? 'symlog' : 'linear', constant: 10, ...(tmax > 100 ? { ticks: symlogTicks(tmax) } : {}), label: 'Time (min)' }} y={{ label: 'Conc (a.u.)' }} color={{ legend: true }}>
       <Line data={sel} x="time" y="value" z="state" stroke="state" />
     </Plot>
     <Plot height={240} grid x={{ label: `log10 |dy/dt| at t = ${lastT}` }} y={{ label: 'states' }}>
