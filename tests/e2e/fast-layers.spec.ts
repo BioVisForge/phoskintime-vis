@@ -3,13 +3,16 @@
  * compared, pixel by pixel, with the canvas SveltePlot draws for the same mark (`?fast=0`), at
  * the same size and device pixel ratio.
  *
+ * Runs in the e2e project (Chromium): both sides are drawn on the same machine, so unlike the
+ * screenshot baselines the comparison holds on any host.
+ *
  * Tolerance (documented in docs/decisions/0006-wasm-perf.md): a channel may differ by at most
  * AA_TOL levels of 255 (anti-aliasing of the same path rasterised in a different order of
  * operations); at most AA_MAX_FRACTION of the pixels may differ at all. Anything larger fails.
  */
 import { test, expect, type Page } from '@playwright/test'
 import { resolve } from 'node:path'
-import { openZip, waitVerified } from '../e2e/helpers'
+import { openZip, waitVerified } from './helpers'
 
 export const AA_TOL = 2
 export const AA_MAX_FRACTION = 0.001
@@ -58,7 +61,7 @@ for (const [section, id] of FAST_PANELS) {
     const ref = await canvases(page, '?fast=0', section, id)
     const fast = await canvases(page, '', section, id)
     if (STROKE_WIDTH_CANVASES[id]) {
-      const p2 = await browser.newPage({ viewport: { width: 1360, height: 900 }, deviceScaleFactor: 1 })
+      const p2 = await browser.newPage({ viewport: page.viewportSize()!, deviceScaleFactor: 1 })
       const compat = await canvases(p2, '', section, id, true)
       await p2.close()
       for (const k of STROKE_WIDTH_CANVASES[id]) fast[k] = compat[k]
@@ -76,6 +79,7 @@ for (const [section, id] of FAST_PANELS) {
       }
       const frac = differ / ref[k].px.length
       test.info().annotations.push({ type: 'parity', description: `${id} canvas ${k}: max channel diff ${maxd}, differing ${(frac * 100).toFixed(4)} %` })
+      console.log(`parity ${id} canvas ${k}: max channel diff ${maxd}, differing channels ${differ}`)
       expect(maxd, `${id} canvas ${k}: max channel difference`).toBeLessThanOrEqual(AA_TOL)
       expect(frac, `${id} canvas ${k}: fraction of differing channels`).toBeLessThanOrEqual(AA_MAX_FRACTION)
     }

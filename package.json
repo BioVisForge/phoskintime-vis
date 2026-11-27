@@ -22,7 +22,7 @@
     "sync-contracts": "tsx scripts/sync-contracts.ts",
     "fixtures": "${PYTHON:-python3} tests/fixtures/make_fixtures.py",
     "validators": "node scripts/build-validators.mjs",
-    "docs:assets": "node scripts/screenshots.mjs && node scripts/gallery.mjs && node scripts/export-samples.mjs",
+    "docs:assets": "node scripts/screenshots.mjs && node scripts/screen-vs-export.mjs && node scripts/gallery.mjs && node scripts/export-samples.mjs",
     "docs:build": "node scripts/build-docs.mjs",
     "release": "node scripts/release.mjs",
     "brand": "python3 scripts/build_brand.py && node scripts/build-brand-rasters.mjs",

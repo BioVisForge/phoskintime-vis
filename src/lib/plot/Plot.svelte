@@ -53,9 +53,9 @@
 
 <style>
   .pkv-zoomwrap { position: relative; }
-  .pkv-zoombar { position: absolute; top: 0; right: 0; z-index: 2; display: flex; gap: 2px; opacity: 0.55; transition: opacity 0.15s; }
-  .pkv-zoomwrap:hover .pkv-zoombar, .pkv-zoombar:focus-within { opacity: 1; }
+  /* full opacity: the labels must keep WCAG AA contrast (axe) */
+  .pkv-zoombar { position: absolute; top: 0; right: 0; z-index: 2; display: flex; gap: 2px; }
   .pkv-zoombar button { font: inherit; font-size: 0.72rem; line-height: 1; padding: 2px 6px; min-width: 22px; border: 1px solid var(--pkv-rule, #ccc); background: var(--pkv-surface, #fff); color: var(--pkv-ink); border-radius: 3px; cursor: pointer; }
   .pkv-zoombar button[aria-pressed='true'] { background: var(--pkv-ink); color: var(--pkv-surface, #fff); }
-  .pkv-zoombar button:disabled { opacity: 0.45; cursor: default; }
+  .pkv-zoombar button:disabled { color: var(--pkv-ink-2); cursor: default; }
 </style>
