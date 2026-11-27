@@ -296,6 +296,16 @@ scenarios.brush100k = [
   },
 ]
 
+// 600 dpi PNG of the GOF panel (vector dots: the composed SVG has ≈ 10,000 circles)
+scenarios.pngGof = [
+  async (page) => {
+    await openNetwork(page)
+    await go(page, '#/fit?only=nm-gof')
+    await ready(page, 'nm-gof')
+  },
+  (page) => download(page, 'nm-gof', 'png'),
+]
+
 // generic single-panel scenarios: `panel:<section>/<panel-id>` (rendered alone, after the bundle is open)
 for (const name of SCEN.filter((n) => n.startsWith('panel:'))) {
   const [section, id] = name.slice(6).split('/')

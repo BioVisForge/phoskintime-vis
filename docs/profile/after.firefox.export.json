@@ -1,0 +1,47 @@
+{
+ "browser": "firefox 159.0",
+ "date": "2026-11-27T18:45:54.978Z",
+ "runs": 3,
+ "scenarios": {
+  "png": {
+   "wallMs": [
+    3364,
+    3369,
+    3372
+   ],
+   "wallMedianMs": 3369,
+   "stagesMedianMs": {
+    "shaping": 18,
+    "transform": 33,
+    "canvas draw": 1138,
+    "export render": 1759,
+    "export compose": 104,
+    "export encode": 1390
+   },
+   "cpuMs": null,
+   "traceMs": null,
+   "profiledWallMs": null,
+   "cpuDetail": null
+  },
+  "pdf": {
+   "wallMs": [
+    4577,
+    4575,
+    4491
+   ],
+   "wallMedianMs": 4575,
+   "stagesMedianMs": {
+    "shaping": 15,
+    "transform": 34,
+    "canvas draw": 1138,
+    "export render": 1761,
+    "export compose": 103,
+    "export encode": 2574
+   },
+   "cpuMs": null,
+   "traceMs": null,
+   "profiledWallMs": null,
+   "cpuDetail": null
+  }
+ }
+}

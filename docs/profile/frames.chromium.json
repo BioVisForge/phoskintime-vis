@@ -1,0 +1,94 @@
+{
+ "browser": "chromium 159.0.8154.6",
+ "date": "2026-11-27T18:47:08.595Z",
+ "gestures": [
+  {
+   "name": "GOF overall, 4,912 points (network): Ctrl+wheel zoom in, 30 steps",
+   "frames": 90,
+   "medianMs": 16.7,
+   "p95Ms": 16.7,
+   "maxMs": 33.4,
+   "afterGesture": {
+    "maxMs": 16.8,
+    "framesOver20ms": 0
+   }
+  },
+  {
+   "name": "GOF overall, 4,912 points (network): pan, 40 steps",
+   "frames": 43,
+   "medianMs": 16.7,
+   "p95Ms": 16.7,
+   "maxMs": 16.7,
+   "afterGesture": {
+    "maxMs": 16.8,
+    "framesOver20ms": 0
+   }
+  },
+  {
+   "name": "GOF overall, 4,912 points (network): brush, 40 steps",
+   "frames": 43,
+   "medianMs": 16.7,
+   "p95Ms": 16.8,
+   "maxMs": 16.8,
+   "afterGesture": {
+    "maxMs": 183.3,
+    "framesOver20ms": 1
+   }
+  },
+  {
+   "name": "GOF overall, 102,868 points (gof-100k): Ctrl+wheel zoom in, 30 steps",
+   "frames": 91,
+   "medianMs": 16.7,
+   "p95Ms": 16.7,
+   "maxMs": 16.8,
+   "afterGesture": {
+    "maxMs": 16.7,
+    "framesOver20ms": 0
+   }
+  },
+  {
+   "name": "GOF overall, 102,868 points (gof-100k): pan, 40 steps",
+   "frames": 47,
+   "medianMs": 16.7,
+   "p95Ms": 16.8,
+   "maxMs": 16.8,
+   "afterGesture": {
+    "maxMs": 16.8,
+    "framesOver20ms": 0
+   }
+  },
+  {
+   "name": "GOF overall, 102,868 points (gof-100k): brush, 40 steps",
+   "frames": 44,
+   "medianMs": 16.7,
+   "p95Ms": 16.8,
+   "maxMs": 16.8,
+   "afterGesture": {
+    "maxMs": 233.3,
+    "framesOver20ms": 1
+   }
+  },
+  {
+   "name": "raw lines, 56,000 points per plot (network): Ctrl+wheel zoom in, 30 steps",
+   "frames": 80,
+   "medianMs": 16.7,
+   "p95Ms": 16.7,
+   "maxMs": 16.8,
+   "afterGesture": {
+    "maxMs": 16.8,
+    "framesOver20ms": 0
+   }
+  },
+  {
+   "name": "raw lines, 56,000 points per plot (network): pan, 40 steps",
+   "frames": 40,
+   "medianMs": 16.7,
+   "p95Ms": 16.8,
+   "maxMs": 16.8,
+   "afterGesture": {
+    "maxMs": 16.8,
+    "framesOver20ms": 0
+   }
+  }
+ ]
+}

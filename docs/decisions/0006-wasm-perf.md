@@ -137,6 +137,8 @@ scheduler and the opt-in profiling spans. Budget 2.5 MB. No `.wasm`, no JS glue.
   its exported helpers (`projectX/Y`, `isValid`, `resolveColor`) and its facet context. A
   SveltePlot upgrade must re-run `tests/e2e/fast-layers.spec.ts`.
 - Lines and areas (posterior ridgeline, parameter parallel lines) still go through SveltePlot's
-  Mark pipeline; the ridgeline panel (≈ 1.3 s) is the slowest left.
+  Mark pipeline; the ridgeline panel (≈ 1.5 s in Chromium) is the slowest left on screen. The
+  600 dpi PNG of the GOF panel (≈ 19 s, unchanged from main) is the slowest export: its vector
+  dots are one Svelte component per dot in export mode.
 - `scripts/profile.mjs` and `scripts/frames.mjs` reproduce every number in
   `docs/performance-profile.md` and `docs/performance.md`.

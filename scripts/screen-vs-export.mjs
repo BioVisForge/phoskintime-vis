@@ -35,11 +35,20 @@ for (const [section, id, caption] of PANELS) {
   await card.screenshot({ path: `${OUT}/${id}-screen.png` })
   await card.locator('[data-testid=panel-menu]').click()
   const t = Date.now()
-  const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 300000 }), card.locator('[data-testid=export-png]').click()])
+  const dlp = page.waitForEvent('download', { timeout: 300000 })
+  await card.locator('[data-testid=export-png]').click()
+  // some panels do not fit 85 mm at 8 pt (long labels): take the dialog's "next width" fix
+  const fix = page.locator('[data-testid=fit-next-preset]')
+  let fitFix = null
+  if ((await Promise.race([dlp.then(() => 'dl'), fix.waitFor({ timeout: 300000 }).then(() => 'fit')])) === 'fit') {
+    fitFix = (await fix.innerText()).trim()
+    await fix.click()
+  }
+  const dl = await dlp
   const ms = Date.now() - t
   copyFileSync(await dl.path(), `${OUT}/${id}-png600.png`)
   const info = readPngInfo(new Uint8Array(readFileSync(`${OUT}/${id}-png600.png`)))
-  meta.push({ id, caption, exportMs: ms, png: { width: info.width, height: info.height, dpi: info.dpiX } })
+  meta.push({ id, caption, fitFix, exportMs: ms, png: { width: info.width, height: info.height, dpi: info.dpiX } })
   console.log(id, ms, 'ms', info.width, 'x', info.height)
   if (id === 'nm-all-trajectories') await page.uncheck('[data-testid=raw-lines]')
 }
