@@ -1,14 +1,19 @@
 <script lang="ts">
-  import { Plot, Raster } from 'svelteplot'
+  import { usePanelState } from '../../ui/panelState'
+  import { untrack } from 'svelte'
+  import { Plot, Raster } from '../../plot'
   import type { PanelProps } from '../types'
   import type { Table } from '../../model/types'
   import { trajRows } from '../common'
   import Loading from '../Loading.svelte'
 
   let { bundle, report }: PanelProps = $props()
+  const ps = usePanelState(untrack(() => bundle))
   let t = $state.raw<Table | null>(null)
-  let layer = $state('')
-  let max = $state(60)
+  let layer = $state(ps.get('layer', ''))
+  $effect(() => ps.set('layer', layer))
+  let max = $state(ps.get('max', 60))
+  $effect(() => ps.set('max', max))
   $effect(() => {
     bundle.table('trajectories').then((x) => (t = x))
   })

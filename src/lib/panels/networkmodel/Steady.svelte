@@ -1,18 +1,18 @@
 <script lang="ts">
-  import { Plot, Line, RectY } from 'svelteplot'
+  import { app, pick } from '../../ui/state.svelte'
+  import { Plot, Line, RectY } from '../../plot'
   import type { PanelProps } from '../types'
   import type { Table } from '../../model/types'
   import { num, str } from '../../transforms/table'
-  import { histogram } from '../common'
+  import { histogram, symlogTicks } from '../common'
   import Loading from '../Loading.svelte'
 
   let { bundle, report }: PanelProps = $props()
   let t = $state.raw<Table | null>(null)
-  let protein = $state('')
+  const protein = $derived(pick(app.ctx.protein, t ? ([...new Set(str(t, 'protein'))].filter(Boolean) as string[]) : []))
   $effect(() => {
     bundle.table('steady_state').then((x) => {
       t = x
-      protein = str(x, 'protein')[0] ?? ''
     })
   })
   const rows = $derived.by(() => {
@@ -31,9 +31,8 @@
 </script>
 
 {#if !t}<Loading />{:else}
-  <label>Protein <select bind:value={protein}>{#each [...new Set(str(t, 'protein'))] as p}<option value={p}>{p}</option>{/each}</select></label>
   <div class="two">
-    <Plot height={240} grid x={{ type: tmax > 100 ? 'symlog' : 'linear', constant: 10, label: 'Time (min)' }} y={{ label: 'Conc (a.u.)' }} color={{ legend: true }}>
+    <Plot height={240} grid x={{ type: tmax > 100 ? 'symlog' : 'linear', constant: 10, ...(tmax > 100 ? { ticks: symlogTicks(tmax) } : {}), label: 'Time (min)' }} y={{ label: 'Conc (a.u.)' }} color={{ legend: true }}>
       <Line data={sel} x="time" y="value" z="state" stroke="state" />
     </Plot>
     <Plot height={240} grid x={{ label: `log10 |dy/dt| at t = ${lastT}` }} y={{ label: 'states' }}>

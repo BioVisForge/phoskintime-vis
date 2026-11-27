@@ -1,0 +1,42 @@
+# Optional, manual: compile every panel's TikZ/PGFPlots export with LuaLaTeX (and pdfLaTeX where
+# the export says it fits) in a pinned TeX Live container.
+name: tikz-compile
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  export:
+    name: Export TikZ for all panels (spec fixtures)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: npm }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.13' }
+      - run: pip install -r tests/requirements-dev.txt && python tests/fixtures/make_fixtures.py
+      - run: npm ci && npx playwright install --with-deps chromium && npm run build:single
+      - run: |
+          node tests/tikz/export_all.mjs network tests/tikz/out tikz
+          node tests/tikz/export_all.mjs small-protwise tests/tikz/out tikz
+          node tests/tikz/export_compare.mjs tests/tikz/out/compare
+      - uses: actions/upload-artifact@v4
+        with: { name: tikz-exports, path: tests/tikz/out }
+  compile:
+    name: Compile with LuaLaTeX / pdfLaTeX (TeX Live 2025)
+    needs: export
+    runs-on: ubuntu-latest
+    container: texlive/texlive:TL2025-historic
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: tikz-exports, path: tests/tikz/out }
+      - name: Compile every panel
+        shell: bash
+        run: |
+          status=0
+          for z in tests/tikz/out/*.zip; do bash tests/tikz/compile_all.sh "$z" "work/$(basename "$z" .zip)" || status=1; done
+          exit $status
+      - name: Compile the comparison sections
+        run: bash tests/tikz/compile_all.sh tests/tikz/out/compare work/compare

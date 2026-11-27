@@ -1,6 +1,7 @@
 <script lang="ts">
+  import { usePanelState } from '../../ui/panelState'
   import { untrack } from 'svelte'
-  import { Plot, BarX, Dot, Text, Brush, Rect, RuleY } from 'svelteplot'
+  import { Plot, BarX, Dot, Text, Brush, Rect, RuleY } from '../../plot'
   import type { PanelProps } from '../types'
   import type { Table } from '../../model/types'
   import { num, str } from '../../transforms/table'
@@ -9,9 +10,12 @@
   import Loading from '../Loading.svelte'
 
   let { bundle, report, workflow }: PanelProps & { workflow: 'protwise' | 'networkmodel' } = $props()
+  const ps = usePanelState(untrack(() => bundle))
   let t = $state.raw<Table | null>(null)
-  let key = $state('')
-  let showConf = $state(untrack(() => workflow === 'protwise'))
+  let key = $state(ps.get('key', ''))
+  $effect(() => ps.set('key', key))
+  let showConf = $state(ps.get('showConf', untrack(() => workflow === 'protwise')))
+  $effect(() => ps.set('showConf', showConf))
   let brush = $state({ enabled: false } as { enabled: boolean; x1?: number; x2?: number; y1?: number; y2?: number })
   $effect(() => {
     bundle.table('sensitivity').then((x) => (t = x))
@@ -49,7 +53,7 @@
   <div class="two">
     <Plot height={h} marginLeft={260} grid x={{ label: 'μ* (importance)' }} y={{ label: '', domain: bars.map((b) => b.label) }}>
       <BarX data={bars} x="mu_star" y="label" fill="#87ceeb" />
-      {#if showConf}<RuleY data={bars.filter((b) => Number.isFinite(b.conf))} y="label" x1={(d: any) => d.mu_star - d.conf} x2={(d: any) => d.mu_star + d.conf} stroke="black" />{/if}
+      {#if showConf}<RuleY data={bars.filter((b) => Number.isFinite(b.conf))} y="label" x1={(d: any) => d.mu_star - d.conf} x2={(d: any) => d.mu_star + d.conf} stroke="var(--pkv-ink)" />{/if}
     </Plot>
     <Plot height={h} marginLeft={260} grid x={{ label: 'σ (standard deviation of elementary effects)' }} y={{ label: '', domain: bars.map((b) => b.label) }}>
       <BarX data={bars} x="sigma" y="label" fill="orange" />

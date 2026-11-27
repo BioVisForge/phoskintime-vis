@@ -1,8 +1,15 @@
 import { expect, type Page } from '@playwright/test'
+import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 export const APP = 'file://' + resolve('dist-single/index.html')
 export const FIX = (n: string) => resolve(`tests/fixtures/out/${n}`)
+
+/** bundle_id of a generated fixture, read from its manifest. The fixtures are regenerated on every
+ *  machine and their floats can differ in the last bits between CPUs, so the ids are never hard-coded. */
+export const bundleId = (n: string): string => JSON.parse(readFileSync(FIX(`${n}.pkt/manifest.json`), 'utf8')).bundle_id
+/** the 8 hex digits an export file name carries (pkt-3d14d0f8… -> 3d14d0f8) */
+export const shortId = (n: string): string => bundleId(n).slice(4, 12)
 
 /** Collect console errors and page errors for the no-console-errors check. */
 export function watchErrors(page: Page): string[] {
@@ -24,8 +31,24 @@ export async function waitVerified(page: Page, state = 'verified') {
   await expect(page.locator(`[data-testid=verify-badge][data-state=${state}]`).first()).toBeVisible({ timeout: 30_000 })
 }
 
-/** Scroll through every panel so lazy panels render; return {id, available, marks, naText}. */
+export const PANEL_SECTIONS = ['fit', 'dynamics', 'parameters', 'uncertainty', 'sensitivity', 'network'] as const
+
+export async function goSection(page: Page, section: string) {
+  await page.evaluate((h) => (location.hash = h), `#/${section}`)
+  await expect(page.locator('main h1')).toBeVisible()
+}
+
+/** Visit every section and scroll through its panels so lazy panels render. */
 export async function renderAllPanels(page: Page) {
+  const out: { id: string; available: boolean; marks: number; text: string }[] = []
+  for (const sec of PANEL_SECTIONS) {
+    await goSection(page, sec)
+    out.push(...(await renderSectionPanels(page)))
+  }
+  return out
+}
+
+export async function renderSectionPanels(page: Page) {
   const ids = await page.locator('[data-panel]').evaluateAll((els) => els.map((e) => e.getAttribute('data-panel')!))
   const out: { id: string; available: boolean; marks: number; text: string }[] = []
   for (const id of ids) {
@@ -33,7 +56,8 @@ export async function renderAllPanels(page: Page) {
     await loc.scrollIntoViewIfNeeded()
     const available = (await loc.getAttribute('data-available')) === 'true'
     if (available) {
-      await expect(loc).toHaveAttribute('data-rendered', 'true')
+      // same budget as the loading wait below: 5 s (the default) is too short on a loaded machine
+      await expect(loc).toHaveAttribute('data-rendered', 'true', { timeout: 30_000 })
       await expect(loc.locator('.loading')).toHaveCount(0, { timeout: 30_000 })
       await page.waitForTimeout(100)
     }

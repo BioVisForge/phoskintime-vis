@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Plot, Line, Dot } from 'svelteplot'
+  import { Plot, Line, Dot } from '../../plot'
   import type { PanelProps } from '../types'
   import type { Table } from '../../model/types'
   import { num, str } from '../../transforms/table'

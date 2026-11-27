@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Plot, RectY, Dot, BoxY, Brush, Rect, Line } from 'svelteplot'
+  import { Plot, RectY, Dot, BoxY, Brush, Rect, Line } from '../../plot'
   import type { PanelProps } from '../types'
   import type { Table } from '../../model/types'
   import { num } from '../../transforms/table'
@@ -36,13 +36,13 @@
     </Plot>
     <Plot height={240} grid inset={8} x={{ label: 'rank' }} y={{ label: 'final objective' }}>
       <Line data={rows} x="rank" y="objective" stroke="#999" />
-      <Dot data={rows} x="rank" y="objective" r={4} fill={(d: any) => (inB(d) ? '#d62728' : d.selected ? 'black' : '#3182bd')} />
+      <Dot data={rows} x="rank" y="objective" r={4} fill={(d: any) => (inB(d) ? '#d62728' : d.selected ? 'var(--pkv-ink)' : '#3182bd')} />
       {#if brush.enabled}<Rect {...brush} opacity={0.08} />{/if}
       <Brush bind:brush constrainToDomain stroke={false} />
     </Plot>
     <Plot height={240} grid x={{ type: 'band', label: '' }} y={{ label: 'final objective' }}>
-      <BoxY data={rows} x="all" y="objective" fill="#c7dcef" tickMedian={{ stroke: 'black', strokeWidth: 2 }} />
-      {#if rows.length < 30}<Dot data={rows} x="all" y="objective" r={2.5} fill="#333" opacity={0.6} />{/if}
+      <BoxY data={rows} x="all" y="objective" fill="#c7dcef" tickMedian={{ stroke: 'var(--pkv-ink)', strokeWidth: 2 }} />
+      {#if rows.length < 30}<Dot data={rows} x="all" y="objective" r={2.5} fill="var(--pkv-ink)" opacity={0.6} />{/if}
     </Plot>
   </div>
   <Selection ids={chosen} label="starts selected" name="multistart_selection" />

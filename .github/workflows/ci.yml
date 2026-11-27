@@ -60,6 +60,8 @@ jobs:
       - run: pip install -r tests/requirements-dev.txt
       - run: npm ci
       - run: npx playwright install --with-deps chromium firefox
+      - name: Ghostscript (renders the exported PDFs for the PDF/PNG comparison)
+        run: sudo apt-get update && sudo apt-get install -y ghostscript
       - run: python tests/fixtures/make_fixtures.py
       - run: npm run build:single
       - run: npm run test:e2e

@@ -73,6 +73,32 @@ export function histogram(values: number[], bins: number) {
 
 /** Explicit ticks for symlog time axes (automatic symlog ticks can come out negative). */
 export const TIME_TICKS = [0, 1, 10, 100, 1000]
+/** TIME_TICKS continued by decades up to tmax (long steady-state runs). */
+export function symlogTicks(tmax: number): number[] {
+  const out = [...TIME_TICKS]
+  while (out[out.length - 1] * 10 <= tmax) out.push(out[out.length - 1] * 10)
+  return out.filter((t) => t <= Math.max(tmax, 1))
+}
 
 /** Marks with more elements than this draw on canvas (addendum rule; also avoids a Svelte runtime cost that grows with the number of SVG elements). */
 export const CANVAS_MIN = 1000
+
+/**
+ * State chosen for a panel: the global psite (or layer) when it names one of `states`, else the
+ * panel's own choice, else the first. `meta` maps state -> {psite, layer} (from trajectories).
+ */
+export function stateFor(states: string[], meta: Map<string, { psite: string | null; layer: string }>, ctx: { psite: string | null; layer: string | null }, local: string): string {
+  if (ctx.psite) {
+    const s = states.find((x) => meta.get(x)?.psite === ctx.psite)
+    if (s) return s
+  }
+  if (ctx.layer && !ctx.psite) {
+    const s = states.find((x) => meta.get(x)?.layer === ctx.layer)
+    if (s && !states.includes(local)) return s
+  }
+  return states.includes(local) ? local : (states[0] ?? '')
+}
+
+export function stateMeta(rows: { state: string; psite: string | null; layer: string }[]) {
+  return new Map(rows.map((r) => [r.state, { psite: r.psite, layer: r.layer }]))
+}

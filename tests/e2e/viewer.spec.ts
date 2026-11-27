@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { APP, openZip, openFolder, waitVerified, renderAllPanels, watchErrors } from './helpers'
+import { APP, openZip, openFolder, waitVerified, renderAllPanels, watchErrors, goSection } from './helpers'
 
 const GOOD = ['small-protwise', 'network', 'network-after-fix', 'reordered-params', 'partial']
 
@@ -14,6 +14,7 @@ for (const fx of GOOD) {
       await expect(page.locator('[data-testid=bundle-id]')).toHaveText(/^pkt-[0-9a-f]{16}$/)
       // fast path for the folder form: header + one panel; zip form renders everything
       if (form === 'folder') {
+        await goSection(page, 'fit')
         await expect(page.locator('[data-panel]').first()).toBeVisible()
       } else {
         const panels = await renderAllPanels(page)
@@ -32,6 +33,7 @@ test('partial bundle shows the manifest reason on missing panels', async ({ page
   await page.goto(APP)
   await openZip(page, 'partial')
   await waitVerified(page)
+  await goSection(page, 'sensitivity')
   const na = page.locator('[data-panel="pw-sensitivity"] [data-testid=not-available]')
   await expect(na).toContainText('Manifest:')
   await expect(na).toContainText('deliberately left out')
@@ -72,6 +74,7 @@ test('labels fall back to raw names when the manifest has none (N8)', async ({ p
   await page.goto(APP)
   await openZip(page, 'network')
   await waitVerified(page)
+  await goSection(page, 'uncertainty')
   const panel = page.locator('[data-panel="nm-post-ci"]')
   await panel.scrollIntoViewIfNeeded()
   await panel.locator('select').first().selectOption('E_i')

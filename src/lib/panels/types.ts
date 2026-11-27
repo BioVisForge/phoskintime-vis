@@ -32,6 +32,8 @@ export interface PanelProps {
 
 export interface PanelDef {
   id: string
+  /** Navigation section (scientific question). */
+  topic: 'fit' | 'dynamics' | 'parameters' | 'uncertainty' | 'sensitivity' | 'network'
   title: string
   workflow: 'protwise' | 'networkmodel' | 'any'
   section: string

@@ -8,7 +8,7 @@ const which = process.argv[2] ?? 'chromium'
 const bt = which === 'firefox' ? firefox : chromium
 const browser = await bt.launch()
 const page = await browser.newPage({ viewport: { width: 1360, height: 1000 } })
-await page.goto('file://' + resolve('dist-single/index.html'))
+await page.goto('file://' + resolve('dist-single/index.html') + '#/fit')
 const ready = (id) => page.waitForFunction((id) => {
   const el = document.querySelector(`[data-panel="${id}"]`)
   return el && el.getAttribute('data-rendered') === 'true' && !el.querySelector('.loading') && el.querySelectorAll('svg path, svg circle, svg rect, svg image, canvas').length > 0
@@ -23,29 +23,36 @@ await page.waitForSelector('[data-testid=verify-badge][data-state=verified]', { 
 const openToVerified = Date.now() - t0
 
 // each available panel in isolation ("Show only"), so queued neighbours do not distort timings
-const ids = await page.locator('[data-panel][data-available=true]').evaluateAll((els) => els.map((e) => e.getAttribute('data-panel')))
+const topics = { fit: [], dynamics: [], parameters: [], uncertainty: [], sensitivity: [], network: [] }
+for (const t of Object.keys(topics)) {
+  await page.evaluate((h) => (location.hash = h), `#/${t}`)
+  await page.waitForSelector('main h1')
+  topics[t] = await page.locator('[data-panel][data-available=true]').evaluateAll((els) => els.map((e) => e.getAttribute('data-panel')))
+}
 const panels = {}
-await page.locator('nav.toc select').selectOption(ids[ids.length - 1]) // so the first panel is re-mounted in isolation too
-await ready(ids[ids.length - 1])
-for (const id of ids) {
-  const t = Date.now()
-  await page.locator('nav.toc select').selectOption(id)
-  await ready(id)
-  panels[id] = Date.now() - t
+for (const [t, ids] of Object.entries(topics)) {
+  for (const id of ids) {
+    await page.evaluate(() => (location.hash = '#/overview'))
+    await page.waitForSelector('main h1')
+    const t0p = Date.now()
+    await page.evaluate((h) => (location.hash = h), `#/${t}?only=${id}`)
+    await ready(id)
+    panels[id] = Date.now() - t0p
+  }
 }
 // raw lines on canvas: all 8,000 predicted series
-await page.locator('nav.toc select').selectOption('nm-all-trajectories')
+await page.evaluate(() => (location.hash = '#/dynamics?only=nm-all-trajectories'))
 await ready('nm-all-trajectories')
 let t = Date.now()
 await page.check('[data-testid=raw-lines]')
 await page.waitForFunction(() => document.querySelector('[data-panel="nm-all-trajectories"] canvas'), null, { timeout: 120000, polling: 20 })
 const rawLinesCanvas = Date.now() - t
 await page.uncheck('[data-testid=raw-lines]')
-await page.locator('nav.toc select').selectOption('')
 
 // comparison: open B, switch tab, wait until all sections exist
 t = Date.now()
 await page.setInputFiles('[data-testid=open-zip]', resolve('tests/fixtures/out/network-after-fix.pkt.zip'))
+await page.waitForFunction(() => document.querySelectorAll('[data-testid=tab-compare]:not([disabled])').length > 0)
 await page.click('[data-testid=tab-compare]')
 await page.waitForSelector('[data-testid=compare-ready] [data-compare-section="params"] svg', { timeout: 120000 })
 const comparisonLoad = Date.now() - t

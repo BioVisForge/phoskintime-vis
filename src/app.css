@@ -1,6 +1,151 @@
-:root { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; color: #1d2330; background: #f4f5f7; --amber: #e8a400; }
-body { margin: 0; }
-code { font-size: 0.85em; background: #f1f2f4; padding: 0 3px; border-radius: 3px; }
-button { cursor: pointer; border: 1px solid #c4c8cf; background: #fff; border-radius: 4px; padding: 2px 8px; }
-button:hover { background: #f0f3f8; }
-select { font-size: 0.85rem; }
+/* Design tokens. Light is also the print/export theme (.pkv-light). Contrast checked (WCAG AA)
+   for text tokens on their surfaces; see docs/decisions/0004-ui-stack.md. */
+:root,
+.pkv-light {
+  --pkv-bg: #f6f7f9;
+  --pkv-surface: #ffffff;
+  --pkv-surface-2: #f1f3f6;
+  --pkv-border: #dde1e7;
+  --pkv-border-strong: #c3c9d2;
+  --pkv-ink: #1b1f27; /* text, neutral marks */
+  --pkv-ink-2: #48505e; /* secondary text: 8.3:1 on white */
+  --pkv-ink-3: #5f6776; /* tertiary text: 5.9:1 on white */
+  --pkv-accent: #3e3a8f; /* indigo: not a data hue (Okabe–Ito has no indigo) */
+  --pkv-accent-ink: #ffffff;
+  --pkv-accent-soft: #ebeaf7;
+  --pkv-focus: #3e3a8f;
+  --pkv-warn-bg: #fff4d6;
+  --pkv-warn-border: #c98a00;
+  --pkv-warn-ink: #5c3d00;
+  --pkv-ok-bg: #dff3e5;
+  --pkv-ok-ink: #135c2b;
+  --pkv-bad-bg: #fbe0e0;
+  --pkv-bad-ink: #8a1414;
+  --pkv-shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.08);
+  --pkv-shadow-pop: 0 10px 30px rgba(16, 24, 40, 0.18);
+  --svelteplot-bg: var(--pkv-surface);
+  color-scheme: light;
+}
+
+[data-theme='dark'] {
+  --pkv-bg: #12151b;
+  --pkv-surface: #1a1e26;
+  --pkv-surface-2: #222733;
+  --pkv-border: #2e3442;
+  --pkv-border-strong: #3d4556;
+  --pkv-ink: #e6e9ef; /* 13.9:1 on surface */
+  --pkv-ink-2: #b8bfcc; /* 9.1:1 */
+  --pkv-ink-3: #9aa3b2; /* 6.5:1 */
+  --pkv-accent: #b4b1ff;
+  --pkv-accent-ink: #15133a;
+  --pkv-accent-soft: #2b2a4d;
+  --pkv-focus: #b4b1ff;
+  --pkv-warn-bg: #3a2f12;
+  --pkv-warn-border: #c98a00;
+  --pkv-warn-ink: #ffdd8a;
+  --pkv-ok-bg: #173323;
+  --pkv-ok-ink: #8fe0a9;
+  --pkv-bad-bg: #3d1c1f;
+  --pkv-bad-ink: #ffb3b3;
+  --pkv-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --pkv-shadow-pop: 0 12px 32px rgba(0, 0, 0, 0.55);
+  color-scheme: dark;
+}
+
+:root {
+  --pkv-font: 'PKV Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --pkv-radius: 8px;
+  --pkv-radius-sm: 5px;
+  --pkv-space-1: 4px;
+  --pkv-space-2: 8px;
+  --pkv-space-3: 12px;
+  --pkv-space-4: 16px;
+  --pkv-space-5: 24px;
+  --pkv-text-xs: 0.75rem;
+  --pkv-text-sm: 0.84rem;
+  --pkv-text-md: 0.92rem;
+  --pkv-text-lg: 1.05rem;
+}
+[data-density='compact'] {
+  --pkv-space-2: 5px;
+  --pkv-space-3: 8px;
+  --pkv-space-4: 10px;
+  --pkv-space-5: 14px;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--pkv-bg);
+  color: var(--pkv-ink);
+  font-family: var(--pkv-font);
+  font-size: 15px;
+}
+* {
+  box-sizing: border-box;
+}
+code {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 0.85em;
+  background: var(--pkv-surface-2);
+  padding: 0 3px;
+  border-radius: 3px;
+}
+button,
+select,
+input {
+  font: inherit;
+  color: inherit;
+}
+button {
+  cursor: pointer;
+  border: 1px solid var(--pkv-border-strong);
+  background: var(--pkv-surface);
+  border-radius: var(--pkv-radius-sm);
+  padding: 3px 10px;
+  font-size: var(--pkv-text-sm);
+}
+button:hover {
+  background: var(--pkv-surface-2);
+}
+button.primary {
+  background: var(--pkv-accent);
+  color: var(--pkv-accent-ink);
+  border-color: var(--pkv-accent);
+}
+button.ghost {
+  border-color: transparent;
+  background: transparent;
+}
+select,
+input[type='text'],
+input[type='number'],
+input[type='search'] {
+  background: var(--pkv-surface);
+  border: 1px solid var(--pkv-border-strong);
+  border-radius: var(--pkv-radius-sm);
+  padding: 3px 6px;
+  font-size: var(--pkv-text-sm);
+}
+:focus-visible {
+  outline: 2px solid var(--pkv-focus);
+  outline-offset: 2px;
+}
+a {
+  color: var(--pkv-accent);
+}
+table {
+  font-variant-numeric: tabular-nums;
+}
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+/* SveltePlot text follows the theme */
+.svelteplot {
+  color: var(--pkv-ink);
+}

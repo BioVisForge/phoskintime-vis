@@ -1,13 +1,17 @@
 <script lang="ts">
-  import { Plot, Line } from 'svelteplot'
+  import { usePanelState } from '../../ui/panelState'
+  import { untrack } from 'svelte'
+  import { Plot, Line } from '../../plot'
   import type { PanelProps } from '../types'
   import type { Table } from '../../model/types'
   import { num, str } from '../../transforms/table'
   import Loading from '../Loading.svelte'
 
   let { bundle, report }: PanelProps = $props()
+  const ps = usePanelState(untrack(() => bundle))
   let t = $state.raw<Table | null>(null)
-  let overlay = $state(false)
+  let overlay = $state(ps.get('overlay', false))
+  $effect(() => ps.set('overlay', overlay))
   $effect(() => {
     bundle.table('kinase_activity').then((x) => (t = x))
   })

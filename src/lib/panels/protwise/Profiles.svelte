@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { Plot, Line, Dot } from 'svelteplot'
+  import { app, pick } from '../../ui/state.svelte'
+  import { Plot, Line, Dot } from '../../plot'
   import type { PanelProps } from '../types'
   import type { Table } from '../../model/types'
   import { num, str } from '../../transforms/table'
@@ -8,11 +9,10 @@
 
   let { bundle, report }: PanelProps = $props()
   let t = $state.raw<Table | null>(null)
-  let protein = $state('')
+  const protein = $derived(pick(app.ctx.protein, t ? ([...new Set(str(t, 'protein'))].filter(Boolean) as string[]) : []))
   $effect(() => {
     bundle.table('parameter_profiles').then((x) => {
       t = x
-      protein = str(x, 'protein')[0] ?? ''
     })
   })
   const rows = $derived.by(() => {
@@ -29,7 +29,6 @@
 </script>
 
 {#if !t}<Loading />{:else}
-  <label>Protein <select bind:value={protein}>{#each [...new Set(str(t, 'protein'))] as p}<option value={p}>{p}</option>{/each}</select></label>
   <Plot height={260} grid fx={{ label: '' }} x={{ type: 'symlog', ticks: TIME_TICKS, label: 'Time (min), symlog' }} y={{ label: 'Model FC' }} color={{ legend: true, label: 'parameter value', scheme: 'viridis' }}>
     <Line data={rows} x="time" y="value" z="pv" fx="parameter" stroke="pv" />
     <Dot data={rows} x="time" y="value" fx="parameter" fill="pv" r={1.5} />

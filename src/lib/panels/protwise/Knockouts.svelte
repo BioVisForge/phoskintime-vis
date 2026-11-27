@@ -1,6 +1,7 @@
 <script lang="ts">
+  import { app, pick } from '../../ui/state.svelte'
   import { TIME_TICKS } from '../common'
-  import { Plot, Line, DifferenceY, CustomMark } from 'svelteplot'
+  import { Plot, Line, DifferenceY, CustomMark } from '../../plot'
   import type { PanelProps } from '../types'
   import type { Table } from '../../model/types'
   import { num, str } from '../../transforms/table'
@@ -8,11 +9,10 @@
 
   let { bundle, report }: PanelProps = $props()
   let t = $state.raw<Table | null>(null)
-  let protein = $state('')
+  const protein = $derived(pick(app.ctx.protein, t ? ([...new Set(str(t, 'protein'))].filter(Boolean) as string[]) : []))
   $effect(() => {
     bundle.table('knockouts').then((x) => {
       t = x
-      protein = str(x, 'protein')[0] ?? ''
     })
   })
   const all = $derived.by(() => {
@@ -39,7 +39,6 @@
 </script>
 
 {#if !t}<Loading />{:else}
-  <label>Protein <select bind:value={protein}>{#each [...new Set(str(t, 'protein'))] as p}<option value={p}>{p}</option>{/each}</select></label>
   <div class="grid">
     {#each kos as ko}
       {#each [...new Set(pairs.map((p) => p.state))] as st}
@@ -48,10 +47,10 @@
           <Plot height={200} width={340} grid title={`${ko} · ${st}`} x={{ type: 'symlog', ticks: TIME_TICKS, label: 'Time (min), symlog' }} y={{ label: 'Model FC' }}>
             <DifferenceY data={d} x="time" y1="wt" y2="ko" positiveFill="#d6604d" negativeFill="#4393c3" fillOpacity={0.4} />
             <Line data={d} x="time" y="wt" stroke="#888" strokeWidth={1.5} />
-            <Line data={d} x="time" y="ko" stroke="black" strokeWidth={1.5} />
+            <Line data={d} x="time" y="ko" stroke="var(--pkv-ink)" strokeWidth={1.5} />
             <!-- P4: knockout glyph at the first time point -->
-            <CustomMark data={d.slice(0, 1)} x="time" y="ko">
-              {#snippet mark({ record })}
+            <CustomMark glyph="cross" data={d.slice(0, 1)} x="time" y="ko">
+              {#snippet mark({ record }: any)}
                 <g transform={`translate(${record.x}, ${record.y})`}><path d="M-5,-5L5,5M-5,5L5,-5" stroke="#b00" stroke-width="2.5" /><title>knockout: {ko}</title></g>
               {/snippet}
             </CustomMark>

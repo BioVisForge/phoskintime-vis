@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Plot, Dot, RuleY, BoxY } from 'svelteplot'
+  import { Plot, Dot, RuleY, BoxY } from '../../plot'
   import type { PanelProps } from '../types'
   import type { Table } from '../../model/types'
   import { gofPoints } from '../../derive/trajectories'
@@ -33,7 +33,7 @@
   </Plot>
   <div class="two">
     <Plot height={240} grid x={{ type: 'band', label: '' }} y={{ label: 'Residual' }}>
-      <BoxY data={pts} x="panel" y="resid" fill="#bcd4ec" tickMedian={{ stroke: 'black', strokeWidth: 2 }} />
+      <BoxY data={pts} x="panel" y="resid" fill="#bcd4ec" tickMedian={{ stroke: 'var(--pkv-ink)', strokeWidth: 2 }} />
       <RuleY y={0} stroke="red" strokeDasharray="4 3" />
     </Plot>
     <Ridgeline series={layers.map((l) => ({ name: l, values: pts.filter((p) => p.panel === l).map((p) => p.resid) }))} mode="raw" height={240} />

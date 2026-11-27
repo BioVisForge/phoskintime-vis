@@ -1,34 +1,55 @@
 # Measured performance
 
-Measured with `scripts/perf.mjs` on 2026-11-26: the single-file build (`dist-single/index.html`,
-995,577 bytes) opened from `file://` in headless Playwright browsers on the
-development machine. Fixture `network`: network (100 proteins, 400 states x 20 samples = 8,000 series, 112,000 rows; 200 parameters; posterior 4x500x200). These are one-run measurements. Expect
-variance between machines and runs. Raw numbers: `docs/performance.json`.
+Measured with `scripts/perf.mjs`: the single-file build opened from `file://` in headless
+Playwright browsers on the development machine. Fixture `network`:
+network (100 proteins, 400 states x 20 samples = 8,000 series, 112,000 rows; 200 parameters; posterior 4x500x200). These are single runs, so expect variance between machines and runs.
+Raw numbers: `docs/performance-baseline.json` (before the export/UI work, `feat/foundation`) and
+`docs/performance.json` (after, `feat/export-ui`).
+
+## Before → after the export and UI work
 
 | Measure | Chromium 159.0.8154.6 | Firefox 159.0 |
 |---|---|---|
-| Open zip → first panel drawn (nm-gof: 4,912 obs/pred points, plus 3 per-layer facets) | 3,347 ms | 5,442 ms |
-| Open zip → all 18 files sha256-verified | 5,117 ms | 8,038 ms |
-| Heaviest panel in isolation | nm-gof 2,486 ms | nm-gof 4,262 ms |
-| “Raw lines” on: 8,000 series × 14 points on canvas (FastLines) | 516 ms | 897 ms |
-| Comparison load (open 2nd bundle → all comparison sections drawn) | 1,523 ms | 6,605 ms |
-| Built single page size | 995,577 B | — |
+| Open zip → first panel drawn (Fit quality, nm-gof) | 3,313 → 2,935 ms (-11 %) | 5,387 → 4,765 ms (-12 %) |
+| Open zip → all files sha256-verified | 5,078 → 4,768 ms (-6 %) | 7,965 → 7,615 ms (-4 %) |
+| Heaviest panel in isolation (nm-gof) | 2,454 → 2,252 ms (-8 %) | 4,247 → 3,756 ms (-12 %) |
+| “Raw lines” on: 8,000 series on canvas | 524 → 545 ms (+4 %) | 861 → 827 ms (-4 %) |
+| Comparison load (2nd bundle → all sections drawn) | 1,361 → 1,440 ms (+6 %) | 6,621 → 1,910 ms (-71 %) |
+| Single-file size | 995,518 → 1,866,036 B (+87 %) | same file |
 
-Slowest panels in isolation (Chromium): nm-gof 2,486 ms, nm-post-ridge 1,612 ms, nm-residuals 1,325 ms, nm-param-parallel 596 ms, nm-param-corr 557 ms, nm-post-ci 539 ms, nm-convergence 471 ms, nm-sensitivity 283 ms.
+There are no timing regressions above 10 %. Two caveats: the before and after first-panel
+measurements land on different pages (before: the old single page; after: the Fit quality
+section), and panels now mount only for the open section. The Firefox comparison load is much
+faster because comparison mode is its own section instead of sitting below every panel.
 
-Parquet decoding alone (112,000 rows): 58 ms in Chromium and 86 ms in Firefox (median, `docs/decisions/0001-parquet-reader.md`).
+The **size increase (+87 %) is intended and within the 2.5 MB budget**:
 
-## What changed the numbers (measured before → after, Chromium)
+| Part | Bytes in the single file |
+|---|---|
+| jsPDF + svg2pdf.js (vector PDF export) | ≈ 483,000 (measured: build without them is 1,371,426 B) |
+| PKV Sans Regular + Bold, base64 | ≈ 246,000 (2 × 92 kB TTF, hinted; see decision 0004) |
+| new UI shell, export pipeline, TikZ emitter | ≈ 130,000 |
+
+jsPDF's optional `html2canvas`, `dompurify` and `canvg` are excluded (aliased to an empty
+module).
+
+Slowest panels in isolation after the change (Chromium): nm-gof 2,265 ms, nm-residuals 1,760 ms, nm-post-ridge 1,702 ms, nm-param-parallel 608 ms, nm-param-corr 544 ms, nm-post-ci 535 ms.
+
+## Export timings (Chromium, 85 mm, 8 pt, network fixture)
+
+| Action | Time |
+|---|---|
+| Export all 22 network panels as TikZ zip | 40 s |
+| Export all 22 network panels as 300 dpi PNG | 42 s |
+| Export all 15 protwise panels as TikZ zip | 8 s |
+| svg2pdf + jsPDF, one path of 50,000 / 112,000 points | 164 / 300 ms (decision 0002) |
+| LuaLaTeX compile, 20,000 / 80,000 marks in one axis | 11.7 / 43.6 s (decision 0003) |
+
+## Earlier optimisations (first milestone)
 
 | Change | Before | After |
 |---|---|---|
-| Dot marks above 1,000 points drawn on canvas (GOF, residuals, parameter vectors). Svelte's runtime cost grew faster than linearly with the number of per-point SVG elements (`push_teardown_context` dominated the profile). | main thread blocked ~36 s after opening `network` | ~5 s |
-| Panels mount one per frame (render queue), and tables are handed to waiting panels one per frame | first panel 5,295 ms | 3,327 ms |
+| Dot marks above 1,000 points drawn on canvas (Svelte runtime cost grows faster than linearly with per-point SVG elements) | ~36 s main-thread block | ~5 s |
+| Panels mount one per frame (render queue); tables handed to waiting panels one per frame | first panel 5,295 ms | 3,327 ms |
 | Ridgeline: offset baselines instead of 25 `fy` facets | 20,956 ms | 1,612 ms |
-| Raw lines: FastLines canvas layer from typed arrays instead of a 112k-point SveltePlot Line | 9,503 ms | 516 ms |
-
-## Remaining costs
-
-- GOF is the heaviest panel: two point marks of 4,912 points each, processed by SveltePlot's mark pipeline. All points are kept (no downsampling).
-- Firefox is about 1.5–4× slower than Chromium throughout. Comparison load is the largest gap (6.6 s vs 1.5 s).
-- The drawing layer for very many lines is swappable (`src/lib/panels/shared/FastLines.svelte`). A WebGL layer with the same props can replace it at 10k+ series.
+| Raw lines: FastLines canvas layer instead of a 112k-point SveltePlot Line | 9,503 ms | 516 ms |

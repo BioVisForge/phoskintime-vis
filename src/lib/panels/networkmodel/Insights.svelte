@@ -1,14 +1,18 @@
 <script lang="ts">
-  import { Plot, RectY, BarX } from 'svelteplot'
+  import { usePanelState } from '../../ui/panelState'
+  import { untrack } from 'svelte'
+  import { Plot, RectY, BarX } from '../../plot'
   import type { PanelProps } from '../types'
   import type { Table } from '../../model/types'
   import { trajRows, histogram } from '../common'
   import Loading from '../Loading.svelte'
 
   let { bundle, report }: PanelProps = $props()
+  const ps = usePanelState(untrack(() => bundle))
   let t = $state.raw<Table | null>(null)
   let W = $state.raw<import('../../model/types').NpyArray | null>(null)
-  let layer = $state('')
+  let layer = $state(ps.get('layer', ''))
+  $effect(() => ps.set('layer', layer))
   const wName = $derived(bundle.meta.files.find((f) => f.kind === 'array' && f.array?.name?.startsWith('matrix_'))?.array?.name ?? null)
   $effect(() => {
     Promise.all([bundle.table('trajectories'), wName ? bundle.array(wName) : Promise.resolve(null)]).then(([a, b]) => {

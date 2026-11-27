@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Plot, BarX, Text } from 'svelteplot'
+  import { Plot, BarX, Text } from '../../plot'
   import type { PanelProps } from '../types'
   import type { Table } from '../../model/types'
   import { num, str } from '../../transforms/table'
@@ -30,11 +30,11 @@
       {@const data = d as { protein: string; value: number }[]}
       {#if data.length}
         <Plot height={Math.max(140, 26 * data.length + 50)} marginLeft={90} grid title={title as string} x={{ label: 'value' }} y={{ label: 'Protein', domain: data.map((r) => r.protein) }}>
-          <BarX data={data} x="value" y="protein" fill={c as string} stroke="black" />
+          <BarX data={data} x="value" y="protein" fill={c as string} stroke="var(--pkv-ink)" />
           <Text data={data} x="value" y="protein" text={(r: any) => r.value.toFixed(2)} textAnchor="start" dx={4} fontSize={9} />
         </Plot>
       {:else}<p class="na">No “{(title as string).split(' ')[0].toLowerCase()}” metric rows per protein in this bundle.</p>{/if}
     {/each}
   </div>
 {/if}
-<style>.two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .na { color: #666; font-size: 0.85rem; }</style>
+<style>.two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .na { color: var(--pkv-ink-2); font-size: 0.85rem; }</style>

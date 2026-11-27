@@ -1,21 +1,20 @@
 <script lang="ts">
-  import { Plot, Line, AreaY } from 'svelteplot'
+  import { Plot, Line, AreaY } from '../../plot'
   import type { PanelProps } from '../types'
   import type { Table } from '../../model/types'
   import { num, str } from '../../transforms/table'
   import { envelopes } from '../../transforms/envelope'
   import { proteins, layerLabel, TIME_TICKS } from '../common'
-  import { app } from '../../ui/state.svelte'
+  import { app, pick } from '../../ui/state.svelte'
   import Loading from '../Loading.svelte'
   import FastLines from '../shared/FastLines.svelte'
 
   let { bundle, report }: PanelProps = $props()
   let t = $state.raw<Table | null>(null)
-  let protein = $state('')
+  const protein = $derived(pick(app.ctx.protein, t ? proteins(t) : []))
   $effect(() => {
     bundle.table('trajectories').then((x) => {
       t = x
-      protein = proteins(x)[0]
     })
   })
   // every (state, sample) series, as flat arrays for speed
@@ -59,7 +58,6 @@
 </script>
 
 {#if !flat}<Loading />{:else}
-  <label>Highlight gene <select bind:value={protein}>{#each proteins(t!) as p}<option value={p}>{p}</option>{/each}</select></label>
   {#if app.rawLines}
     <div class="three">
       {#each raw as r}

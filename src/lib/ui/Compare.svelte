@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Plot, Line, Dot, DifferenceY, BarX, RuleX, RegressionY, BoxY, Raster, CustomMark } from 'svelteplot'
+  import { Plot, Line, Dot, DifferenceY, BarX, RuleX, RegressionY, BoxY, Raster, CustomMark } from '../plot'
   import { app } from './state.svelte'
   import { compareRuns, type Comparison } from '../derive/compare'
   import { sortDeltas } from '../transforms/compare'
@@ -78,6 +78,8 @@
   }
 </script>
 
+<h1 class="ctitle">Compare runs</h1>
+<p class="csub">Run A (before) vs run B (after): provenance, fit quality, trajectories, Δ views and parameter changes. Export a report to attach to a fix PR.</p>
 <div class="pick">
   {#if app.bundles.length < 2}
     <p data-testid="compare-need-two">Open at least two bundles to compare runs (for example a run before and after a PhosKinTime fix).</p>
@@ -94,7 +96,7 @@
 
 {#if cmp && A && B}
   <div bind:this={root} data-testid="compare-ready">
-    <Section id="provenance" title="Provenance and compatibility" patterns={['P4']} rows={[{ run: 'A', ...cmp.provenance.a }, { run: 'B', ...cmp.provenance.b }]}>
+    <Section id="provenance" title="Provenance and compatibility" patterns={['P4']} tikz={false} rows={[{ run: 'A', ...cmp.provenance.a }, { run: 'B', ...cmp.provenance.b }]}>
       <table class="prov">
         <thead><tr><th></th><th>A (before)</th><th>B (after)</th></tr></thead>
         <tbody>
@@ -117,8 +119,8 @@
         </div>
         <!-- P4: per-run issue glyphs -->
         <Plot height={110} marginLeft={60} x={{ type: 'band', label: 'KNOWN_ISSUES id', domain: [...new Set([...cmp.issues.onlyA, ...cmp.issues.both, ...cmp.issues.onlyB])] }} y={{ type: 'band', domain: ['A', 'B'], label: '' }}>
-          <CustomMark data={[...cmp.issues.onlyA.map((i) => ({ id: i, run: 'A' })), ...cmp.issues.both.flatMap((i) => [{ id: i, run: 'A' }, { id: i, run: 'B' }]), ...cmp.issues.onlyB.map((i) => ({ id: i, run: 'B' }))]} x="id" y="run">
-            {#snippet mark({ record })}<g transform={`translate(${record.x}, ${record.y})`}><path d="M0,-7L7,6L-7,6Z" fill="#e8a400" stroke="#7a5600" /><title>{record.datum.id} open when run {record.datum.run} was produced</title></g>{/snippet}
+          <CustomMark glyph="triangle" data={[...cmp.issues.onlyA.map((i) => ({ id: i, run: 'A' })), ...cmp.issues.both.flatMap((i) => [{ id: i, run: 'A' }, { id: i, run: 'B' }]), ...cmp.issues.onlyB.map((i) => ({ id: i, run: 'B' }))]} x="id" y="run">
+            {#snippet mark({ record }: any)}<g transform={`translate(${record.x}, ${record.y})`}><path d="M0,-7L7,6L-7,6Z" fill="#e8a400" stroke="#7a5600" /><title>{record.datum.id} open when run {record.datum.run} was produced</title></g>{/snippet}
           </CustomMark>
         </Plot>
         <p class="dim">Triangle: issue open at the producing commit. An issue open in A but not in B was probably fixed between the runs.</p>
@@ -127,7 +129,7 @@
       {/if}
     </Section>
 
-    <Section id="gof" title="Goodness of fit per layer, side by side" rows={gofRows} note="Same definitions as the GOF panel (robust σ, R² = squared Pearson r, RMSE about identity), computed on each run's best fit.">
+    <Section id="gof" title="Goodness of fit per layer, side by side" tikz={false} rows={gofRows} note="Same definitions as the GOF panel (robust σ, R² = squared Pearson r, RMSE about identity), computed on each run's best fit.">
       <table class="prov" data-testid="gof-compare">
         <thead><tr><th>subset</th><th>n A</th><th>n B</th><th>R² A</th><th>R² B</th><th>ΔR²</th><th>RMSE A</th><th>RMSE B</th><th>ΔRMSE</th></tr></thead>
         <tbody>{#each gofRows as g}<tr><td>{g.subset}</td><td>{g.n_a}</td><td>{g.n_b}</td><td>{fmt(g.r2_a ?? NaN, 4)}</td><td>{fmt(g.r2_b ?? NaN, 4)}</td><td class:neg={g.d_r2 < 0} class:pos={g.d_r2 > 0}>{fmt(g.d_r2, 4)}</td><td>{fmt(g.rmse_a ?? NaN, 4)}</td><td>{fmt(g.rmse_b ?? NaN, 4)}</td><td class:neg={g.d_rmse > 0} class:pos={g.d_rmse < 0}>{fmt(g.d_rmse, 4)}</td></tr>{/each}</tbody>
@@ -149,7 +151,7 @@
         <DifferenceY data={overlay} x="time" y1="a" y2="b" positiveFill="#d6604d" negativeFill="#4393c3" fillOpacity={0.4} />
         {#if otherLines.length}<Line data={otherLines} x="time" y="pred" z="run" stroke="run" strokeWidth={1} />{/if}
         <Line data={overlay} x="time" y="a" stroke="#888" strokeWidth={1.6} strokeDasharray="5 3" />
-        <Line data={overlay} x="time" y="b" stroke="black" strokeWidth={1.8} />
+        <Line data={overlay} x="time" y="b" stroke="var(--pkv-ink)" strokeWidth={1.8} />
         <Dot data={obs} x="time" y="obs" fill="#e6550d" r={3} />
       </Plot>
     </Section>
@@ -173,16 +175,16 @@
       <div class="two">
         <Plot height={Math.max(200, 14 * topParams.length + 60)} marginLeft={230} grid x={{ label: 'log2(B / A)' }} y={{ label: '', domain: topParams.map((p) => p.label) }}>
           <BarX data={topParams.filter((p) => p.log2ratio !== null)} x="log2ratio" y="label" fill={(d: any) => (d.log2ratio > 0 ? '#d6604d' : '#4393c3')} />
-          <RuleX x={0} stroke="black" />
+          <RuleX x={0} stroke="var(--pkv-ink)" />
         </Plot>
         <div>
           <Plot height={300} grid inset={6} x={{ label: 'log10 A value' }} y={{ label: 'log10 B value' }} color={{ legend: true }}>
             <Line data={(() => { const v = logPairs.flatMap((p) => [p.la, p.lb]); return [{ x: Math.min(...v), y: Math.min(...v) }, { x: Math.max(...v), y: Math.max(...v) }] })()} x="x" y="y" stroke="#666" strokeDasharray="4 3" />
             <Dot data={logPairs} x="la" y="lb" r={2.5} fill="group" opacity={0.7} title={(d: any) => `${d.name}: ${d.a.toPrecision(4)} → ${d.b.toPrecision(4)}`} />
-            <RegressionY data={logPairs} x="la" y="lb" stroke="black" confidence={0.95} />
+            <RegressionY data={logPairs} x="la" y="lb" stroke="var(--pkv-ink)" confidence={0.95} />
           </Plot>
           <Plot height={200} grid x={{ type: 'band', label: 'group' }} y={{ label: 'log2(B / A)' }}>
-            <BoxY data={byGroup} x="group" y="log2ratio" fill="#c6d9ec" tickMedian={{ stroke: 'black', strokeWidth: 2 }} />
+            <BoxY data={byGroup} x="group" y="log2ratio" fill="#c6d9ec" tickMedian={{ stroke: 'var(--pkv-ink)', strokeWidth: 2 }} />
           </Plot>
           <p class="dim">Box: Tukey 1.5 × IQR whiskers, spread of the parameter change within each group.</p>
         </div>
@@ -192,18 +194,20 @@
 {/if}
 
 <style>
+  .ctitle { font-size: 1.35rem; margin: 0; letter-spacing: -0.01em; }
+  .csub { color: var(--pkv-ink-2); font-size: var(--pkv-text-sm); margin: 2px 0 8px; }
   .pick { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin: 10px 0; font-size: 0.9rem; }
-  .primary { background: #1d2a44; color: #fff; }
+  
   .prov { border-collapse: collapse; font-size: 0.82rem; margin: 4px 0 8px; }
   .prov th, .prov td { border-bottom: 1px solid #eee; padding: 2px 8px; text-align: left; }
   .small { font-size: 0.76rem; }
-  .diff { color: #b35c00; }
-  .neg { color: #b00; } .pos { color: #1a7f37; }
+  .diff { color: var(--pkv-warn-ink); }
+  .neg { color: var(--pkv-bad-ink); } .pos { color: var(--pkv-ok-ink); }
   .issues { display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.85rem; }
   .glyph { padding: 0 6px; border-radius: 8px; margin: 0 2px; }
-  .fixed { background: #d8f2df; } .new { background: #fbd5d5; } .open { background: #fff3cd; }
-  .dim { color: #666; font-size: 0.8rem; }
-  .err { background: #fdecec; padding: 6px; }
+  .fixed { background: var(--pkv-ok-bg); color: var(--pkv-ok-ink); } .new { background: var(--pkv-bad-bg); color: var(--pkv-bad-ink); } .open { background: var(--pkv-warn-bg); color: var(--pkv-warn-ink); }
+  .dim { color: var(--pkv-ink-2); font-size: 0.8rem; }
+  .err { background: var(--pkv-bad-bg); color: var(--pkv-bad-ink); padding: 6px; }
   .two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .st-verified { color: #1a7f37; } .st-mismatch, .st-error { color: #b00; }
+  .st-verified { color: var(--pkv-ok-ink); } .st-mismatch, .st-error { color: var(--pkv-bad-ink); }
 </style>

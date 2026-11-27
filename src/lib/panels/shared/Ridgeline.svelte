@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Plot, AreaY, Line, RuleY, Text } from 'svelteplot'
+  import { Plot, AreaY, Line, RuleY, Text } from '../../plot'
   import { ridgeNormalised, smoothDensity1d } from '../../transforms/kde'
   import { quantile } from '../../transforms/stats'
 
@@ -37,6 +37,6 @@
   y={{ domain: [-0.1, series.length], ticks: ridges.map((r) => r.base), tickFormat: (d: any) => names.get(d) ?? '', label: '' }}>
   <AreaY data={flat} x="x" y1="y0" y2="y" z="name" fill="#8fb3dc" fillOpacity={0.55} />
   <Line data={flat} x="x" y="y" z="name" stroke="#2b4f7d" strokeWidth={1} />
-  <RuleY data={qbars} y="y" x1="x1" x2="x2" stroke="black" strokeWidth={2} />
+  <RuleY data={qbars} y="y" x1="x1" x2="x2" stroke="var(--pkv-ink)" strokeWidth={2} />
   <Text data={qbars} x="x2" y="y" text={(d: any) => `median=${Number(d.med).toPrecision(3)}`} textAnchor="start" dx={6} dy={-6} fontSize={9} />
 </Plot>

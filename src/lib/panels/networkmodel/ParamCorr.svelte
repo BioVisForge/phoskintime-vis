@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { Plot, Cell, Text } from 'svelteplot'
+  import { usePanelState } from '../../ui/panelState'
+  import { untrack } from 'svelte'
+  import { Plot, Cell, Text } from '../../plot'
   import type { PanelProps } from '../types'
   import { loadPosterior } from './posterior'
   import { posteriorColumn } from '../../derive/trajectories'
@@ -8,9 +10,11 @@
   import Loading from '../Loading.svelte'
 
   let { bundle, report }: PanelProps = $props()
+  const ps = usePanelState(untrack(() => bundle))
   let post = $state.raw<Awaited<ReturnType<typeof loadPosterior>> | null>(null)
   let params = $state.raw<Awaited<ReturnType<typeof parameterValues>> | null>(null)
-  let group = $state('')
+  let group = $state(ps.get('group', ''))
+  $effect(() => ps.set('group', group))
   $effect(() => {
     Promise.all([bundle.arrayEntry('posterior_draws') ? loadPosterior(bundle) : Promise.resolve(null), parameterValues(bundle)]).then(([p, q]) => {
       post = p

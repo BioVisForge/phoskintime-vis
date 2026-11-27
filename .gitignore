@@ -166,6 +166,7 @@ test-results/
 playwright-report/
 bench/out/
 src/lib/contracts/generated/
+tests/tikz/out/
 # generated docs assets (synthetic): regenerate with `npm run docs:assets`; CI uploads them as the
 # docs-assets artifact and the Pages workflow publishes them with the demo
 docs/screenshots/

@@ -14,5 +14,5 @@
     "allowImportingTsExtensions": true,
     "types": ["node", "vite/client"]
   },
-  "include": ["src/**/*", "tests/unit/**/*", "tests/parity/**/*", "tests/e2e/**/*", "scripts/**/*.ts", "vite.config.ts", "vitest.parity.config.ts", "playwright.config.ts"]
+  "include": ["src/**/*", "tests/unit/**/*", "tests/parity/**/*", "tests/e2e/**/*", "tests/visual/**/*", "scripts/**/*.ts", "vite.config.ts", "vitest.parity.config.ts", "playwright.config.ts"]
 }

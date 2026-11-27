@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { Plot, BoxY, Dot } from 'svelteplot'
+  import { app, pick } from '../../ui/state.svelte'
+  import { Plot, BoxY, Dot } from '../../plot'
   import type { PanelProps } from '../types'
   import type { Table } from '../../model/types'
   import { num, str } from '../../transforms/table'
@@ -8,11 +9,10 @@
 
   let { bundle, report }: PanelProps = $props()
   let t = $state.raw<Table | null>(null)
-  let protein = $state('')
+  const protein = $derived(pick(app.ctx.protein, t ? ([...new Set(str(t, 'protein'))].filter(Boolean) as string[]) : []))
   $effect(() => {
     bundle.table('perturbations').then((x) => {
       t = x
-      protein = str(x, 'protein')[0] ?? ''
     })
   })
   const rows = $derived.by(() => {
@@ -36,9 +36,8 @@
 </script>
 
 {#if !t}<Loading />{:else}
-  <label>Protein <select bind:value={protein}>{#each [...new Set(str(t, 'protein'))] as p}<option value={p}>{p}</option>{/each}</select></label>
   <Plot height={220} grid fy={{ label: '' }} fx={{ label: 'State' }} x={{ type: 'band', label: 'Time (min), categorical as in PhosKinTime', domain: [...new Set(rows.map((r) => r.time))] }} y={{ label: 'Model FC' }}>
-    <BoxY data={rows.filter((r) => r.state === states[0] || true)} x="time" y="value" fx="state" fill="#a6c3e0" tickMedian={{ stroke: 'black', strokeWidth: 2 }} />
-    {#if nPer < 30}<Dot data={rows} x="time" y="value" fx="state" r={1.2} fill="#333" opacity={0.5} />{/if}
+    <BoxY data={rows.filter((r) => r.state === states[0] || true)} x="time" y="value" fx="state" fill="#a6c3e0" tickMedian={{ stroke: 'var(--pkv-ink)', strokeWidth: 2 }} />
+    {#if nPer < 30}<Dot data={rows} x="time" y="value" fx="state" r={1.2} fill="var(--pkv-ink)" opacity={0.5} />{/if}
   </Plot>
 {/if}

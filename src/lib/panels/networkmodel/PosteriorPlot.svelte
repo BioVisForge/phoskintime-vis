@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { Plot, Line, RectY, RuleX } from 'svelteplot'
+  import { usePanelState } from '../../ui/panelState'
+  import { untrack } from 'svelte'
+  import { Plot, Line, RectY, RuleX } from '../../plot'
   import type { PanelProps } from '../types'
   import { loadPosterior } from './posterior'
   import { posteriorColumn, credible } from '../../derive/trajectories'
@@ -8,8 +10,10 @@
   import Loading from '../Loading.svelte'
 
   let { bundle, report, kind }: PanelProps & { kind: 'trace' | 'density' } = $props()
+  const ps = usePanelState(untrack(() => bundle))
   let post = $state.raw<Awaited<ReturnType<typeof loadPosterior>> | null>(null)
-  let j = $state(0)
+  let j = $state(ps.get('j', 0))
+  $effect(() => ps.set('j', j))
   $effect(() => {
     loadPosterior(bundle).then((p) => (post = p))
   })
@@ -43,7 +47,7 @@
   {:else}
     <Plot height={240} grid x={{ label: paramLabel(bundle, post.names[j]) }} y={{ label: 'frequency' }}>
       <RectY data={hist} x1="x1" x2="x2" y1={0} y2="count" fill="#7aa6d6" stroke="white" />
-      <RuleX data={[s.q05, s.q50, s.q95]} stroke="#333" strokeDasharray="4 3" />
+      <RuleX data={[s.q05, s.q50, s.q95]} stroke="var(--pkv-ink)" strokeDasharray="4 3" />
     </Plot>
   {/if}
 {/if}

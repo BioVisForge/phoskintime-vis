@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { Plot, Dot, Brush, Rect } from 'svelteplot'
+  import { usePanelState } from '../../ui/panelState'
+  import { untrack } from 'svelte'
+  import { Plot, Dot, Brush, Rect } from '../../plot'
   import type { PanelProps } from '../types'
   import type { Table } from '../../model/types'
   import { num, str } from '../../transforms/table'
@@ -7,9 +9,12 @@
   import Loading from '../Loading.svelte'
 
   let { bundle, report }: PanelProps = $props()
+  const ps = usePanelState(untrack(() => bundle))
   let t = $state.raw<Table | null>(null)
-  let ox = $state('')
-  let oy = $state('')
+  let ox = $state(ps.get('ox', ''))
+  $effect(() => ps.set('ox', ox))
+  let oy = $state(ps.get('oy', ''))
+  $effect(() => ps.set('oy', oy))
   let brush = $state({ enabled: false } as { enabled: boolean; x1?: number; x2?: number; y1?: number; y2?: number })
   $effect(() => {
     bundle.table('pareto').then((x) => (t = x))
@@ -42,7 +47,7 @@
   <label>y <select value={Y} onchange={(e) => (oy = e.currentTarget.value)}>{#each wide.objs as o}<option value={o}>{o}</option>{/each}</select></label>
   <Plot height={320} grid inset={8} x={{ label: X }} y={{ label: Y }}>
     <Dot data={wide.rows} x={X} y={Y} r={4} fill={(d: any) => (inB(d) ? '#d62728' : '#6a8caf')} />
-    <Dot data={wide.rows.filter((r) => r.selected)} x={X} y={Y} r={8} stroke="black" strokeWidth={2} />
+    <Dot data={wide.rows.filter((r) => r.selected)} x={X} y={Y} r={8} stroke="var(--pkv-ink)" strokeWidth={2} />
     {#if brush.enabled}<Rect {...brush} opacity={0.08} />{/if}
     <Brush bind:brush constrainToDomain stroke={false} />
   </Plot>
