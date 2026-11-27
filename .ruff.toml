@@ -1,0 +1,12 @@
+# Python here is development tooling only (fixtures, parity references, font and brand builds).
+line-length = 200
+target-version = "py313"
+extend-exclude = ["node_modules", "site", "dist", "dist-single"]
+
+[lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+# compact reference formulas pair statements on one line; zip() inputs are equal length by construction
+ignore = ["E702", "B905"]
+
+[lint.per-file-ignores]
+"scripts/build_brand.py" = ["E501"]  # SVG markup reads better on one line per element

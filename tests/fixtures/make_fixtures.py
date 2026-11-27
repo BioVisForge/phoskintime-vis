@@ -17,9 +17,7 @@ import hashlib
 import io
 import json
 import shutil
-import uuid
 import zipfile
-from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -522,7 +520,7 @@ def make_network(variant: str = "base") -> Bundle:
     b.add_table("kinase_activity", ka, units={"time": "min"})
 
     ss = {k: [] for k in ["workflow", "protein", "state", "time", "value", "dydt_abs"]}
-    for (st, layer, p, ps) in state_rows[:80]:
+    for (st, _layer, p, _ps) in state_rows[:80]:
         for t in [0.0, 960.0, 5000.0, 20000.0]:
             for k, x in zip(ss.keys(), ["networkmodel", p, st, t, float(1 + rng.normal(0, 0.1)), float(abs(rng.normal(0, 1e-3)) * np.exp(-t / 2000))]):
                 ss[k].append(x)

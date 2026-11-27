@@ -197,7 +197,7 @@
   .ctitle { font-size: 1.35rem; margin: 0; letter-spacing: -0.01em; }
   .csub { color: var(--pkv-ink-2); font-size: var(--pkv-text-sm); margin: 2px 0 8px; }
   .pick { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin: 10px 0; font-size: 0.9rem; }
-  
+
   .prov { border-collapse: collapse; font-size: 0.82rem; margin: 4px 0 8px; }
   .prov th, .prov td { border-bottom: 1px solid #eee; padding: 2px 8px; text-align: left; }
   .small { font-size: 0.76rem; }
