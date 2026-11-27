@@ -23,7 +23,11 @@ Only new dependencies for the export work: `jspdf` and `svg2pdf.js` (decision 00
 Dark is tuned for plots: the surface is `#1a1e26` and the page `#12151b`, never pure black.
 Text tokens meet WCAG AA on their surfaces in both themes (secondary text 8.3:1 light and 9.1:1
 dark; tertiary 5.9:1 and 6.5:1). Axe (`wcag2a` and `wcag2aa`) runs on every section in both
-themes in the e2e suite and fails on serious or critical violations. Density: comfortable or
+themes in the e2e suite, in Chromium and Firefox, and fails on serious or critical violations.
+In Playwright's Firefox (build 1572) one read of the DOM property `ariaLabelledByElements`, which
+axe-core 4.14.1 performs, segfaults the content process; the spec removes the getter in Firefox so
+that axe reads the `aria-labelledby` attribute instead. The app never reads the property. The
+crash was reproduced only inside the Playwright test runner; stock Firefox was not tried. Density: comfortable or
 compact, through spacing tokens.
 
 ## Data colours

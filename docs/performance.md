@@ -10,19 +10,19 @@ Raw numbers: `docs/performance-baseline.json` (before the export/UI work, `feat/
 
 | Measure | Chromium 159.0.8154.6 | Firefox 159.0 |
 |---|---|---|
-| Open zip → first panel drawn (Fit quality, nm-gof) | 3,313 → 2,901 ms (-12 %) | 5,387 → 4,466 ms (-17 %) |
-| Open zip → all files sha256-verified | 5,078 → 4,810 ms (-5 %) | 7,965 → 7,330 ms (-8 %) |
-| Heaviest panel in isolation (nm-gof) | 2,454 → 2,265 ms (-8 %) | 4,247 → 3,819 ms (-10 %) |
-| “Raw lines” on: 8,000 series on canvas | 524 → 541 ms (+3 %) | 861 → 919 ms (+7 %) |
-| Comparison load (2nd bundle → all sections drawn) | 1,361 → 1,461 ms (+7 %) | 6,621 → 1,888 ms (-71 %) |
-| Single-file size | 995,518 → 1,854,875 B (+86 %) | same file |
+| Open zip → first panel drawn (Fit quality, nm-gof) | 3,313 → 2,935 ms (-11 %) | 5,387 → 4,765 ms (-12 %) |
+| Open zip → all files sha256-verified | 5,078 → 4,768 ms (-6 %) | 7,965 → 7,615 ms (-4 %) |
+| Heaviest panel in isolation (nm-gof) | 2,454 → 2,252 ms (-8 %) | 4,247 → 3,756 ms (-12 %) |
+| “Raw lines” on: 8,000 series on canvas | 524 → 545 ms (+4 %) | 861 → 827 ms (-4 %) |
+| Comparison load (2nd bundle → all sections drawn) | 1,361 → 1,440 ms (+6 %) | 6,621 → 1,910 ms (-71 %) |
+| Single-file size | 995,518 → 1,866,036 B (+87 %) | same file |
 
 There are no timing regressions above 10 %. Two caveats: the before and after first-panel
 measurements land on different pages (before: the old single page; after: the Fit quality
 section), and panels now mount only for the open section. The Firefox comparison load is much
 faster because comparison mode is its own section instead of sitting below every panel.
 
-The **size increase (+86 %) is intended and within the 2.5 MB budget**:
+The **size increase (+87 %) is intended and within the 2.5 MB budget**:
 
 | Part | Bytes in the single file |
 |---|---|

@@ -82,8 +82,29 @@ The same composed SVG with `width="…mm" height="…mm"`, inline styles and the
 font is embedded as a data URL by default; the dialog option "Embed font in SVG" switches to
 referencing `'PKV Sans'` by name.
 
-## Fit
+## Fit to width
 
-When long tick labels overhang a plot's own box (for example parameter labels in the ridgeline
-at 85 mm), the whole figure is scaled to fit the dialog width, and the caption states the
-percentage.
+Text is never scaled below the chosen pt size without confirmation. When something sticks out of
+the chosen width, nothing is exported and the dialog names it and offers:
+
+| Fix | What it does | In the caption |
+|---|---|---|
+| Shorter labels | truncates tick labels on the overflowing axes with an ellipsis; numbers are never truncated; the CSV keeps the full labels | yes |
+| Fewer ticks | keeps every 2nd to 4th tick on the overflowing axes | yes |
+| Next width preset | 114 or 174 mm, drawing the plot narrower by whatever still overhangs (labels that overhang do so by the same amount at any width, so a wider page alone would not help); refused if more than 40 % of the page would go to labels | no (nothing is removed or scaled) |
+| Scale anyway | scales the whole figure | yes, with the resulting pt size |
+
+A fix applies to one export and is not remembered. TikZ is not checked, because PGFPlots lays out
+its own text at the chosen size. A quick export from a panel menu or a comparison section that
+does not fit opens the dialog with the same warning. "Export all panels" lists every panel that
+does not fit and writes no partial zip.
+
+## Text baselines and opacity
+
+svg2pdf ignores most `dominant-baseline` values and element opacity. The composed SVG therefore
+carries neither: baselines are resolved to a measured offset and opacity is folded into
+fill/stroke opacity, so the PNG, SVG and PDF place and shade everything alike. Two e2e guards
+(`tests/e2e/pdf-fidelity.spec.ts`): no exported panel uses element or group opacity, and the PDF
+of three panels, rendered with Ghostscript, matches the PNG within measured block-wise limits.
+The comparison renders at 600 dpi and downscales, because Ghostscript draws sub-pixel strokes
+too heavily at 150 dpi.

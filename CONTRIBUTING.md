@@ -43,6 +43,9 @@ screenshots) and commit them with the change that caused them, stating why in th
   golden snapshot in `tests/unit/tikz.test.ts`.
 - `tests/tikz/compile_all.sh` compiles TikZ exports. Run it after emitter changes:
   `node tests/tikz/export_all.mjs network tests/tikz/out tikz && bash tests/tikz/compile_all.sh tests/tikz/out/all-panels_*.zip`.
+  Comparison sections: `node tests/tikz/export_compare.mjs tests/tikz/out/compare && bash tests/tikz/compile_all.sh tests/tikz/out/compare`.
+- The PDF/PNG comparison in `tests/e2e/pdf-fidelity.spec.ts` needs Ghostscript (`gs`).
+- The TikZ gallery: `node tests/tikz/gallery.mjs <png-zips> -- <compile-workdirs>`, then `python tests/tikz/downscale_viewer_pngs.py` (needs TeX Live and Ghostscript).
 
 ## Checks before a PR
 

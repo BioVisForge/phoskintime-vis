@@ -16,7 +16,9 @@ metadata), **SVG** (size in mm), **CSV** (the plotted data, with a provenance an
 and **TikZ/PGFPlots** (a zip with a `tikzpicture`, a standalone document, full-precision data
 files and a README). "Export options…" sets the journal size (85 / 114 / 174 mm or custom), the
 base font size in pt, the dpi, and title, caption and footer. "Export all panels" (command
-palette) writes one zip. Exports always use the light print theme and the bundled font. See
+palette) writes one zip. Exports always use the light print theme and the bundled font. Text is
+never scaled below the chosen size without confirmation: when labels do not fit, the dialog offers
+shorter labels, fewer ticks, the next width preset or "scale anyway". See
 `docs/decisions/0002-pdf-export.md` and `docs/decisions/0003-tikz-export.md`.
 
 ## Navigation
