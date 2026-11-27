@@ -1,0 +1,60 @@
+{
+  "name": "phoskintime-vis",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Offline viewer and run comparison for PhosKinTime run bundles.",
+  "license": "BSD-3-Clause",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:single": "vite build --mode single",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:parity": "${PYTHON:-python3} tests/reference/compute_reference.py && vitest run --config vitest.parity.config.ts",
+    "test:e2e": "playwright test",
+    "lint": "eslint .",
+    "check": "svelte-check --tsconfig ./tsconfig.json --fail-on-warnings",
+    "sync-contracts": "tsx scripts/sync-contracts.ts",
+    "fixtures": "${PYTHON:-python3} tests/fixtures/make_fixtures.py",
+    "validators": "node scripts/build-validators.mjs",
+    "docs:assets": "node scripts/screenshots.mjs && node scripts/gallery.mjs",
+    "predev": "node scripts/build-validators.mjs",
+    "prebuild": "node scripts/build-validators.mjs",
+    "prebuild:single": "node scripts/build-validators.mjs",
+    "pretest": "node scripts/build-validators.mjs",
+    "precheck": "node scripts/build-validators.mjs",
+    "pretest:parity": "node scripts/build-validators.mjs",
+    "pretest:e2e": "node scripts/build-validators.mjs"
+  },
+  "dependencies": {
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "fflate": "0.8.3",
+    "hyparquet": "1.33.2",
+    "svelte": "5.59.2",
+    "svelteplot": "0.14.2"
+  },
+  "devDependencies": {
+    "@duckdb/duckdb-wasm": "1.33.1-dev57.0",
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.65.1",
+    "@sveltejs/vite-plugin-svelte": "7.3.2",
+    "@types/node": "24.19.4",
+    "apache-arrow": "21.2.0",
+    "eslint": "10.15.0",
+    "eslint-plugin-svelte": "3.24.1",
+    "globals": "17.14.0",
+    "parquet-wasm": "0.9.0",
+    "svelte-check": "4.7.8",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.74.0",
+    "vite": "8.4.0",
+    "vite-plugin-singlefile": "2.3.4",
+    "vitest": "5.1.2"
+  }
+}

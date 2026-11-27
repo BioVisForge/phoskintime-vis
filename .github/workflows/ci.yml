@@ -1,0 +1,91 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  lint-and-types:
+    name: Lint and type check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: npm }
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run check
+
+  unit-and-parity:
+    name: Unit and parity tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: npm }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.13' }
+      - run: pip install -r tests/requirements-dev.txt
+      - run: npm ci
+      - name: Build spec fixtures (synthetic)
+        run: python tests/fixtures/make_fixtures.py
+      - run: npm test
+      - run: npm run test:parity
+      - uses: actions/upload-artifact@v4
+        with: { name: parity-max-errors, path: tests/reference/out/parity-max-errors.json }
+
+  build:
+    name: Build (single file + pages)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: npm }
+      - run: npm ci
+      - run: npm run build:single
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with: { name: dist-single, path: dist-single/index.html }
+
+  e2e:
+    name: End-to-end (Chromium + Firefox, file://)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: npm }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.13' }
+      - run: pip install -r tests/requirements-dev.txt
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium firefox
+      - run: python tests/fixtures/make_fixtures.py
+      - run: npm run build:single
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with: { name: playwright-results, path: test-results }
+
+  docs-assets:
+    name: Docs assets (screenshots, gallery; synthetic)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: npm }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.13' }
+      - run: pip install -r tests/requirements-dev.txt
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: python tests/fixtures/make_fixtures.py
+      - run: npm run build:single
+      - run: npm run docs:assets
+      - uses: actions/upload-artifact@v4
+        with:
+          name: docs-assets
+          path: |
+            docs/screenshots
+            docs/samples/exports
+          if-no-files-found: error

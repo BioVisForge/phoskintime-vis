@@ -1,0 +1,207 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/bibymaths/phoskintime-vis/contracts/phoskintime/1.0-draft/manifest.schema.json",
+  "title": "PhosKinTime run bundle manifest (DRAFT 1.0)",
+  "description": "DRAFT written in phoskintime-vis from its own specification. PhosKinTime has not published a bundle schema yet; this file is a proposal, not an authoritative contract.",
+  "type": "object",
+  "required": [
+    "bundle_schema", "bundle_id", "created_utc", "producer", "workflows", "model",
+    "config_sha256", "parameter_order_sha256", "state_order_sha256",
+    "inputs", "files", "missing", "skipped", "warnings"
+  ],
+  "properties": {
+    "bundle_schema": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+$" },
+    "bundle_id": { "type": "string", "minLength": 8 },
+    "created_utc": { "type": "string", "format": "date-time" },
+    "producer": {
+      "type": "object",
+      "required": ["phoskintime_version", "git_commit"],
+      "properties": {
+        "phoskintime_version": { "type": "string" },
+        "git_commit": { "type": "string", "pattern": "^[0-9a-f]{7,40}$" },
+        "git_branch": { "type": "string" },
+        "git_dirty": { "type": "boolean" },
+        "repository": { "type": "string" }
+      }
+    },
+    "workflows": {
+      "type": "array", "minItems": 1,
+      "items": { "type": "string", "enum": ["protwise", "networkmodel"] }
+    },
+    "model": {
+      "type": "object",
+      "required": ["model_id"],
+      "properties": {
+        "model_id": { "type": "string" },
+        "variant": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "config_sha256": { "$ref": "#/$defs/sha256" },
+    "parameter_order_sha256": { "$ref": "#/$defs/sha256" },
+    "state_order_sha256": { "$ref": "#/$defs/sha256" },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "sha256"],
+        "properties": {
+          "name": { "type": "string" },
+          "sha256": { "$ref": "#/$defs/sha256" },
+          "bytes": { "type": "integer", "minimum": 0 },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "files": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/file" }
+    },
+    "layers": {
+      "description": "Measurement layers. fold_change_baseline is a proposed field (makes KNOWN_ISSUES N7 visible).",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" },
+          "unit": { "type": "string" },
+          "fold_change_baseline": {
+            "type": "object",
+            "required": ["time"],
+            "properties": {
+              "time": { "type": "number" },
+              "method": { "type": "string" },
+              "note": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "parameters": {
+      "description": "Parameter metadata (proposed). Labels, groups and units come only from here; the viewer shows the raw name when a label is missing.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string" },
+          "label": { "type": ["string", "null"] },
+          "group": { "type": ["string", "null"] },
+          "unit": { "type": ["string", "null"] },
+          "description": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "parameter_groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": ["string", "null"] },
+          "unit": { "type": ["string", "null"] },
+          "description": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "missing": { "type": "array", "items": { "$ref": "#/$defs/reasoned" } },
+    "skipped": { "type": "array", "items": { "$ref": "#/$defs/reasoned" } },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["message"],
+        "properties": {
+          "code": { "type": "string" },
+          "message": { "type": "string" },
+          "issue": { "type": "string" }
+        }
+      }
+    },
+    "known_issues_open": {
+      "description": "Proposed field: KNOWN_ISSUES.md IDs still open at the producing commit.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "string" },
+          "severity": { "type": "string" },
+          "status": { "type": "string" },
+          "title": { "type": "string" },
+          "text": { "type": "string" }
+        }
+      }
+    },
+    "known_issues_source": {
+      "type": "object",
+      "properties": {
+        "path": { "type": "string" },
+        "commit": { "type": "string" },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "reasoned": {
+      "type": "object",
+      "required": ["artifact", "reason"],
+      "properties": {
+        "artifact": { "type": "string" },
+        "reason": { "type": "string" },
+        "workflow": { "type": "string" }
+      }
+    },
+    "column": {
+      "type": "object",
+      "required": ["name", "dtype"],
+      "properties": {
+        "name": { "type": "string" },
+        "dtype": { "type": "string", "enum": ["float64", "float32", "int64", "int32", "string", "bool"] },
+        "unit": { "type": ["string", "null"] },
+        "nullable": { "type": "boolean" },
+        "description": { "type": "string" }
+      }
+    },
+    "file": {
+      "type": "object",
+      "required": ["path", "sha256", "bytes", "kind"],
+      "properties": {
+        "path": { "type": "string", "pattern": "^(provenance|tables|arrays|resim)/[^/].*$" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "kind": { "type": "string", "enum": ["provenance", "table", "array", "resim"] },
+        "table": { "type": "string", "description": "Logical table name for kind=table" },
+        "rows": { "type": "integer", "minimum": 0 },
+        "columns": { "type": "array", "items": { "$ref": "#/$defs/column" } },
+        "array": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "dtype": { "type": "string" },
+            "shape": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+            "axes": { "type": "array", "items": { "type": "string" } },
+            "unit": { "type": ["string", "null"] }
+          }
+        },
+        "passthrough": {
+          "type": "object",
+          "description": "For tables converted 1:1 from another PhosKinTime output.",
+          "required": ["source_path"],
+          "properties": {
+            "source_path": { "type": "string" },
+            "sheet": { "type": ["string", "null"] }
+          }
+        }
+      },
+      "allOf": [
+        { "if": { "properties": { "kind": { "const": "table" } } }, "then": { "required": ["table", "rows", "columns"] } },
+        { "if": { "properties": { "kind": { "const": "array" } } }, "then": { "required": ["array"] } }
+      ]
+    }
+  }
+}

@@ -1,0 +1,13 @@
+name: Panel request
+description: A plot that the viewer should draw
+labels: [panel]
+body:
+  - type: input
+    id: ref
+    attributes: { label: PhosKinTime reference (file:line, function, commit), description: 'or "viewer extra"' }
+  - type: textarea
+    id: data
+    attributes: { label: Tables/columns needed from the bundle }
+  - type: textarea
+    id: why
+    attributes: { label: What question does it answer? }

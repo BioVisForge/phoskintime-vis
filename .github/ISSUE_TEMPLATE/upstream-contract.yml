@@ -1,0 +1,18 @@
+name: Upstream contract change
+description: PhosKinTime changed or published the bundle schema or engine API
+labels: [upstream]
+body:
+  - type: input
+    id: version
+    attributes: { label: 'Schema / API version and upstream commit' }
+  - type: textarea
+    id: change
+    attributes: { label: What changed (fields, tables, endpoints) }
+  - type: checkboxes
+    id: tasks
+    attributes:
+      label: Tasks
+      options:
+        - label: npm run sync-contracts run and committed
+        - label: adapter added or updated
+        - label: fixtures regenerated, tests pass

@@ -155,3 +155,18 @@ vite.config.ts.timestamp-*
 .nx/cache
 .nx/workspace-data
 .nx/migrate-runs
+
+# phoskintime-vis
+.venv/
+dist/
+dist-single/
+tests/fixtures/out/
+tests/reference/out/
+test-results/
+playwright-report/
+bench/out/
+src/lib/contracts/generated/
+# generated docs assets (synthetic): regenerate with `npm run docs:assets`; CI uploads them as the
+# docs-assets artifact and the Pages workflow publishes them with the demo
+docs/screenshots/
+docs/samples/exports/

@@ -1,0 +1,87 @@
+# DRAFT: the engine API phoskintime-vis needs from PhosKinTime's planned `pktengine`.
+# pktengine does not exist at phoskintime sci/2026-12 @ e634e17. This is a proposal
+# (docs/upstream-proposals.md); the viewer talks to scripts/mock-engine.mjs until upstream ships.
+openapi: 3.1.0
+info: { title: pktengine (draft), version: 0.1-draft }
+servers: [{ url: 'http://127.0.0.1:8765' }]
+paths:
+  /health:
+    get:
+      summary: Engine identity and capabilities
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health' }
+  /bundles:
+    get:
+      summary: Bundles the engine can simulate (bundle_id must match the manifest's)
+      responses:
+        '200': { content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/BundleRef' } } } } }
+  /simulate:
+    post:
+      summary: Re-simulate one bundle with parameter overrides and knockouts
+      requestBody: { content: { application/json: { schema: { $ref: '#/components/schemas/SimulateRequest' } } } }
+      responses:
+        '200':
+          description: Trajectory rows (state, layer, protein, time, value). Arrow IPC stream preferred; JSON allowed.
+          content:
+            application/vnd.apache.arrow.stream: {}
+            application/json: { schema: { $ref: '#/components/schemas/SimulateResult' } }
+  /simulate/batch:
+    post:
+      requestBody: { content: { application/json: { schema: { type: object, properties: { requests: { type: array, items: { $ref: '#/components/schemas/SimulateRequest' } } } } } } }
+      responses: { '200': { content: { application/json: { schema: { type: object, properties: { results: { type: array, items: { $ref: '#/components/schemas/SimulateResult' } } } } } } } }
+  /verify:
+    post:
+      summary: Does the engine reproduce the bundle's stored best-fit trajectories?
+      requestBody: { content: { application/json: { schema: { type: object, required: [bundle_id], properties: { bundle_id: { type: string } } } } } }
+      responses: { '200': { content: { application/json: { schema: { $ref: '#/components/schemas/Verify' } } } } }
+components:
+  schemas:
+    Health:
+      type: object
+      required: [status, engine, version, commit, capabilities]
+      properties:
+        status: { enum: [ok, degraded] }
+        engine: { type: string, description: 'e.g. pktengine' }
+        version: { type: string }
+        commit: { type: string }
+        api_version: { type: string }
+        capabilities:
+          type: object
+          required: [simulate, batch, whatif_ops, model_variants]
+          properties:
+            simulate: { type: boolean }
+            batch: { type: boolean }
+            whatif_ops: { type: array, items: { enum: [set_parameter, knockout] } }
+            knockout_targets: { type: array, items: { type: string }, description: 'e.g. protein, kinase' }
+            model_variants: { type: array, items: { type: string } }
+            output_formats: { type: array, items: { enum: [arrow, json] } }
+            bundle_schemas: { type: array, items: { type: string } }
+    BundleRef: { type: object, required: [bundle_id], properties: { bundle_id: { type: string }, model_id: { type: string }, variant: { type: string } } }
+    SimulateRequest:
+      type: object
+      required: [bundle_id]
+      properties:
+        bundle_id: { type: string }
+        parameters: { type: object, additionalProperties: { type: number }, description: 'name -> value (physical space)' }
+        knockouts: { type: array, items: { type: object, properties: { target: { type: string }, id: { type: string } } } }
+        times: { type: array, items: { type: number } }
+    SimulateResult:
+      type: object
+      required: [engine, version, rows]
+      properties:
+        engine: { type: string }
+        version: { type: string }
+        rows: { type: array, items: { type: object, properties: { state: { type: string }, layer: { type: string }, protein: { type: string }, time: { type: number }, value: { type: [number, 'null'] } } } }
+    Verify:
+      type: object
+      required: [bundle_id, reproduces, max_abs_diff, tolerance, n_compared]
+      properties:
+        bundle_id: { type: string }
+        reproduces: { type: boolean }
+        max_abs_diff: { type: number }
+        tolerance: { type: number }
+        n_compared: { type: integer }
+        note: { type: string }
