@@ -4,12 +4,9 @@
 
 ## Where to continue
 
-1. Run the final verification that was stopped when the session ended (about 40 min):
-   full suite on `feat/export-ui` (`0244bd8`) and on `feat/docs-release`, plus
-   `npm run docs:build` there, and ideally a Node 24 pass on all three tips (CI uses Node 24).
-2. Show the owner: `git log` of the branches, `du -sh .git`, test results and the PR
-   descriptions in `docs/pr-drafts.md` (fill in the pending results).
-3. After confirmation: push, open the stacked PRs. Delete `docs/pr-drafts.md` before PR 3.
+Verification finished on 2026-11-27 (results below); the three branches are pushed and the
+stacked PRs are open. Next: merge them in order following the merge plan below; then the
+post-merge steps. A Node 24 run has not happened locally; the first CI run covers it.
 
 ## Test status at the end of the session
 
