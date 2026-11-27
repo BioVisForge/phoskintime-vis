@@ -17,8 +17,8 @@
 |---|---|
 | `feat/foundation` `fb7a7e3` | all passed (Node 26): lint, types, unit 44, parity 10, e2e 42, builds, `docs:assets` |
 | `feat/export-ui` `8e6d60b` | e2e 73 passed, **1 failed** (Firefox, reordered-params), visual 16, **`docs:assets` failed** |
-| `feat/export-ui` `0244bd8` (longer timeouts for both) | lint, types, unit 82, parity 10, builds passed; **e2e, visual, `docs:assets` not completed** |
-| `feat/docs-release` | lint, types, unit 82, visual 16, ruff, pre-commit, tox (lint, fixtures, parity), strict docs build with 0 broken links passed on the working tree before the commits; **no full e2e run** |
+| `feat/export-ui` `0244bd8` (longer timeouts for both) | all passed 2026-11-27 (Node 26, load ~2): lint, types, unit 82, parity 10, e2e 74 + 18 skipped, visual 16, builds, `docs:assets` |
+| `feat/docs-release` | all passed 2026-11-27 (Node 26): lint, types, unit 82, parity 10, e2e 74 + 18 skipped, visual 16, builds, `tox -e lint`, `tox -e docs` (strict build), pre-commit |
 
 The two failures: the Firefox test passed 6 of 6 afterwards and the sample export twice in a row;
 the host was at load 60-105. Most likely timeouts (5 s panel render, 30 s click), now longer, but

@@ -39,8 +39,9 @@ fewer ticks, next width preset, scale anyway). Fixes found on the way: PDF tick 
 titles were misplaced (`dominant-baseline`); comparison TikZ held every plot of the view; the
 protein selector could drop Enter before its list loaded.
 
-**Tests.** PENDING on the final tip (see `docs/HANDOFF.md`). On `0244bd8`: lint and types clean,
-unit 82/82, parity 10/10, builds pass. PDF vs PNG on three panels: mean difference 1.6–2.2/255,
+**Tests** (local, Node 26, on `0244bd8`): lint and type check clean; unit 82/82; parity 10/10;
+e2e 74 passed, 18 skipped (export specs are Chromium-only); visual 16/16; both builds and
+`docs:assets`. CI has not run yet. PDF vs PNG on three panels: mean difference 1.6–2.2/255,
 under 1 % of blocks differing. TikZ: 41/41 compile in `texlive/texlive:TL2025-historic`.
 
 **Measured performance** (before → after, Chromium / Firefox): first panel 3,313 → 2,935 /
@@ -66,7 +67,10 @@ logo and favicons; `cliff.toml`, changelog, `release-notes/`, tag-driven release
 `.bumpversion.toml`, `CITATION.cff`, `.zenodo.json`, `SECURITY.md`, `CODEOWNERS`; ruff, tox and
 pre-commit.
 
-**Tests.** PENDING (full suite). Strict docs build passes; 5,155 links checked, none broken.
+**Tests** (local, Node 26): lint and type check clean; unit 82/82; parity 10/10; e2e 74 passed,
+18 skipped; visual 16/16; both builds; `tox -e lint` (ruff), `tox -e docs` (fixtures,
+`docs:assets`, strict Zensical build) and pre-commit on all files pass. Link check at authoring:
+5,155 links, none broken. CI has not run yet.
 
 **Known limitations.** No per-version docs switcher; the changelog and 0.1.0 date are prepared,
 nothing is tagged; tag 0.1.0 before preparing a later version; TypeDoc's build-only dependency
