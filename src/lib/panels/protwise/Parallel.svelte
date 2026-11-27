@@ -30,7 +30,7 @@
 
 {#if !t}<Loading />{:else}
   <label>Scale <select bind:value={mode}><option value="raw">raw values (as PhosKinTime)</option><option value="extent">per-state extent</option></select></label>
-  <Plot height={Math.max(200, 50 * new Set(rows.map((r) => r.state)).size)} grid inset={10} x={{ label: mode === 'raw' ? 'Predicted fold change' : 'Normalised to state extent' }} y={{ label: 'State' }} color={{ legend: true, label: 'Time (min)', type: 'log' }}>
+  <Plot zoom="main" height={Math.max(200, 50 * new Set(rows.map((r) => r.state)).size)} grid inset={10} x={{ label: mode === 'raw' ? 'Predicted fold change' : 'Normalised to state extent' }} y={{ label: 'State' }} color={{ legend: true, label: 'Time (min)', type: 'log' }}>
     <Line {...plotted as any} stroke={(d: any) => Math.max(d.time, 0.1)} strokeOpacity={0.6} />
     <Dot {...plotted as any} fill={(d: any) => Math.max(d.time, 0.1)} r={2.5} title={(d: any) => `${d.state} t=${d.time}: ${d.raw}`} />
   </Plot>

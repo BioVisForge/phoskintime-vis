@@ -1,15 +1,23 @@
 <script lang="ts">
   import { download } from '../../export/figure'
   import { toCsv } from '../../transforms/table'
-  let { ids, label = 'selected', name = 'selection' }: { ids: string[]; label?: string; name?: string } = $props()
+  /**
+   * `ids`: the selected ids, or a function that returns them (with `count`), so a brush over
+   * 100k points does not build 100k strings per move; they are built for the 30 shown and for
+   * downloads only.
+   */
+  let { ids, count, label = 'selected', name = 'selection' }: { ids: string[] | ((limit?: number) => string[]); count?: number; label?: string; name?: string } = $props()
+  const all = () => (typeof ids === 'function' ? ids() : ids)
+  const n = $derived(typeof ids === 'function' ? (count ?? 0) : ids.length)
+  const shown = $derived(!n ? [] : typeof ids === 'function' ? ids(30) : ids.slice(0, 30))
 </script>
 
 <div class="sel" data-testid="selection" data-export-skip>
-  <b>{ids.length}</b> {label}{ids.length ? ':' : ''}
-  <span class="ids">{ids.slice(0, 30).join(', ')}{ids.length > 30 ? ` … (+${ids.length - 30})` : ''}</span>
-  {#if ids.length}
-    <button onclick={() => download(`${name}.csv`, toCsv(ids.map((id) => ({ id }))), 'text/csv')}>CSV</button>
-    <button onclick={() => download(`${name}.json`, JSON.stringify(ids, null, 1), 'application/json')}>JSON</button>
+  <b>{n}</b> {label}{n ? ':' : ''}
+  <span class="ids">{shown.join(', ')}{n > 30 ? ` … (+${n - 30})` : ''}</span>
+  {#if n}
+    <button onclick={() => download(`${name}.csv`, toCsv(all().map((id) => ({ id }))), 'text/csv')}>CSV</button>
+    <button onclick={() => download(`${name}.json`, JSON.stringify(all(), null, 1), 'application/json')}>JSON</button>
   {/if}
   <span class="dim">Selection is interaction only; it never changes the bundle.</span>
 </div>

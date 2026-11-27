@@ -5,6 +5,7 @@
  * ("aligned"), and the names at each position are checked. Otherwise rows are paired by name
  * ("by-name") and rows present in only one run are listed, never silently dropped.
  */
+import { timed } from '../perf/spans'
 
 export type NamedValue = {
   name: string
@@ -35,7 +36,7 @@ export interface Alignment<T> {
   onlyB: string[]
 }
 
-export function alignParameters(a: NamedValue[], b: NamedValue[], shaA: string, shaB: string): Alignment<ParamDelta> {
+function alignParameters_(a: NamedValue[], b: NamedValue[], shaA: string, shaB: string): Alignment<ParamDelta> {
   let mode: 'aligned' | 'by-name' = 'by-name'
   let reason = 'parameter_order_sha256 differs: paired by name.'
   if (shaA === shaB) {
@@ -97,7 +98,7 @@ export type TrajDelta = {
 }
 
 /** Pair predicted trajectories by (state, exact time). States present in only one run are listed. */
-export function alignTrajectories(a: TrajPoint[], b: TrajPoint[]): Alignment<TrajDelta> & { timesOnlyA: number; timesOnlyB: number } {
+function alignTrajectories_(a: TrajPoint[], b: TrajPoint[]): Alignment<TrajDelta> & { timesOnlyA: number; timesOnlyB: number } {
   const key = (p: TrajPoint) => `${p.state}\u0000${p.time}`
   const mb = new Map(b.map((p) => [key(p), p]))
   const ka = new Set(a.map(key))
@@ -132,7 +133,7 @@ export type MetricRow = {
   value: number
 }
 
-export function compareMetrics(a: MetricRow[], b: MetricRow[]) {
+function compareMetrics_(a: MetricRow[], b: MetricRow[]) {
   const key = (m: MetricRow) => `${m.layer ?? ''}\u0000${m.protein ?? ''}\u0000${m.metric}`
   const mb = new Map(b.map((m) => [key(m), m]))
   const ka = new Set(a.map(key))
@@ -157,3 +158,7 @@ export function issueDiff(a: string[] | null, b: string[] | null) {
     both: a.filter((x) => sb.has(x)),
   }
 }
+
+export const alignParameters = timed('transform', 'alignParameters', alignParameters_)
+export const alignTrajectories = timed('transform', 'alignTrajectories', alignTrajectories_)
+export const compareMetrics = timed('transform', 'compareMetrics', compareMetrics_)

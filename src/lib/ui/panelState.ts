@@ -25,3 +25,8 @@ export function usePanelState(bundle: LoadedBundle) {
     },
   }
 }
+
+/** The registry id of the panel being rendered (screen or export), or null outside a panel. */
+export function getPanelId(): string | null {
+  return getContext<string | undefined>(KEY) ?? null
+}

@@ -1,0 +1,49 @@
+{
+ "browser": "firefox 159.0",
+ "date": "2026-11-27T16:59:26.860Z",
+ "runs": 3,
+ "scenarios": {
+  "png": {
+   "note": "the 85 mm fit check refused; timed with its \"Use 1.5 column (114 mm)\" fix, so the time includes the refused attempt",
+   "wallMs": [
+    23714,
+    23441,
+    23502
+   ],
+   "wallMedianMs": 23502,
+   "stagesMedianMs": {
+    "shaping": 46,
+    "canvas draw": 18730,
+    "transform": 102,
+    "export render": 21675,
+    "export compose": 122,
+    "export encode": 1429
+   },
+   "cpuMs": null,
+   "traceMs": null,
+   "profiledWallMs": null,
+   "cpuDetail": null
+  },
+  "pdf": {
+   "note": "the 85 mm fit check refused; timed with its \"Use 1.5 column (114 mm)\" fix, so the time includes the refused attempt",
+   "wallMs": [
+    24924,
+    24915,
+    24863
+   ],
+   "wallMedianMs": 24915,
+   "stagesMedianMs": {
+    "shaping": 46,
+    "canvas draw": 18629,
+    "transform": 109,
+    "export render": 21580,
+    "export compose": 119,
+    "export encode": 2968
+   },
+   "cpuMs": null,
+   "traceMs": null,
+   "profiledWallMs": null,
+   "cpuDetail": null
+  }
+ }
+}

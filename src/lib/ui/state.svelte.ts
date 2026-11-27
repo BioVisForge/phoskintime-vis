@@ -71,7 +71,7 @@ class AppState {
   /** Per-bundle, per-panel local controls (shared by screen and offscreen export renders). */
   private ui = new Map<string, Record<string, unknown>>()
   /** Export dialog: registry panels by id, all panels, or custom targets (comparison sections). */
-  export = $state<{ open: boolean; targetIds: string[]; all: boolean; formats?: Format[]; fit?: FitIssue[]; custom?: { title: string; make: () => Promise<ExportTarget[]> } }>({ open: false, targetIds: [], all: false })
+  export = $state<{ open: boolean; targetIds: string[]; all: boolean; formats?: Format[]; fit?: FitIssue[]; view?: 'full' | 'current'; custom?: { title: string; make: () => Promise<ExportTarget[]> } }>({ open: false, targetIds: [], all: false })
   toast = $state<string | null>(null)
 
   constructor() {
@@ -160,6 +160,7 @@ class AppState {
       this.activeId = b.meta.bundleId
       if (!this.compareA) this.compareA = b.meta.bundleId
       else if (!this.compareB) this.compareB = b.meta.bundleId
+      b.prefetch('trajectories')
       this.verifyProgress[b.meta.bundleId] = 'checking…'
       b.verify((d, n) => (this.verifyProgress[b.meta.bundleId] = `checking ${d}/${n}`)).then(() => {
         this.verifyProgress[b.meta.bundleId] = b.verifyState

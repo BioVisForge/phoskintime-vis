@@ -1,0 +1,43 @@
+{
+ "browser": "chromium 159.0.8154.6",
+ "date": "2026-11-27T16:57:40.449Z",
+ "runs": 3,
+ "scenarios": {
+  "open": {
+   "wallMs": [
+    855,
+    829,
+    836
+   ],
+   "wallMedianMs": 836,
+   "stagesMedianMs": {
+    "zip inflate": 132.4,
+    "sha256": 9.8,
+    "decode (worker)": 135.3,
+    "shaping": 30.2,
+    "transform": 111.7
+   },
+   "cpuMs": null,
+   "traceMs": null,
+   "profiledWallMs": null,
+   "cpuDetail": null
+  },
+  "gof": {
+   "wallMs": [
+    570,
+    561,
+    539
+   ],
+   "wallMedianMs": 561,
+   "stagesMedianMs": {
+    "shaping": 16.1,
+    "decode (worker)": 142.4,
+    "transform": 21.8
+   },
+   "cpuMs": null,
+   "traceMs": null,
+   "profiledWallMs": null,
+   "cpuDetail": null
+  }
+ }
+}

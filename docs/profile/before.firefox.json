@@ -1,0 +1,99 @@
+{
+ "browser": "firefox 159.0",
+ "date": "2026-11-27T16:52:31.642Z",
+ "runs": 3,
+ "scenarios": {
+  "open": {
+   "wallMs": [
+    4824,
+    4431,
+    4466
+   ],
+   "wallMedianMs": 4466,
+   "stagesMedianMs": {
+    "zip inflate": 125,
+    "sha256": 77,
+    "decode (worker)": 141,
+    "shaping": 37,
+    "transform": 120
+   },
+   "cpuMs": null,
+   "traceMs": null,
+   "profiledWallMs": null,
+   "cpuDetail": null
+  },
+  "gof": {
+   "wallMs": [
+    3992,
+    4021,
+    3964
+   ],
+   "wallMedianMs": 3992,
+   "stagesMedianMs": {
+    "decode (worker)": 138,
+    "shaping": 16,
+    "transform": 10
+   },
+   "cpuMs": null,
+   "traceMs": null,
+   "profiledWallMs": null,
+   "cpuDetail": null
+  },
+  "raw": {
+   "wallMs": [
+    903,
+    899,
+    924
+   ],
+   "wallMedianMs": 903,
+   "stagesMedianMs": {
+    "canvas draw": 448
+   },
+   "cpuMs": null,
+   "traceMs": null,
+   "profiledWallMs": null,
+   "cpuDetail": null
+  },
+  "compare": {
+   "wallMs": [
+    2385,
+    2315,
+    2433
+   ],
+   "wallMedianMs": 2385,
+   "stagesMedianMs": {
+    "zip inflate": 123,
+    "decode (worker)": 290,
+    "shaping": 111,
+    "transform": 46,
+    "sha256": 396
+   },
+   "cpuMs": null,
+   "traceMs": null,
+   "profiledWallMs": null,
+   "cpuDetail": null
+  },
+  "png": {
+   "errors": [
+    "page.waitForEvent: Timeout 120000ms exceeded while waiting for event \"download\" | app: Labels do not fit 85 mm at 8 pt. Nothing was exported. Text is never scaled below the chosen size without your confirmation.\n\nAll trajectories: needs about 86 mm; sticking out: axis title “Predicted FC” (left), tick label “1K” (right).\nShorter labels\nFewer ticks\nUse 1.5 column (114 mm)\nScale anyway  | console: "
+   ],
+   "wallMs": [],
+   "stagesMedianMs": {},
+   "cpuMs": null,
+   "traceMs": null,
+   "profiledWallMs": null,
+   "cpuDetail": null
+  },
+  "pdf": {
+   "errors": [
+    "page.waitForEvent: Timeout 120000ms exceeded while waiting for event \"download\" | app: Labels do not fit 85 mm at 8 pt. Nothing was exported. Text is never scaled below the chosen size without your confirmation.\n\nAll trajectories: needs about 86 mm; sticking out: axis title “Predicted FC” (left), tick label “1K” (right).\nShorter labels\nFewer ticks\nUse 1.5 column (114 mm)\nScale anyway  | console: "
+   ],
+   "wallMs": [],
+   "stagesMedianMs": {},
+   "cpuMs": null,
+   "traceMs": null,
+   "profiledWallMs": null,
+   "cpuDetail": null
+  }
+ }
+}

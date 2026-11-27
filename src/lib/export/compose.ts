@@ -136,6 +136,8 @@ function inlineSvg(svg: SVGSVGElement, raster: Composed['rasterLayers']): SVGSVG
     if (Math.abs(shifts[i]) > 0.01) d.setAttribute('transform', `${d.getAttribute('transform') ?? ''} translate(0 ${shifts[i].toFixed(2)})`.trim())
     d.removeAttribute('class')
   })
+  // the zoom layer's frame rectangle (transparent, interaction only) is not part of the figure
+  for (const r of clone.querySelectorAll('rect.pkv-zoom-overlay')) r.remove()
   const srcFO = svg.querySelectorAll('foreignObject')
   const dstFO = clone.querySelectorAll('foreignObject')
   srcFO.forEach((fo, i) => {
@@ -149,6 +151,9 @@ function inlineSvg(svg: SVGSVGElement, raster: Composed['rasterLayers']): SVGSVG
     img.setAttribute('href', canvas.toDataURL('image/png'))
     img.setAttribute('preserveAspectRatio', 'none')
     img.setAttribute('data-raster-layer', kind)
+    // a zoomed view clips its layers to the frame ("export current view")
+    const clip = fo.getAttribute('clip-path')
+    if (clip) img.setAttribute('clip-path', clip)
     dstFO[i].replaceWith(img)
   })
   return clone
@@ -205,6 +210,54 @@ function htmlText(lines: HtmlLine[], ox: number, oy: number, texts: string[]): s
     .join('')
 }
 
+/**
+ * Client-space box of a drawn element. SVG text is measured by its glyph box (getBBox) mapped
+ * through its screen transform: Firefox's getBoundingClientRect pads SVG text by about 1 px on
+ * each side (its visual-overflow rect), which made 85 mm figures that fit in Chromium "not fit"
+ * in Firefox. For other elements, and where the transform is unavailable, getBoundingClientRect.
+ */
+export function drawnRect(el: Element): { left: number; right: number; top: number; bottom: number; width: number; height: number } {
+  if (el instanceof SVGTextElement || (typeof SVGTSpanElement !== 'undefined' && el instanceof SVGTSpanElement)) {
+    const g = el as SVGGraphicsElement
+    const m = g.getScreenCTM?.()
+    if (m) {
+      const b = g.getBBox()
+      const pts = [
+        [b.x, b.y],
+        [b.x + b.width, b.y],
+        [b.x, b.y + b.height],
+        [b.x + b.width, b.y + b.height],
+      ].map(([x, y]) => [m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f])
+      const xs = pts.map((p) => p[0])
+      const ys = pts.map((p) => p[1])
+      const left = Math.min(...xs)
+      const right = Math.max(...xs)
+      const top = Math.min(...ys)
+      const bottom = Math.max(...ys)
+      return { left, right, top, bottom, width: right - left, height: bottom - top }
+    }
+  }
+  return el.getBoundingClientRect()
+}
+
+/**
+ * An element inside a zoomed plot ("export current view") is clipped to the plot frame: what
+ * it can occupy is its box intersected with the frame (the zoom layer's frame rectangle in the
+ * same facet). Unclipped elements keep their box.
+ */
+function clippedRect(el: Element, r: { left: number; right: number; top: number; bottom: number; width: number; height: number }) {
+  const g = el.closest('[clip-path^="url(#pkv-zoom-clip-"]')
+  const frame = g?.parentElement?.querySelector(':scope > rect.pkv-zoom-overlay')
+  if (!frame) return r
+  const f = frame.getBoundingClientRect()
+  const left = Math.max(r.left, f.left)
+  const right = Math.min(r.right, f.right)
+  const top = Math.max(r.top, f.top)
+  const bottom = Math.min(r.bottom, f.bottom)
+  if (right <= left || bottom <= top) return { left: 0, right: 0, top: 0, bottom: 0, width: 0, height: 0 }
+  return { left, right, top, bottom, width: right - left, height: bottom - top }
+}
+
 interface Extent {
   minX: number
   maxX: number
@@ -229,10 +282,10 @@ function extentOf(figure: HTMLElement, W0: number, part: 'ticks' | 'rest', lines
     if (l < -0.5) offenders.push({ kind, text, side: 'left' })
     else if (r > W0 + 0.5) offenders.push({ kind, text, side: 'right' })
   }
-  const els = part === 'ticks' ? figure.querySelectorAll(`svg g.tick :is(text, line, path)`) : [...figure.querySelectorAll(MEASURED)].filter((el) => !el.closest('g.tick'))
+  const els = part === 'ticks' ? figure.querySelectorAll(`svg g.tick :is(text, line, path)`) : [...figure.querySelectorAll(MEASURED)].filter((el) => !el.closest('g.tick') && !el.classList.contains('pkv-zoom-overlay'))
   for (const el of els) {
     if (hidden(el)) continue
-    const r = el.getBoundingClientRect()
+    const r = clippedRect(el, drawnRect(el))
     if (!r.width && !r.height) continue
     const l = r.left - base.left
     const rt = r.right - base.left
@@ -263,7 +316,7 @@ function overflowingAxes(figure: HTMLElement, W0: number): Element[] {
   const base = figure.getBoundingClientRect()
   const axes = new Set<Element>()
   for (const t of figure.querySelectorAll('svg g.tick text')) {
-    const r = t.getBoundingClientRect()
+    const r = drawnRect(t)
     if ((r.width || r.height) && (r.left - base.left < -0.5 || r.right - base.left > W0 + 0.5)) {
       const g = t.closest('g.tick')?.parentElement
       if (g) axes.add(g)

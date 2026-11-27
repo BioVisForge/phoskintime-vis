@@ -1,0 +1,81 @@
+{
+ "browser": "firefox 159.0",
+ "date": "2026-11-27T18:45:18.322Z",
+ "runs": 3,
+ "scenarios": {
+  "open": {
+   "wallMs": [
+    1630,
+    1208,
+    1230
+   ],
+   "wallMedianMs": 1230,
+   "stagesMedianMs": {
+    "zip directory": 0,
+    "zip inflate (async)": 171,
+    "sha256": 78,
+    "decode (worker)": 150,
+    "shaping": 39,
+    "transform": 91,
+    "canvas draw": 136
+   },
+   "cpuMs": null,
+   "traceMs": null,
+   "profiledWallMs": null,
+   "cpuDetail": null
+  },
+  "gof": {
+   "wallMs": [
+    782,
+    802,
+    782
+   ],
+   "wallMedianMs": 782,
+   "stagesMedianMs": {
+    "decode (worker)": 135,
+    "shaping": 16,
+    "transform": 10,
+    "canvas draw": 97
+   },
+   "cpuMs": null,
+   "traceMs": null,
+   "profiledWallMs": null,
+   "cpuDetail": null
+  },
+  "raw": {
+   "wallMs": [
+    413,
+    396,
+    418
+   ],
+   "wallMedianMs": 413,
+   "stagesMedianMs": {
+    "canvas draw": 77
+   },
+   "cpuMs": null,
+   "traceMs": null,
+   "profiledWallMs": null,
+   "cpuDetail": null
+  },
+  "compare": {
+   "wallMs": [
+    2314,
+    2315,
+    2322
+   ],
+   "wallMedianMs": 2315,
+   "stagesMedianMs": {
+    "zip directory": 0,
+    "zip inflate (async)": 153,
+    "sha256": 357,
+    "decode (worker)": 264,
+    "shaping": 109,
+    "transform": 39
+   },
+   "cpuMs": null,
+   "traceMs": null,
+   "profiledWallMs": null,
+   "cpuDetail": null
+  }
+ }
+}

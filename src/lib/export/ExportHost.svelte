@@ -6,11 +6,12 @@
   import { okabeIto } from '../ui/palette'
   import { FONT_FAMILY } from './fonts'
   import { setPanelId } from '../ui/panelState'
+  import { panelViews } from '../plot/zoom/views'
 
   /** Renders one panel (or comparison view) offscreen in export mode: print theme, export font, dialog size. */
   let { component, props, settings, collector, panelId }: { component: Component<any>; props: Record<string, unknown>; settings: ExportSettings; collector: FigureCollector; panelId: string } = $props()
   const s = untrack(() => $state.snapshot(settings)) as ExportSettings
-  setExportMode({ active: true, vectorMax: VECTOR_MAX, pixelRatio: s.dpi / (25.4 * LAYOUT_PX_PER_MM) })
+  setExportMode({ active: true, vectorMax: VECTOR_MAX, pixelRatio: s.dpi / (25.4 * LAYOUT_PX_PER_MM), views: s.view === 'current' ? panelViews(untrack(() => panelId)) : undefined })
   setCollector(untrack(() => collector))
   setPanelId(untrack(() => panelId))
   const F = ptToLayoutPx(s.fontPt)

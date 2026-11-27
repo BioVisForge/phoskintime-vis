@@ -132,7 +132,7 @@
           <Line data={pairs} x="time" y="baseline" stroke="#888" strokeDasharray="5 3" />
           <Line data={pairs} x="time" y="engine" stroke="var(--pkv-ink)" />
         </Plot>
-        <Plot height={260} grid x={{ type: 'symlog', ticks: TIME_TICKS, label: 'Time (min), symlog' }} y={{ label: 'Δ (engine − stored baseline)' }}>
+        <Plot zoom="main" height={260} grid x={{ type: 'symlog', ticks: TIME_TICKS, label: 'Time (min), symlog' }} y={{ label: 'Δ (engine − stored baseline)' }}>
           <Line data={pairs} x="time" y="delta" stroke="#d62728" />
           <Dot data={pairs} x="time" y="delta" fill="#d62728" r={2} />
         </Plot>

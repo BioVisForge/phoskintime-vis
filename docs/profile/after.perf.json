@@ -1,0 +1,78 @@
+{
+ "chromium": {
+  "browser": "chromium 159.0.8154.6",
+  "date": "2026-11-27T18:46:47.735Z",
+  "fixture": "network (100 proteins, 400 states x 20 samples = 8,000 series, 112,000 rows; 200 parameters; posterior 4x500x200)",
+  "openToFirstPanelMs": 1013,
+  "openToVerifiedMs": 1650,
+  "heaviestPanel": {
+   "id": "nm-post-ridge",
+   "ms": 1527
+  },
+  "rawLinesCanvasMs": 300,
+  "comparisonLoadMs": 1318,
+  "panelsMs": {
+   "nm-gof": 425,
+   "nm-residuals": 547,
+   "nm-timeseries": 151,
+   "nm-all-trajectories": 248,
+   "heatmap": 168,
+   "nm-kinase": 56,
+   "nm-param-dist": 212,
+   "nm-param-corr": 554,
+   "nm-param-parallel": 336,
+   "nm-convergence": 435,
+   "nm-multistart": 131,
+   "nm-pareto": 94,
+   "nm-profile": 196,
+   "nm-post-trace": 195,
+   "nm-post-density": 69,
+   "nm-post-ridge": 1527,
+   "nm-post-ci": 178,
+   "nm-post-predictive": 141,
+   "nm-sensitivity": 287,
+   "nm-steady": 199,
+   "nm-insights": 146,
+   "nm-matrices": 114
+  },
+  "singleFileBytes": 1887743
+ },
+ "firefox": {
+  "browser": "firefox 159.0",
+  "date": "2026-11-27T18:47:07.315Z",
+  "fixture": "network (100 proteins, 400 states x 20 samples = 8,000 series, 112,000 rows; 200 parameters; posterior 4x500x200)",
+  "openToFirstPanelMs": 1298,
+  "openToVerifiedMs": 2197,
+  "heaviestPanel": {
+   "id": "nm-post-ridge",
+   "ms": 2788
+  },
+  "rawLinesCanvasMs": 369,
+  "comparisonLoadMs": 1990,
+  "panelsMs": {
+   "nm-gof": 520,
+   "nm-residuals": 892,
+   "nm-timeseries": 258,
+   "nm-all-trajectories": 331,
+   "heatmap": 222,
+   "nm-kinase": 97,
+   "nm-param-dist": 333,
+   "nm-param-corr": 844,
+   "nm-param-parallel": 576,
+   "nm-convergence": 663,
+   "nm-multistart": 240,
+   "nm-pareto": 165,
+   "nm-profile": 375,
+   "nm-post-trace": 341,
+   "nm-post-density": 115,
+   "nm-post-ridge": 2788,
+   "nm-post-ci": 203,
+   "nm-post-predictive": 197,
+   "nm-sensitivity": 377,
+   "nm-steady": 197,
+   "nm-insights": 221,
+   "nm-matrices": 318
+  },
+  "singleFileBytes": 1887743
+ }
+}

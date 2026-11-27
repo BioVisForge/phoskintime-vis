@@ -2,6 +2,7 @@ import type { LoadedBundle } from '../model/bundle'
 import type { Table } from '../model/types'
 import { num, str } from '../transforms/table'
 import { bestRows } from '../derive/trajectories'
+import { timed } from '../perf/spans'
 
 export const PKT_COMMIT = 'e634e170c76f9c8b56f8a98ec0ad5a26ae0cff7b'
 
@@ -41,7 +42,7 @@ export type TrajRow = {
   pred: number | null
 }
 
-export function trajRows(t: Table, opts: { protein?: string; best?: boolean } = {}): TrajRow[] {
+function trajRows_(t: Table, opts: { protein?: string; best?: boolean } = {}): TrajRow[] {
   const L = str(t, 'layer'), P = str(t, 'protein'), S = str(t, 'psite'), ST = str(t, 'state'), SID = str(t, 'sample_id')
   const T = num(t, 'time'), O = num(t, 'value_obs'), E = num(t, 'value_pred')
   const idx = opts.best ? bestRows(t) : Int32Array.from({ length: t.rows }, (_, i) => i)
@@ -82,6 +83,8 @@ export function symlogTicks(tmax: number): number[] {
 
 /** Marks with more elements than this draw on canvas (addendum rule; also avoids a Svelte runtime cost that grows with the number of SVG elements). */
 export const CANVAS_MIN = 1000
+/** A brush selection is applied when the pointer pauses this long (the rectangle itself follows at once). */
+export const BRUSH_SETTLE_MS = 120
 
 /**
  * State chosen for a panel: the global psite (or layer) when it names one of `states`, else the
@@ -102,3 +105,5 @@ export function stateFor(states: string[], meta: Map<string, { psite: string | n
 export function stateMeta(rows: { state: string; psite: string | null; layer: string }[]) {
   return new Map(rows.map((r) => [r.state, { psite: r.psite, layer: r.layer }]))
 }
+
+export const trajRows = timed('shaping', 'trajRows', trajRows_)

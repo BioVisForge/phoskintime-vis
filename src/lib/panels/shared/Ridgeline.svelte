@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Plot, AreaY, Line, RuleY, Text } from '../../plot'
   import { ridgeNormalised, smoothDensity1d } from '../../transforms/kde'
-  import { quantile } from '../../transforms/stats'
+  import { quantiles } from '../../transforms/stats'
 
   /**
    * P12 ridgeline with PhosKinTime's KDE (_smooth_density_1d). Ridges are drawn the way
@@ -15,7 +15,7 @@
     series.map((s, i) => {
       const base = series.length - 1 - i // first series on top, as PhosKinTime (y_positions reversed)
       const r = ridgeNormalised(s.values)
-      const qs = [0.05, 0.5, 0.95].map((p) => quantile(s.values, p))
+      const qs = quantiles(s.values, [0.05, 0.5, 0.95])
       if (mode === 'normalised') {
         const n = (v: number) => (v - r.vmin) / (r.vmax - r.vmin)
         return { name: s.name, base, pts: r.xNorm.map((x, k) => ({ name: s.name, x, y0: base, y: base + H * r.density[k] })), q: qs.map(n), med: qs[1] }

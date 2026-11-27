@@ -1,4 +1,4 @@
-# Handoff (updated 2026-11-27)
+# Handoff (updated 2026-11-27, feat/wasm-perf)
 
 **Rule from the owner: push, open PRs, tag or deploy only after the owner confirms.** Claude Code's
 auto mode blocks `gh pr merge`; the owner runs `gh pr merge <n> --squash` once a PR is green.
@@ -18,6 +18,22 @@ each PR (GitHub runners, Node 24). The feature branches are deleted on GitHub.
 - **Fixture bundle ids differ between machines** (floats differ in the last bits between CPUs;
   GitHub's runners gave other ids than the development host). Tests read ids from the generated
   manifests (`bundleId()`/`shortId()` in `tests/e2e/helpers.ts`); never hard-code them.
+
+## feat/wasm-perf (local, not pushed)
+
+Performance work on the existing panels, CPU only (decision 0006, `docs/performance-profile.md`,
+`docs/performance.md`). Profile first (`scripts/profile.mjs`), then: fast canvas dot layer on
+screen (proxy rows keep SveltePlot's scales; exports unchanged), one canvas draw per frame and
+none when the scale values are unchanged, pan/zoom (GOF overall, raw lines), cheaper brushing,
+bitwise-identical JS fixes for quantiles/KDE/raw-lines sort, lazy async zip inflate, and the
+Firefox export fit fix (SVG text measured by its glyph box). No WebAssembly: the tiny-skia spike
+(`bench/wasm-raster/`) was slower than Canvas2D. New fixture `gof-100k` (102,868 GOF points;
+`make_fixtures.py` writes it with the others; the other fixtures' files are unchanged, their zips
+differ only in timestamps). Visual baselines changed: listed in the PR description.
+
+- `?fast=0` turns the fast layers off; `tests/e2e/fast-layers.spec.ts` compares both pixel by pixel.
+- `scripts/frames.mjs [chromium|firefox]`: frame intervals during pan/zoom/brush.
+- `scripts/screen-vs-export.mjs`: gallery section "Screen vs export" (part of `docs:assets`).
 
 ## Still open
 

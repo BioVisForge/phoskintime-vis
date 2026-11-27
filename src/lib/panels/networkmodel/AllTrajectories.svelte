@@ -8,6 +8,7 @@
   import { app, pick } from '../../ui/state.svelte'
   import Loading from '../Loading.svelte'
   import FastLines from '../shared/FastLines.svelte'
+  import { rawSeries } from '../../derive/raw'
 
   let { bundle, report }: PanelProps = $props()
   let t = $state.raw<Table | null>(null)
@@ -33,16 +34,9 @@
   const raw = $derived.by(() => {
     if (!flat || !app.rawLines) return []
     return layers.map((l) => {
-      const idx: number[] = []
-      for (let i = 0; i < flat!.T.length; i++) if (flat!.L[i] === l) idx.push(i)
-      const key = (i: number) => flat!.S[i]! + '\u0000' + flat!.SID[i]
-      idx.sort((a, b) => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : flat!.T[a] - flat!.T[b]))
-      const xs = Float64Array.from(idx, (i) => flat!.T[i])
-      const ys = Float64Array.from(idx, (i) => flat!.E[i])
-      const starts: number[] = []
-      idx.forEach((i, k) => (k === 0 || key(i) !== key(idx[k - 1])) && starts.push(k))
+      const { xs, ys, starts } = rawSeries(flat!, l)
       const fin = Array.from(ys).filter(Number.isFinite)
-      return { layer: l, panel: layerLabel(bundle, l), xs, ys, starts: Int32Array.from(starts), ydom: [Math.min(...fin), Math.max(...fin)], xdom: [Math.min(...xs), Math.max(...xs)] }
+      return { layer: l, panel: layerLabel(bundle, l), xs, ys, starts, ydom: [Math.min(...fin), Math.max(...fin)], xdom: [Math.min(...xs), Math.max(...xs)] }
     })
   })
   const hi = $derived.by(() => {
@@ -61,7 +55,7 @@
   {#if app.rawLines}
     <div class="three">
       {#each raw as r}
-        <Plot height={280} grid title={r.panel} x={{ type: 'symlog', ticks: TIME_TICKS, domain: r.xdom, label: 'Time (min), symlog' }} y={{ domain: r.ydom, label: 'Predicted FC' }}>
+        <Plot zoom height={280} grid title={r.panel} x={{ type: 'symlog', ticks: TIME_TICKS, domain: r.xdom, label: 'Time (min), symlog' }} y={{ domain: r.ydom, label: 'Predicted FC' }}>
           <FastLines xs={r.xs} ys={r.ys} starts={r.starts} />
           <Line data={hi.filter((h) => h.panel === r.panel)} x="time" y="v" z="z" stroke="#d62728" strokeWidth={1.8} />
         </Plot>

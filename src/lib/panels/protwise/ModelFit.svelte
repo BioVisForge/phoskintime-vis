@@ -38,7 +38,7 @@
 {#if !t}<Loading />{:else}
   <div class="two">
     {#each parts as part, i}
-      <Plot height={300} grid x={{ label: `Time (min), ${part.name}` }} y={{ label: 'Fold change: model solid, data dashed', domain: ydom }} color={{ legend: i === 1 }}>
+      <Plot zoom={`part:${part.name}`} height={300} grid x={{ label: `Time (min), ${part.name}` }} y={{ label: 'Fold change: model solid, data dashed', domain: ydom }} color={{ legend: i === 1 }}>
         <Line data={part.rows as TrajRow[]} x="time" y="pred" z="state" stroke="state" strokeWidth={1.4} />
         <Line data={part.rows as TrajRow[]} x="time" y="obs" z="state" stroke="state" strokeDasharray="4 3" strokeWidth={0.8} />
         <Dot data={part.rows.filter((r) => r.obs !== null) as TrajRow[]} x="time" y="obs" stroke="state" symbol="square" r={3} />

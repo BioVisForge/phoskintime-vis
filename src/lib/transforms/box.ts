@@ -1,11 +1,12 @@
 import { finite, quantileSorted } from './stats'
+import { timed } from '../perf/spans'
 
 /**
  * Tukey box statistics as SveltePlot's BoxY draws them (marks/helpers/Box.svelte, v0.14.2):
  * quartiles by linear (type 7) quantile = numpy default; whiskers at the most extreme data inside
  * [q1 - 1.5 IQR, q3 + 1.5 IQR]; points outside are outliers.
  */
-export function boxStats(values: ArrayLike<number>) {
+function boxStats_(values: ArrayLike<number>) {
   const s = finite(values).sort((a, b) => a - b)
   const q1 = quantileSorted(s, 0.25)
   const med = quantileSorted(s, 0.5)
@@ -24,3 +25,5 @@ export function boxStats(values: ArrayLike<number>) {
     outliers: s.filter((v) => v < lo || v > hi),
   }
 }
+
+export const boxStats = timed('transform', 'boxStats', boxStats_)

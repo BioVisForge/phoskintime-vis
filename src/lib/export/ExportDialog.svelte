@@ -20,6 +20,8 @@
     if (!dlg) return
     if (app.export.open && !dlg.open) {
       s = loadSettings()
+      // a one-click export refused by the fit check keeps its "current view" choice
+      if (app.export.view) s.view = app.export.view
       error = null
       fit = app.export.fit ?? null
       if (app.export.formats) formats = Object.fromEntries(FORMATS.map((f) => [f, app.export.formats!.includes(f)])) as Record<Format, boolean>
@@ -112,6 +114,7 @@
         <label class="radio"><input type="checkbox" bind:checked={s.footer} /> Provenance footer</label>
         <label class="radio"><input type="checkbox" bind:checked={s.svgEmbedFont} /> Embed font in SVG</label>
         <label class="radio"><input type="checkbox" bind:checked={s.tikzDownsample} /> Downsample for TeX (LTTB, stated in caption)</label>
+        <label class="radio" title="Zoomed plots show the view you zoomed to; the caption states the shown axis ranges. Off: the full data range."><input type="checkbox" checked={s.view === 'current'} onchange={(e) => (s.view = e.currentTarget.checked ? 'current' : 'full')} data-testid="export-view" /> Export current view</label>
       </div>
     </fieldset>
     <fieldset>

@@ -45,7 +45,7 @@
 </script>
 
 {#if !t}<Loading />{:else}
-  <Plot height={360} grid inset={14} x={{ label: ax('x') }} y={{ label: ax('y') }} color={{ legend: true, label: 'Time (min)', type: 'log' }}>
+  <Plot zoom="main" height={360} grid inset={14} x={{ label: ax('x') }} y={{ label: ax('y') }} color={{ legend: true, label: 'Time (min)', type: 'log' }}>
     <Line data={pts} x="x" y="y" stroke="#c33" strokeOpacity={0.35} />
     <PixelArrows data={arrows.map((a) => ({ ...a, x0: a.x - a.dx / 2, y0: a.y - a.dy / 2, x1: a.x + a.dx / 2, y1: a.y + a.dy / 2 }))} length={14} stroke="#444" />
     <Dot data={pts} x="x" y="y" fill={(d: any) => Math.max(d.time, 0.1)} stroke="var(--pkv-ink)" r={5} title={(d: any) => `t = ${d.time} min`} />

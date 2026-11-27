@@ -45,7 +45,7 @@
     <p>No posterior-predictive samples (sample_id ≠ “best”) in this bundle.</p>
   {:else}
     <label>State <select value={S} onchange={(e) => (st = e.currentTarget.value)}>{#each states as s}<option value={s}>{s}</option>{/each}</select></label>
-    <Plot height={280} grid x={{ type: 'symlog', ticks: TIME_TICKS, label: 'Time (min), symlog' }} y={{ label: 'FC' }}>
+    <Plot zoom="main" height={280} grid x={{ type: 'symlog', ticks: TIME_TICKS, label: 'Time (min), symlog' }} y={{ label: 'FC' }}>
       <AreaY data={env} x="time" y1="q01" y2="q99" fill="#c6dbef" fillOpacity={0.6} />
       <AreaY data={env} x="time" y1="q05" y2="q95" fill="#9ecae1" fillOpacity={0.7} />
       <DifferenceY data={diff} x="time" y1="fit" y2="median" positiveFill="#d6604d" negativeFill="#4393c3" fillOpacity={0.5} />

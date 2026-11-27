@@ -40,6 +40,32 @@ protein / psite / layer bar drives every dependent panel and the URL, so a link 
 `index.html#/dynamics/nm-timeseries?protein=G007` reproduces the view. Ctrl/⌘ + K opens the
 command palette. The light and dark themes and two densities are in the top bar.
 
+## Pan and zoom
+
+Every plot with dot marks pans and zooms: Ctrl/⌘ + wheel, the toolbar, pan mode, double-click
+to reset, and the keyboard (+/−, arrow keys, 0) when the plot has focus. Facets zoom together by
+default ("link facets"). Exports show the full data range unless "Export current view" is
+chosen, and then the caption states the shown ranges. List and details: `docs/pan-zoom.md`.
+
+## Performance
+
+Measured on the `network` fixture (single file from `file://`; `docs/performance.md`). Large dot
+layers are drawn by a fast canvas layer on screen; exports are unchanged. No WebAssembly: the
+profile showed the time in SveltePlot's per-point mark pipeline, not in numeric kernels, and a
+CPU rasteriser in WASM was slower than the browsers' Canvas2D (decision 0006).
+
+| Target | Chromium | Firefox |
+|---|---|---|
+| Open → first panel ≤ 1.0 s / 1.5 s | 1,000 ms (met) | 1,230 ms (met) |
+| GOF panel ≤ 0.5 s | **713 ms: not met** | **782 ms: not met** |
+| Pan/zoom/brush frames on 100k+ marks ≤ 20 ms (p95) | GOF, raw lines ≤ 16.8 ms (met); residuals zoom **33 ms: not met** | **33–50 ms: not met** |
+
+Not met: GOF's floor is ≈ 550 ms of SveltePlot laying out four plot frames and their axes (plus
+≈ 140 ms decode wait in the measured scenario); Firefox frames during a gesture are SveltePlot
+recomputing scales and axes (the data layers only redraw a transformed bitmap); plots with many
+SVG lines (parameter parallel coordinates) are slower in both browsers. Follow-ups:
+`docs/follow-ups.md`.
+
 ## Contract-only design
 
 This repository depends **only on versioned contracts**, never on PhosKinTime's internals:

@@ -569,6 +569,67 @@ def make_network(variant: str = "base") -> Bundle:
     return b
 
 
+def make_gof_100k() -> Bundle:
+    """Stress fixture for the GOF panel: 2,100 proteins x 4 states = 8,400 states, 14 times,
+    best fit + one predictive sample. About 103,000 best-fit (observed, predicted) pairs: brushing,
+    pan/zoom and redraw frame times on 100k+ marks are measured on it. Only the tables the GOF,
+    residual and trajectory panels read; everything else is listed as skipped."""
+    rng = np.random.default_rng(100_000)
+    name = "gof-100k"
+    b = Bundle(name)
+    n_prot = 2100
+    state_rows = []
+    for i in range(1, n_prot + 1):
+        p = f"G{i:04d}"
+        state_rows += [(f"{p}_R", "rna", p, None), (f"{p}_P", "protein", p, None),
+                       (f"{p}_S{i % 400 + 1}", "phospho", p, f"S{i % 400 + 1}"), (f"{p}_T{(i * 7) % 400 + 1}", "phospho", p, f"T{(i * 7) % 400 + 1}")]
+    states = [r[0] for r in state_rows]
+    b.add_table("state_index", {"index": list(range(len(states))), "state": states, "layer": [r[1] for r in state_rows],
+                                "protein": [r[2] for r in state_rows], "psite": [r[3] for r in state_rows]})
+    T = TIMES.size
+    n_samples = 2
+    rows = len(states) * n_samples * T
+    col = {k: [None] * rows for k in ["workflow", "scenario", "sample_id", "layer", "protein", "psite", "state"]}
+    obs_arr = np.full(rows, np.nan)
+    pred_arr = np.empty(rows)
+    i = 0
+    for (st, layer, p, ps) in state_rows:
+        amp, t1, t2 = rng.uniform(0.2, 2.5), rng.uniform(1, 30), rng.uniform(80, 1500)
+        best = curve(TIMES, amp, t1, t2)
+        obs = curve(TIMES, amp * rng.lognormal(0, 0.1), t1, t2) * (1 + rng.normal(0, 0.08, T))
+        if layer == "rna":
+            obs[:5] = np.nan
+        obs[rng.random(T) < 0.04] = np.nan
+        for s in range(n_samples):
+            sl = slice(i, i + T)
+            for k, v in [("workflow", "networkmodel"), ("scenario", "fit" if s == 0 else "posterior_predictive"), ("sample_id", "best" if s == 0 else "ppc01"),
+                         ("layer", layer), ("protein", p), ("psite", ps), ("state", st)]:
+                col[k][sl] = [v] * T
+            pred_arr[sl] = best if s == 0 else best * (1 + rng.normal(0, 0.05, T))
+            if s == 0:
+                obs_arr[sl] = obs
+            i += T
+    b.add_table("trajectories", {**col, "time": np.tile(TIMES, len(states) * n_samples), "value_obs": obs_arr, "value_pred": pred_arr},
+                units={"time": "min", "value_obs": "fold change", "value_pred": "fold change"})
+    params = ["tf_scale", "c_k[K01]"]
+    groups = [{"id": "tf_scale", "label": "tf_scale (synthetic label)", "unit": None}, {"id": "c_k", "label": "c_k (synthetic label)", "unit": None}]
+    pmeta = [{"name": "tf_scale", "label": "tf_scale (synthetic label)", "group": "tf_scale", "unit": None},
+             {"name": "c_k[K01]", "label": "c_k (synthetic label)", "group": "c_k", "unit": None}]
+    prow = {k: [] for k in ["workflow", "scenario", "sample_id", "name", "group", "label", "protein", "psite", "kinase", "value", "lower", "upper", "unit"]}
+    for pm, v in zip(pmeta, [0.8, 0.3]):
+        for k, x in zip(prow.keys(), ["networkmodel", "fit", "best", pm["name"], pm["group"], pm["label"], None, None, None, v, 1e-5, 100.0, None]):
+            prow[k].append(x)
+    b.add_table("parameters", prow)
+    config = "workflow: networkmodel\nmodel_id: 0\n# stress fixture gof-100k\n"
+    b.add_provenance(config, "phoskintime networkmodel --spec-fixture", {"fixture": name})
+    layers = [{"id": "rna", "label": "mRNA", "unit": "fold change"}, {"id": "protein", "label": "Protein", "unit": "fold change"},
+              {"id": "phospho", "label": "Phosphosite", "unit": "fold change"}]
+    m = base_manifest("networkmodel", "0", "distributive", "e634e17" + "0" * 33, config, [], params, states, layers, pmeta, groups)
+    m["skipped"].append({"artifact": "posterior", "reason": "Stress fixture: only the GOF inputs are included.", "workflow": "networkmodel"})
+    b.finish(m)
+    return b
+
+
 def make_tampered(out: Path):
     b = make_small_protwise(name="tampered")
     key = "tables/metrics.parquet"
@@ -596,6 +657,7 @@ BUILDERS = {
     "partial": make_partial,
     "tampered": lambda: make_tampered(None),
     "future-major": make_future_major,
+    "gof-100k": make_gof_100k,
 }
 
 

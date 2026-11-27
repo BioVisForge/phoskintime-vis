@@ -1,0 +1,43 @@
+{
+ "browser": "firefox 159.0",
+ "date": "2026-11-27T16:57:54.570Z",
+ "runs": 3,
+ "scenarios": {
+  "open": {
+   "wallMs": [
+    1153,
+    1079,
+    1103
+   ],
+   "wallMedianMs": 1103,
+   "stagesMedianMs": {
+    "zip inflate": 130,
+    "sha256": 81,
+    "decode (worker)": 135,
+    "shaping": 38,
+    "transform": 117
+   },
+   "cpuMs": null,
+   "traceMs": null,
+   "profiledWallMs": null,
+   "cpuDetail": null
+  },
+  "gof": {
+   "wallMs": [
+    682,
+    676,
+    687
+   ],
+   "wallMedianMs": 682,
+   "stagesMedianMs": {
+    "decode (worker)": 135,
+    "shaping": 16,
+    "transform": 10
+   },
+   "cpuMs": null,
+   "traceMs": null,
+   "profiledWallMs": null,
+   "cpuDetail": null
+  }
+ }
+}

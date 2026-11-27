@@ -25,7 +25,7 @@
 </script>
 
 {#if !t}<Loading />{:else}
-  <Plot height={220} grid fx={{ label: '' }} x={{ label: `grid value (${space})` }} y={{ label: `Δ objective (${stat})` }}>
+  <Plot zoom="main" height={220} grid fx={{ label: '' }} x={{ label: `grid value (${space})` }} y={{ label: `Δ objective (${stat})` }}>
     <Line data={rows} x="grid" y="delta" fx="parameter" stroke="#d95f02" />
     <Dot data={rows} x="grid" y="delta" fx="parameter" symbol="times" stroke="#d95f02" r={3} />
   </Plot>

@@ -7,6 +7,9 @@
   import Section from '../compare/Section.svelte'
   import { deltasCsv, reportHtml } from '../compare/report'
   import { download } from '../export/figure'
+  import { setPanelId } from './panelState'
+  // zoomed views of the comparison plots are keyed by section id under this panel id (export current view)
+  setPanelId('compare')
 
   let cmp = $state.raw<Comparison | null>(null)
   let error = $state<string | null>(null)
@@ -129,12 +132,12 @@
       {/if}
     </Section>
 
-    <Section id="gof" title="Goodness of fit per layer, side by side" tikz={false} rows={gofRows} note="Same definitions as the GOF panel (robust σ, R² = squared Pearson r, RMSE about identity), computed on each run's best fit.">
+    <Section id="gof" zoomable title="Goodness of fit per layer, side by side" tikz={false} rows={gofRows} note="Same definitions as the GOF panel (robust σ, R² = squared Pearson r, RMSE about identity), computed on each run's best fit.">
       <table class="prov" data-testid="gof-compare">
         <thead><tr><th>subset</th><th>n A</th><th>n B</th><th>R² A</th><th>R² B</th><th>ΔR²</th><th>RMSE A</th><th>RMSE B</th><th>ΔRMSE</th></tr></thead>
         <tbody>{#each gofRows as g}<tr><td>{g.subset}</td><td>{g.n_a}</td><td>{g.n_b}</td><td>{fmt(g.r2_a ?? NaN, 4)}</td><td>{fmt(g.r2_b ?? NaN, 4)}</td><td class:neg={g.d_r2 < 0} class:pos={g.d_r2 > 0}>{fmt(g.d_r2, 4)}</td><td>{fmt(g.rmse_a ?? NaN, 4)}</td><td>{fmt(g.rmse_b ?? NaN, 4)}</td><td class:neg={g.d_rmse > 0} class:pos={g.d_rmse < 0}>{fmt(g.d_rmse, 4)}</td></tr>{/each}</tbody>
       </table>
-      <Plot height={160} marginLeft={100} grid x={{ label: 'RMSE (best fit)' }} y={{ label: '', domain: gofRows.map((g) => g.subset) }} color={{ legend: true, domain: ['A', 'B'], range: ['#9aa4b5', '#1f4e8c'] }}>
+      <Plot zoom="gof" height={160} marginLeft={100} grid x={{ label: 'RMSE (best fit)' }} y={{ label: '', domain: gofRows.map((g) => g.subset) }} color={{ legend: true, domain: ['A', 'B'], range: ['#9aa4b5', '#1f4e8c'] }}>
         <Dot data={gofLong} x="rmse" y="subset" fill="run" r={5} />
       </Plot>
       {#if cmp.metrics.length}
@@ -145,9 +148,9 @@
       {/if}
     </Section>
 
-    <Section id="overlay" title="Trajectory overlay, A vs B" patterns={['P5', 'P6']} rows={overlay} note="y1 = A (grey), y2 = B (black). Red where B > A, blue where B < A. Both are best-fit model series on the same time grid. Observations (orange) are points only. Other open runs are thin coloured lines. Default state: the one with the largest |B − A|.">
+    <Section id="overlay" zoomable title="Trajectory overlay, A vs B" patterns={['P5', 'P6']} rows={overlay} note="y1 = A (grey), y2 = B (black). Red where B > A, blue where B < A. Both are best-fit model series on the same time grid. Observations (orange) are points only. Other open runs are thin coloured lines. Default state: the one with the largest |B − A|.">
       <label>State <select data-testid="compare-state" value={S} onchange={(e) => (state_ = e.currentTarget.value)}>{#each states as s}<option value={s}>{s}</option>{/each}</select></label>
-      <Plot height={300} grid x={{ type: 'symlog', ticks: TIME_TICKS, label: 'Time (min), symlog' }} y={{ label: 'Predicted FC' }} color={{ legend: others.length > 0 }}>
+      <Plot zoom="overlay" height={300} grid x={{ type: 'symlog', ticks: TIME_TICKS, label: 'Time (min), symlog' }} y={{ label: 'Predicted FC' }} color={{ legend: others.length > 0 }}>
         <DifferenceY data={overlay} x="time" y1="a" y2="b" positiveFill="#d6604d" negativeFill="#4393c3" fillOpacity={0.4} />
         {#if otherLines.length}<Line data={otherLines} x="time" y="pred" z="run" stroke="run" strokeWidth={1} />{/if}
         <Line data={overlay} x="time" y="a" stroke="#888" strokeWidth={1.6} strokeDasharray="5 3" />
@@ -170,7 +173,7 @@
       </Plot>
     </Section>
 
-    <Section id="params" title="Parameter changes" patterns={['P9', 'P2']} rows={sorted as unknown as Record<string, unknown>[]} note="Sorted by |log2(B/A)|. Labels and groups come from the manifest of A (raw names where a label is missing). The scatter has the identity line and an OLS line (95 % band) on log10 values.">
+    <Section id="params" zoomable title="Parameter changes" patterns={['P9', 'P2']} rows={sorted as unknown as Record<string, unknown>[]} note="Sorted by |log2(B/A)|. Labels and groups come from the manifest of A (raw names where a label is missing). The scatter has the identity line and an OLS line (95 % band) on log10 values.">
       <label>Show top <input type="number" min="5" max="200" bind:value={topN} style="width:5em" /></label>
       <div class="two">
         <Plot height={Math.max(200, 14 * topParams.length + 60)} marginLeft={230} grid x={{ label: 'log2(B / A)' }} y={{ label: '', domain: topParams.map((p) => p.label) }}>
@@ -178,7 +181,7 @@
           <RuleX x={0} stroke="var(--pkv-ink)" />
         </Plot>
         <div>
-          <Plot height={300} grid inset={6} x={{ label: 'log10 A value' }} y={{ label: 'log10 B value' }} color={{ legend: true }}>
+          <Plot zoom="params" height={300} grid inset={6} x={{ label: 'log10 A value' }} y={{ label: 'log10 B value' }} color={{ legend: true }}>
             <Line data={(() => { const v = logPairs.flatMap((p) => [p.la, p.lb]); return [{ x: Math.min(...v), y: Math.min(...v) }, { x: Math.max(...v), y: Math.max(...v) }] })()} x="x" y="y" stroke="#666" strokeDasharray="4 3" />
             <Dot data={logPairs} x="la" y="lb" r={2.5} fill="group" opacity={0.7} title={(d: any) => `${d.name}: ${d.a.toPrecision(4)} → ${d.b.toPrecision(4)}`} />
             <RegressionY data={logPairs} x="la" y="lb" stroke="var(--pkv-ink)" confidence={0.95} />

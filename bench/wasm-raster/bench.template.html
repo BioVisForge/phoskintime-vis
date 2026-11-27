@@ -1,0 +1,30 @@
+<!doctype html><meta charset=utf-8><body><script>
+const WASM = Uint8Array.from(atob("__WASM_BASE64__"), c => c.charCodeAt(0));
+window.run = async function (W, H, lw) {
+  const { instance } = await WebAssembly.instantiate(WASM);
+  const e = instance.exports;
+  let seed = 1; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const NS = 8000, NP = 14, n = NS * NP;
+  const xy = new Float64Array(n * 2), starts = new Int32Array(NS);
+  for (let s = 0; s < NS; s++) { starts[s] = s * NP; let y = H * (0.2 + 0.6 * rnd());
+    for (let k = 0; k < NP; k++) { const i = s * NP + k; xy[2*i] = W * 0.05 + (W * 0.9 * Math.log1p(k)) / Math.log1p(NP - 1); y += (rnd() - 0.5) * H * 0.08; xy[2*i+1] = y } }
+  // Canvas2D, as FastLines draws it
+  const c = document.createElement('canvas'); c.width = W; c.height = H; const ctx = c.getContext('2d');
+  let t = performance.now();
+  ctx.strokeStyle = '#9aa3ad'; ctx.globalAlpha = 0.15; ctx.lineWidth = lw; ctx.beginPath();
+  for (let s = 0; s < NS; s++) for (let k = 0; k < NP; k++) { const i = s * NP + k; k ? ctx.lineTo(xy[2*i], xy[2*i+1]) : ctx.moveTo(xy[2*i], xy[2*i+1]) }
+  ctx.stroke();
+  const ref = ctx.getImageData(0, 0, W, H).data;  // forces the raster to finish
+  const tCanvas = performance.now() - t;
+  // tiny-skia in wasm
+  t = performance.now();
+  const pxy = e.alloc(xy.byteLength), pst = e.alloc(starts.byteLength), pout = e.alloc(W * H * 4);
+  new Float64Array(e.memory.buffer, pxy, xy.length).set(xy); new Int32Array(e.memory.buffer, pst, NS).set(starts);
+  const ok = e.stroke_lines(pxy, n, pst, NS, W, H, 0x9aa3adff, 0.15, lw, pout);
+  const out = new Uint8ClampedArray(e.memory.buffer, pout, W * H * 4).slice();
+  const c2 = document.createElement('canvas'); c2.width = W; c2.height = H; c2.getContext('2d').putImageData(new ImageData(out, W, H), 0, 0);
+  const tWasm = performance.now() - t;
+  let maxd = 0, nd = 0; for (let i = 0; i < ref.length; i++) { const d = Math.abs(ref[i] - out[i]); if (d) nd++; if (d > maxd) maxd = d }
+  return { W, H, lw, ok, tCanvas: Math.round(tCanvas), tWasm: Math.round(tWasm), maxd, differPct: +(100 * nd / ref.length).toFixed(3) };
+};
+</script>
