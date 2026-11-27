@@ -20,6 +20,7 @@ jobs:
       - run: |
           node tests/tikz/export_all.mjs network tests/tikz/out tikz
           node tests/tikz/export_all.mjs small-protwise tests/tikz/out tikz
+          node tests/tikz/export_compare.mjs tests/tikz/out/compare
       - uses: actions/upload-artifact@v4
         with: { name: tikz-exports, path: tests/tikz/out }
   compile:
@@ -31,4 +32,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with: { name: tikz-exports, path: tests/tikz/out }
-      - run: for z in tests/tikz/out/*.zip; do bash tests/tikz/compile_all.sh "$z" "work/$(basename "$z" .zip)"; done
+      - name: Compile every panel
+        shell: bash
+        run: |
+          status=0
+          for z in tests/tikz/out/*.zip; do bash tests/tikz/compile_all.sh "$z" "work/$(basename "$z" .zip)" || status=1; done
+          exit $status
+      - name: Compile the comparison sections
+        run: bash tests/tikz/compile_all.sh tests/tikz/out/compare work/compare

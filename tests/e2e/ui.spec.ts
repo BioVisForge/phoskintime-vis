@@ -83,9 +83,12 @@ test('theme toggle switches and persists; export stays light', async ({ page }) 
 
 for (const theme of ['light', 'dark'] as const) {
   test(`axe: no serious or critical violations on any section (${theme})`, async ({ page, browserName }) => {
-    // axe's rules are browser-independent; the full two-bundle sweep crashed the Firefox page (memory), so it runs in Chromium
-    test.skip(browserName !== 'chromium', 'axe sweep runs in Chromium')
     test.setTimeout(240_000)
+    // Playwright's Firefox (build 1572) segfaults the content process (signal 11) when a script
+    // reads the reflected ariaLabelledByElements of the overview section, which axe-core 4.14.1
+    // does. Without the getter axe reads the aria-labelledby attribute, so the same relationship is
+    // still checked. The app itself never reads this property.
+    if (browserName === 'firefox') await page.addInitScript(() => delete (Element.prototype as any).ariaLabelledByElements)
     await page.goto(APP)
     await page.evaluate((t) => localStorage.setItem('pkv.theme', t), theme)
     await page.reload()
